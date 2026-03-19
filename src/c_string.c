@@ -1,0 +1,554 @@
+/* @file: c_string.c
+ * #desc:
+ *    The implementations of string operations.
+ *
+ * #copy:
+ *    Copyright (C) 1970 Public Free Software
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not,
+ *    see <https://www.gnu.org/licenses/>.
+ */
+
+#include <conch/config.h>
+#include <conch/c_stddef.h>
+#include <conch/c_stdint.h>
+#include <conch/c_string.h>
+
+
+/* @func: conch_memcpy
+ * #desc:
+ *    copy memory area.
+ *
+ * #1: t   [out] target pointer
+ * #2: s   [in]  source pointer
+ * #3: len [in]  length
+ * #r:     [ret] target pointer
+ */
+void *conch_memcpy(void *t, const void *s, size_t len)
+{
+	if (!len) /* len is zero */
+		return t;
+
+#if 1 /* little endian */
+#	define LS >>
+#	define RS <<
+#else
+#	define LS <<
+#	define RS >>
+#endif
+
+	volatile uint8_t *_t = t, *_s = (uint8_t *)s;
+	uint32_t w, x;
+
+	for (; ((uintptr_t)_s & 3) && len; len--)
+		*_t++ = *_s++;
+
+	switch ((uintptr_t)_t & 3) {
+		case 0:
+			for (; len > 15; len -= 16) {
+				((uint32_t *)_t)[0] = ((uint32_t *)_s)[0];
+				((uint32_t *)_t)[1] = ((uint32_t *)_s)[1];
+				((uint32_t *)_t)[2] = ((uint32_t *)_s)[2];
+				((uint32_t *)_t)[3] = ((uint32_t *)_s)[3];
+				_t += 16;
+				_s += 16;
+			}
+			break;
+		case 1:
+			if (len < 32)
+				break;
+
+			w = *((uint32_t *)_s);
+			*_t++ = *_s++;
+			*_t++ = *_s++;
+			*_t++ = *_s++;
+			len -= 3;
+
+			for (; len > 16; len -= 16) {
+				x = *((uint32_t *)(_s + 1));
+				((uint32_t *)_t)[0] = (w LS 24) | (x RS 8);
+				w = *((uint32_t *)(_s + 5));
+				((uint32_t *)_t)[1] = (x LS 24) | (w RS 8);
+				x = *((uint32_t *)(_s + 9));
+				((uint32_t *)_t)[2] = (w LS 24) | (x RS 8);
+				w = *((uint32_t *)(_s + 13));
+				((uint32_t *)_t)[3] = (x LS 24) | (w RS 8);
+				_t += 16;
+				_s += 16;
+			}
+			break;
+		case 2:
+			if (len < 32)
+				break;
+
+			w = *((uint32_t *)_s);
+			*_t++ = *_s++;
+			*_t++ = *_s++;
+			len -= 2;
+
+			for (; len > 17; len -= 16) {
+				x = *((uint32_t *)(_s + 2));
+				((uint32_t *)_t)[0] = (w LS 16) | (x RS 16);
+				w = *((uint32_t *)(_s + 6));
+				((uint32_t *)_t)[1] = (x LS 16) | (w RS 16);
+				x = *((uint32_t *)(_s + 10));
+				((uint32_t *)_t)[2] = (w LS 16) | (x RS 16);
+				w = *((uint32_t *)(_s + 14));
+				((uint32_t *)_t)[3] = (x LS 16) | (w RS 16);
+				_t += 16;
+				_s += 16;
+			}
+			break;
+		case 3:
+			if (len < 32)
+				break;
+
+			w = *((uint32_t *)_s);
+			*_t++ = *_s++;
+			len -= 1;
+
+			for (; len > 18; len -= 16) {
+				x = *((uint32_t *)(_s + 3));
+				((uint32_t *)_t)[0] = (w LS 8) | (x RS 24);
+				w = *((uint32_t *)(_s + 7));
+				((uint32_t *)_t)[1] = (x LS 8) | (w RS 24);
+				x = *((uint32_t *)(_s + 11));
+				((uint32_t *)_t)[2] = (w LS 8) | (x RS 24);
+				w = *((uint32_t *)(_s + 15));
+				((uint32_t *)_t)[3] = (x LS 8) | (w RS 24);
+				_t += 16;
+				_s += 16;
+			}
+			break;
+		default:
+			break;
+	}
+
+	if (len & 16) {
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+	}
+	if (len & 8) {
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+	}
+	if (len & 4) {
+		*_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++; *_t++ = *_s++;
+	}
+	if (len & 2) {
+		*_t++ = *_s++; *_t++ = *_s++;
+	}
+	if (len & 1)
+		*_t++ = *_s++;
+
+	return t;
+}
+
+/* @func: conch_memmove
+ * #desc:
+ *    copy memory area (memory overlap and then copy).
+ *
+ * #1: t   [out] target pointer
+ * #2: s   [in]  source pointer
+ * #3: len [in]  length
+ * #r:     [ret] target pointer
+ */
+void *conch_memmove(void *t, const void *s, size_t len)
+{
+	if (t <= s)
+		return conch_memcpy(t, s, len);
+
+	volatile uint8_t *_t = (uint8_t *)t + len, *_s = (uint8_t *)s + len;
+	while (len--)
+		*--_t = *--_s;
+
+	return t;
+}
+
+/* @func: conch_memset
+ * #desc:
+ *    fill memory with a constant byte.
+ *
+ * #1: t   [out] target pointer
+ * #2: c   [in]  character
+ * #3: len [in]  length
+ * #r:     [ret] target pointer
+ */
+void *conch_memset(void *t, int8_t c, size_t len)
+{
+	int8_t cc[4] = { c, c, c, c };
+	volatile int8_t *_t = t;
+
+	for (; ((uintptr_t)_t & 3) && len; len--)
+		*_t++ = c;
+
+	for (; len > 15; len -= 16) {
+		((uint32_t *)_t)[0] = *((uint32_t *)cc);
+		((uint32_t *)_t)[1] = *((uint32_t *)cc);
+		((uint32_t *)_t)[2] = *((uint32_t *)cc);
+		((uint32_t *)_t)[3] = *((uint32_t *)cc);
+		_t += 16;
+	}
+
+	for (; len > 3; len -= 4) {
+		*((uint32_t *)_t) = *((uint32_t *)cc);
+		_t += 4;
+	}
+
+	while (len--)
+		*_t++ = c;
+
+	return t;
+}
+
+/* @func: conch_memchr
+ * #desc:
+ *    scan memory for a character.
+ *
+ * #1: s   [in]  source pointer
+ * #2: c   [in]  character
+ * #3: len [in]  length
+ * #r:     [ret] target location / NULL pointer
+ */
+void *conch_memchr(const void *s, uint8_t c, size_t len)
+{
+	for (uint8_t *t = (uint8_t *)s; len--; t++) {
+		if (*t == c)
+			return (void *)t;
+	}
+
+	return NULL;
+}
+
+/* @func: conch_memrchr
+ * #desc:
+ *    scan memory for a character from the back.
+ *
+ * #1: s   [in]  source pointer
+ * #2: c   [in]  character
+ * #3: len [in]  length
+ * #r:     [ret] target location / NULL pointer
+ */
+void *conch_memrchr(const void *s, uint8_t c, size_t len)
+{
+	for (uint8_t *t = (uint8_t *)s + len; len--; ) {
+		if (*--t == c)
+			return (void *)t;
+	}
+
+	return NULL;
+}
+
+/* @func: conch_memcmp
+ * #desc:
+ *    compare memory areas.
+ *
+ * #1: s1  [in]  source1 pointer
+ * #2: s2  [in]  source2 pointer
+ * #3: len [in]  length
+ * #r:     [ret] 0: equal, 0<N>0: *s2 - *s1
+ */
+int32_t conch_memcmp(const void *s1, const void *s2, size_t len)
+{
+	if (!len)
+		return 0;
+
+	uint8_t *t1 = (uint8_t *)s1, *t2 = (uint8_t *)s2;
+	for (; --len && *t1 == *t2; t1++, t2++);
+
+	return *t1 - *t2;
+}
+
+/* @func: conch_strlen
+ * #desc:
+ *    calculate the length of a string.
+ *
+ * #1: s [in]  string pointer
+ * #r:   [ret] string length
+ */
+size_t conch_strlen(const char *s)
+{
+	const char *a = s;
+	for (; *s != '\0'; s++);
+
+	return (size_t)(s - a);
+}
+
+/* @func: conch_strnlen
+ * #desc:
+ *    calculate the length of a string.
+ *
+ * #1: s   [in]  string pointer
+ * #2: len [in]  string length-max
+ * #r:     [ret] string length
+ */
+size_t conch_strnlen(const char *s, size_t len)
+{
+	const char *a = s;
+	for (; len && *s != '\0'; s++, len--);
+
+	return (size_t)(s - a);
+}
+
+/* @func: conch_strcpy
+ * #desc:
+ *    copy string.
+ *
+ * #1: t [out] target pointer
+ * #2: s [in]  source pointer
+ * #r:   [ret] target pointer
+ */
+char *conch_strcpy(char *t, const char *s)
+{
+	char *a = t;
+	while (*s != '\0')
+		*t++ = *s++;
+	*t = '\0';
+
+	return a;
+}
+
+/* @func: conch_strncpy
+ * #desc:
+ *    copy the string into the buffer and zero the rest.
+ *
+ * #1: t   [out] target pointer
+ * #2: s   [in]  source pointer
+ * #3: len [in]  target length-max
+ * #r:     [ret] target pointer
+ */
+char *conch_strncpy(char *t, const char *s, size_t len)
+{
+	char *a = t;
+	for (; len && *s != '\0'; len--)
+		*t++ = *s++;
+	conch_memset(t, 0, len);
+
+	return a;
+}
+
+/* @func: conch_strcat
+ * #desc:
+ *    string append or catenate.
+ *
+ * #1: t [out] target pointer
+ * #2: s [in]  source pointer
+ * #r:   [ret] target pointer
+ */
+char *conch_strcat(char *t, const char *s)
+{
+	t += conch_strlen(t);
+	conch_strcpy(t, s);
+
+	return t;
+}
+
+/* @func: conch_strncat
+ * #desc:
+ *    string append or catenate.
+ *
+ * #1: t   [out] target pointer
+ * #2: s   [in]  source pointer
+ * #3: len [in]  source length-max
+ * #r:     [ret] target pointer
+ */
+char *conch_strncat(char *t, const char *s, size_t len)
+{
+	char *a = t;
+
+	t += conch_strlen(t);
+	for (; len && *s != '\0'; len--)
+		*t++ = *s++;
+	*t = '\0';
+
+	return a;
+}
+
+/* @func: conch_strchr
+ * #desc:
+ *    locate character in string.
+ *
+ * #1: s [in]  string pointer
+ * #2: c [in]  character
+ * #r:   [ret] string pointer
+ */
+char *conch_strchr(const char *s, uint8_t c)
+{
+	for (; *s != '\0'; s++) {
+		if (*((uint8_t *)s) == c)
+			return (char *)s;
+	}
+
+	return (*((uint8_t *)s) == c) ? (char *)s : NULL;
+}
+
+/* @func: conch_strrchr
+ * #desc:
+ *    locate the character in the string from the end.
+ *
+ * #1: s [in]  string pointer
+ * #2: c [in]  character
+ * #r:   [ret] string pointer
+ */
+char *conch_strrchr(const char *s, uint8_t c)
+{
+	size_t n = conch_strlen(s) + 1;
+
+	return conch_memrchr(s, c, n);
+}
+
+/* @func: conch_strcmp
+ * #desc:
+ *    compare two string.
+ *
+ * #1: s1 [in]  string1 pointer
+ * #2: s2 [in]  string2 pointer
+ * #r:    [ret] 0: equal, 0<N>0: *s1 - *s2
+ */
+int32_t conch_strcmp(const char *s1, const char *s2)
+{
+	for (; *s1 == *s2 && *s1 != '\0'; s1++, s2++);
+
+	return *((uint8_t *)s1) - *((uint8_t *)s2);
+}
+
+/* @func: conch_strncmp
+ * #desc:
+ *    compare two string.
+ *
+ * #1: s1  [in]  string1 pointer
+ * #2: s2  [in]  string2 pointer
+ * #3: len [in]  length
+ * #r:     [ret] 0: equal, 0<N>0: *s1 - *s2
+ */
+int32_t conch_strncmp(const char *s1, const char *s2, size_t len)
+{
+	if (!len)
+		return 0;
+
+	for (; --len && *s1 == *s2 && *s1 != '\0'; s1++, s2++);
+
+	return *((uint8_t *)s1) - *((uint8_t *)s2);
+}
+
+/* @func: conch_strstr
+ * #desc:
+ *    locate a substring.
+ *
+ * #1: s1 [in]  string1 pointer
+ * #2: s2 [in]  string2 pointer
+ * #r:    [ret] string1 location / NULL pointer
+ */
+char *conch_strstr(const char *s1, const char *s2)
+{
+	size_t n1 = conch_strlen(s1);
+	size_t n2 = conch_strlen(s2);
+
+	for (size_t n = 0; (n1 - n) >= n2; s1++, n++) {
+		if (!conch_memcmp(s2, s1, n2))
+			return (char *)s1;
+	}
+
+	return NULL;
+}
+
+/* @func: conch_strpbrk
+ * #desc:
+ *    locate character set in string.
+ *
+ * #1: s  [in]  string pointer
+ * #2: cs [in]  character set
+ * #r:    [ret] string location / NULL pointer
+ */
+char *conch_strpbrk(const char *s, const char *cs)
+{
+	for (; *s != '\0'; s++) {
+		if (conch_strchr(cs, *s))
+			return (char *)s;
+	}
+
+	return NULL;
+}
+
+/* @func: conch_strspn
+ * #desc:
+ *    get the prefix length of a substring consisting of a
+ *    character set.
+ *
+ * #1: s  [in]  string pointer
+ * #2: cs [in]  character set
+ * #r:    [ret] string location length
+ */
+size_t conch_strspn(const char *s, const char *cs)
+{
+	size_t n = 0;
+	for (; *s != '\0'; s++, n++) {
+		if (!conch_strchr(cs, *s))
+			break;
+	}
+
+	return n;
+}
+
+/* @func: conch_strcspn
+ * #desc:
+ *    get the prefix length of the substring that does not belong
+ *    to the character set.
+ *
+ * #1: s  [in]  string pointer
+ * #2: cs [in]  character set
+ * #r:    [ret] string location length
+ */
+size_t conch_strcspn(const char *s, const char *cs)
+{
+	size_t n = 0;
+	for (; *s != '\0'; s++, n++) {
+		if (conch_strchr(cs, *s))
+			return n;
+	}
+
+	return n;
+}
+
+/* @func: conch_strtok_r
+ * #desc:
+ *    extract tokens from strings.
+ *
+ * #1: s  [in/out] string pointer / NULL
+ * #2: sp [in]     separation character set
+ * #3: sl [in/out] separation location save pointer
+ * #r:    [ret]    separation location / NULL pointer
+ */
+char *conch_strtok_r(char *s, const char *sp, char **sl)
+{
+	if (!s)
+		s = *sl;
+
+	char *tmp = s;
+	if (*tmp == '\0')
+		return NULL;
+
+	for (; *tmp != '\0'; tmp++) {
+		if (conch_strchr(sp, *tmp)) {
+			*sl = tmp + 1;
+			*tmp = '\0';
+			return s;
+		}
+	}
+	*sl = tmp;
+
+	return s;
+}

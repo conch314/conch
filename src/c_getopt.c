@@ -1,0 +1,204 @@
+/* @file: c_getopt.c
+ * #desc:
+ *    The implementations of command-line options parse.
+ *
+ * #copy:
+ *    Copyright (C) 1970 Public Free Software
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not,
+ *    see <https://www.gnu.org/licenses/>.
+ */
+
+#include <conch/config.h>
+#include <conch/c_stddef.h>
+#include <conch/c_stdint.h>
+#include <conch/c_getopt.h>
+
+
+/* @func: conch_getopt_r
+ * #desc:
+ *    command-line short options parse.
+ *
+ * #1: argc   [in]     command-line argc
+ * #2: argv   [in]     command-line argv
+ * #3: optstr [in]     options string
+ * #4: arg    [in/out] argument pointer
+ * #5: ind    [in/out] current argv index
+ * #r:        [ret]
+ *    -1: parseing end, ':': missing argument, '?': unknown option,
+ *    '<opt-character>': option character, 1: non option argument
+ */
+int32_t conch_getopt_r(int32_t argc, char *const *argv,
+		const char *optstr, char **arg, int32_t *ind)
+{
+	if (*ind >= argc)
+		return -1;
+
+	char *opt = *arg;
+	if (!opt) {
+		opt = *arg = argv[*ind];
+		if (opt[0] != '-') { /* non option argument */
+			if (opt[0] != '\0' && *optstr == '-') {
+				(*ind)++;
+				return 1;
+			}
+			return '?';
+		}
+		if (opt[1] == '-' && opt[2] == '\0') /* option '--' */
+			return -1;
+		if (opt[1] == '\0') { /* option '-' */
+			*arg = NULL;
+			(*ind)++;
+			return '-';
+		}
+		*arg = ++opt;
+	}
+	if (*opt == '\0')
+		return '?';
+
+	if (*optstr == '-' || *optstr == '+')
+		optstr++;
+
+	while (*optstr != '\0') {
+		if (*opt != *optstr) {
+			if (optstr[1] == ':') {
+				if (optstr[2] == ':')
+					optstr++;
+				optstr++;
+			}
+			optstr++;
+			continue;
+		}
+
+		if (optstr[1] == ':') {
+			/* optional argument */
+			if (optstr[2] == ':') { /* option '-o'[...] */
+				(*arg)++;
+				if (opt[1] == '\0') /* optional */
+					*arg = NULL;
+				(*ind)++;
+				return *opt;
+			}
+
+			/* with option argument */
+			if (opt[1] == '\0') { /* next a argv */
+				if (++(*ind) >= argc) {
+					*arg = opt;
+					return ':';
+				}
+				/* option '-o' '[...]' */
+				*arg = argv[*ind];
+				(*ind)++;
+				return *opt;
+			}
+
+			/* option '-o[...]' */
+			(*arg)++;
+			(*ind)++;
+			return *opt;
+		}
+
+		/* no option argument */
+		(*arg)++;
+		if (opt[1] == '\0') { /* next a argv */
+			*arg = NULL;
+			(*ind)++;
+		}
+		return *opt;
+	}
+
+	return '?';
+}
+
+/* @func: conch_getopt_long_r
+ * #desc:
+ *    command-line long options parse.
+ *
+ * #1: argc     [in]     command-line argc
+ * #2: argv     [in]     command-line argv
+ * #3: optstr   [in]     short options string
+ * #4: longopts [in]     long options string
+ * #5: longind  [out]    long option index
+ * #6: arg      [in/out] argument pointer
+ * #7: ind      [in/out] current argv index
+ * #r:          [ret]
+ *    -1: parseing end, ':': missing argument, '?': unknown option,
+ *    '<opt-character>': option character/number, 1: non option argument,
+ *    0: use long option flag
+ */
+int32_t conch_getopt_long_r(int32_t argc, char *const *argv,
+		const char *optstr, const struct option_r *longopts,
+		int32_t *longind, char **arg, int32_t *ind)
+{
+	if (*ind >= argc)
+		return -1;
+
+	char *opt = argv[*ind];
+	*longind = -1;
+
+	if (!*arg && opt[0] == '-' && opt[1] == '-' && opt[2] != '\0') {
+		*arg = opt;
+		opt += 2;
+		for (int32_t i = 0; longopts->name; longopts++, i++) {
+			const char *p = longopts->name;
+			for (; *p != '\0'; p++, opt++) {
+				if (*p != *opt)
+					break;
+			}
+
+			*longind = i;
+			if (!(*opt == '=' || *opt == '\0') || *p != '\0')
+				continue;
+
+			switch (longopts->has_arg) {
+				case REQUIRED_ARGUMENT:
+					if (*opt == '=') {
+						*arg = ++opt;
+						(*ind)++;
+						break;
+					}
+					if (*opt == '\0') {
+						if (++(*ind) >= argc)
+							return ':';
+						*arg = argv[*ind];
+						(*ind)++;
+						break;
+					}
+					break;
+				case OPTIONAL_ARGUMENT:
+					if (*opt == '=') {
+						*arg = ++opt;
+						(*ind)++;
+						break;
+					}
+				case NO_ARGUMENT:
+					*arg = NULL;
+					(*ind)++;
+					break;
+				default:
+					return -1;
+			}
+
+			if (longopts->flag) {
+				*longopts->flag = longopts->val;
+				return 0;
+			}
+			return longopts->val;
+		}
+
+		return '?';
+	}
+
+	return conch_getopt_r(argc, argv, optstr, arg, ind);
+}
