@@ -88,7 +88,7 @@ struct swissmap_head {
 extern "C" {
 #endif
 
-/* swissmap.c */
+/* ds_swissmap.c */
 extern
 void conch_swissmap_empty(struct swissmap_head *head)
 ;

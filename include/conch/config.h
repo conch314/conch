@@ -66,7 +66,7 @@
 #   define CONCH_MARCH_TYPE CONCH_MARCH_RISCV_64
 #  endif
 # else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
+#  error "!!!undefined CONCH_MARCH_TYPE!!!"
 # endif
 #endif
 

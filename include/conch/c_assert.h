@@ -1,6 +1,6 @@
-/* @file: c_internal.h
+/* @file: c_assert.h
  * #desc:
- *    The definitions of.
+ *    The definitions of verify program assertion.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,33 +20,32 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_C_INTERNAL_H
-#define _CONCH_C_INTERNAL_H
+#ifndef _CONCH_C_ASSERT_H
+#define _CONCH_C_ASSERT_H
 
 #include <conch/config.h>
-#include <conch/c_stddef.h>
-#include <conch/c_stdint.h>
 
 
-struct stdio_file {
-	int32_t flags;
-	int32_t fd;
-	uint8_t *buf;
-	size_t buf_size;
-	uint8_t *rpos;
-	uint8_t *rend;
-	uint8_t *wbase;
-	uint8_t *wpos;
-	uint8_t *wend;
-};
+#undef xassert
+#ifdef NDEBUG
+# define xassert(x) ((void)0)
+#else
+# define xassert(x) ((void)((x) \
+	|| (___assert_crash(#x, __FILE__, __LINE__, __func__), 0)))
+#endif
 
-#define STDIO_FILE_FG_EOF 0x01
-#define STDIO_FILE_FG_ERR 0x02
-#define STDIO_FILE_FG_NORD 0x04
-#define STDIO_FILE_FG_NOWR 0x08
-#define STDIO_FILE_FG_SEEK 0x10
-#define STDIO_FILE_FG_TEXT 0x20
 
+inline
+static void ___assert_crash(const char *expr, const char *file,
+		long line, const char *func) {
+	volatile char *p = (char *)0;
+	*p = 0;
+
+	(void)expr;
+	(void)file;
+	(void)line;
+	(void)func;
+}
 
 
 #endif

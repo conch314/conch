@@ -97,7 +97,7 @@ void conch_chacha20_crypto(struct chacha20_ctx *ctx, uint8_t *buf,
 		size_t len)
 ;
 
-/* chacha20.c */
+/* xchacha20.c */
 extern
 void conch_xchacha20_init(struct xchacha20_ctx *ctx, const uint8_t *key,
 		const uint8_t *ran, const uint8_t *ctr)

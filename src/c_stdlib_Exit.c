@@ -1,6 +1,6 @@
-/* @file: pw_bcrypt.h
+/* @file: c_stdlib_Exit.c
  * #desc:
- *    The definitions of bcrypt password-hash.
+ *    The implementations of standard library.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,31 +20,34 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_PW_BCRYPT_H
-#define _CONCH_PW_BCRYPT_H
-
 #include <conch/config.h>
-#include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
+#include <conch/c_syscall.h>
 
 
-#define BCRYPT_HASHPASS_LEN 24
+/* @func: conch_Exit
+ * #desc:
+ *    terminate the calling process.
+ *
+ * #1: status [in] exit status
+ */
+void conch_Exit(int32_t status)
+{
+#ifdef CONCH_PLATFORM
+# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
 
+	conch_syscall_linux(__NR_exit_group,
+		status);
 
-#ifdef __cplusplus
-extern "C" {
+	while (1) {
+		conch_syscall_linux(__NR_exit,
+			status);
+	}
+
+# else
+#  error "!!!unknown CONCH_PLATFORM!!!"
+# endif
+#else
+# error "!!!undefined CONCH_PLATFORM!!!"
 #endif
-
-/* pw_bcrypt.c */
-extern
-void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,
-		const uint8_t *salt, uint32_t salt_len, uint8_t *ohp,
-		uint32_t k)
-;
-
-#ifdef __cplusplus
 }
-#endif
-
-
-#endif

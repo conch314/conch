@@ -222,7 +222,7 @@ struct inflate_ctx {
 extern "C" {
 #endif
 
-/* inflate.c */
+/* z_inflate.c */
 extern
 void conch_inflate_init(struct inflate_ctx *ctx)
 ;

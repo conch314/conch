@@ -270,7 +270,7 @@ struct deflate_ctx {
 extern "C" {
 #endif
 
-/* deflate.c */
+/* z_deflate.c */
 extern
 int32_t conch_deflate_init(struct deflate_ctx *ctx, int32_t lev)
 ;

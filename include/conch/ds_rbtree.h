@@ -29,8 +29,19 @@
 
 
 struct rb_node {
+#if 0
+	/* $ m4 -DRB_COLOR='$1->color' \
+	 * -DRB_SET_COLOR='$1->color = $2' \
+	 * -DRB_PARENT='$1->parent' \
+	 * -DRB_SET_PARENT='$1->parent = $2' \
+	 * -DRB_PCOLOR_SET0=''
+	 */
 	int32_t color;
-	struct rb_node *parent, *left, *right;
+	struct rb_node *parent;
+#else
+	unsigned long pcolor;
+#endif
+	struct rb_node *left, *right;
 };
 
 struct rb_root {
@@ -40,6 +51,15 @@ struct rb_root {
 #define RB_ROOT_NEW(x) struct rb_root x = { NULL }
 #define RB_ROOT_INIT(x) (x)->node = NULL
 
+#define RB_PCOLOR_SET0(x) (x)->pcolor = 0
+#define RB_PARENT(x) ((struct rb_node *)((x)->pcolor & ~3UL))
+#define RB_COLOR(x) ((x)->pcolor & 1)
+
+#define RB_SET_PARENT(x, p) \
+	(x)->pcolor = ((unsigned long)(p) | RB_COLOR(x))
+#define RB_SET_COLOR(x, c) \
+	(x)->pcolor = ((unsigned long)RB_PARENT(x) | ((c) & 1))
+
 #define RB_RED 0
 #define RB_BLACK 1
 
@@ -48,7 +68,7 @@ struct rb_root {
 extern "C" {
 #endif
 
-/* rbtree.c */
+/* ds_rbtree.c */
 extern
 void conch_rb_insert_fix(struct rb_root *root, struct rb_node *node)
 ;

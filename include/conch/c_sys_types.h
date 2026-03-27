@@ -1,6 +1,6 @@
-/* @file: pw_bcrypt.h
+/* @file: c_sys_types.h
  * #desc:
- *    The definitions of bcrypt password-hash.
+ *    The definitions of system data types.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,31 +20,41 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_PW_BCRYPT_H
-#define _CONCH_PW_BCRYPT_H
+#ifndef _CONCH_C_SYS_TYPES_H
+#define _CONCH_C_SYS_TYPES_H
 
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 
 
-#define BCRYPT_HASHPASS_LEN 24
+typedef ssize_t xoff_t;
+typedef int64_t xoff64_t;
 
+typedef int32_t xpid_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef uint32_t xid_t;
+typedef xid_t xuid_t;
+typedef xid_t xgid_t;
 
-/* pw_bcrypt.c */
-extern
-void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,
-		const uint8_t *salt, uint32_t salt_len, uint8_t *ohp,
-		uint32_t k)
-;
+typedef size_t xdev_t;
+typedef size_t xino_t;
+typedef uint64_t xino64_t;
+typedef size_t xnlink_t;
+typedef long xblksize_t;
+typedef ssize_t xblkcnt_t;
 
-#ifdef __cplusplus
-}
-#endif
+typedef size_t fsblkcnt_t;
+typedef size_t xsfilcnt_t;
+
+typedef uint32_t xmode_t;
+
+typedef int64_t xtime_t;
+typedef int64_t xsuseconds_t;
+typedef uint32_t xuseconds_t;
+
+typedef int64_t xclock_t;
+typedef int32_t xclockid_t;
 
 
 #endif

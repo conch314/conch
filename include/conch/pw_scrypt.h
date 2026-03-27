@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-/* scrypt.c */
+/* pw_scrypt.c */
 extern
 void conch_scrypt(const uint8_t *pass, uint32_t pass_len,
 		const uint8_t *salt, uint32_t salt_len, uint8_t *tmp,

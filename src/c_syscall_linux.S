@@ -26,7 +26,7 @@
 	.text
 	.globl conch_syscall_linux
 
-/* @func: syscall_linux
+/* @func: conch_syscall_linux
  * #desc:
  *    linux system call.
  *
@@ -116,5 +116,5 @@ conch_syscall_linux:
 #  error "!!!unknown CONCH_MARCH_TYPE!!!"
 # endif
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!undefined CONCH_MARCH_TYPE!!!"
 #endif

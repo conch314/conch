@@ -1,6 +1,6 @@
-/* @file: pw_bcrypt.h
+/* @file: c_unistd_fork.c
  * #desc:
- *    The definitions of bcrypt password-hash.
+ *    The implementations of unix standard.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,31 +20,45 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_PW_BCRYPT_H
-#define _CONCH_PW_BCRYPT_H
-
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
+#include <conch/c_errno.h>
+#include <conch/c_sys_types.h>
+#include <conch/c_signal.h>
+#include <conch/c_unistd.h>
+#include <conch/c_syscall.h>
 
 
-#define BCRYPT_HASHPASS_LEN 24
+/* @func: conch_fork
+ * #desc:
+ *    create a child process.
+ *
+ * #r: [ret] 0: current process, >0: child process id, -1: errno
+ */
+xpid_t conch_fork(void)
+{
+#ifdef CONCH_PLATFORM
+# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
 
+	xpid_t ret;
 
-#ifdef __cplusplus
-extern "C" {
+	ret = (xpid_t)conch_syscall_linux(__NR_clone,
+		X_SIGCHLD,
+		0);
+
+	if (ret < 0) {
+		/* errno */
+		x_errno = -ret;
+		return -1;
+	}
+
+	return ret;
+
+# else
+#  error "!!!unknown CONCH_PLATFORM!!!"
+# endif
+#else
+# error "!!!undefined CONCH_PLATFORM!!!"
 #endif
-
-/* pw_bcrypt.c */
-extern
-void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,
-		const uint8_t *salt, uint32_t salt_len, uint8_t *ohp,
-		uint32_t k)
-;
-
-#ifdef __cplusplus
 }
-#endif
-
-
-#endif

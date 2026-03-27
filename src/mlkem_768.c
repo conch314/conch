@@ -1,7 +1,7 @@
 /* @file: mlkem_768.c
  * #desc:
  *    The implementations of module-lattice-based key-encapsulation
- *    mechanism (512'128).
+ *    mechanism (768'192).
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

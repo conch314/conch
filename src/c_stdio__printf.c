@@ -215,8 +215,10 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 	v = conch_frexp(conch_fabs(v), &e);
 
 	/* integer length, log10(v) + e * log10(2) == log10(v * 2^e) */
-	intlen = (int32_t)conch_floor(conch_log10(v)
-		+ e * 0.3010299956639812) + 1;
+	if (v) {
+		intlen = (int32_t)conch_floor(conch_log10(v)
+			+ e * 0.3010299956639812 + 1);
+	}
 
 	/* compensate precision */
 	v *= 2;
@@ -519,6 +521,8 @@ static int32_t _printf_s(struct printf_ctx *ctx)
 	if (ctx->va.s) {
 		p = ctx->va.s;
 		len = (int32_t)conch_strlen(p);
+		if (ctx->flags & FG_PRECISE && len > ctx->precise)
+			len = ctx->precise;
 	}
 
 	a_len = ctx->align - len;
@@ -566,7 +570,22 @@ static int32_t _printf_f(struct printf_ctx *ctx)
 
 	if (v < 0)
 		neg = 1;
-	len = _dou2str_df(0, buf, v, ctx->precise);
+
+	switch (conch_fpclassify(v)) {
+		case X_FP_INFINITE:
+			ctx->precise = 0;
+			conch_memcpy(buf, "inf", 3);
+			len = 3;
+			break;
+		case X_FP_NAN:
+			ctx->precise = 0;
+			conch_memcpy(buf, "nan", 3);
+			len = 3;
+			break;
+		default:
+			len = _dou2str_df(0, buf, v, ctx->precise);
+			break;
+	}
 
 	if (ctx->precise > DOU2STR_DF_PREMAX)
 		p_len = ctx->precise - DOU2STR_DF_PREMAX;
@@ -607,6 +626,7 @@ static int32_t _printf_f(struct printf_ctx *ctx)
 		if (ctx->pad(ctx, '0', p_len))
 			return -1;
 	}
+
 	/* left aligned */
 	if (a_len > 0 && flags & FG_ALIGN_LEFT) {
 		if (ctx->pad(ctx, ' ', a_len))
@@ -842,7 +862,7 @@ e:
 			case 'E':
 			case 'f': case 'F': case 'g':
 			case 'G': case 'a': case 'A':
-				if (!ctx.precise && ctx.flags & FG_PRECISE)
+				if (!(ctx.flags & FG_PRECISE))
 					ctx.precise = 6;
 				ctx.va.f = va_arg(ap, double);
 

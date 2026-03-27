@@ -56,7 +56,7 @@ struct list_head {
 extern "C" {
 #endif
 
-/* list.c */
+/* ds_list.c */
 extern
 struct list_node *conch_list_add(struct list_head *head,
 		struct list_node *_new)

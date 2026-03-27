@@ -103,5 +103,5 @@ conch_atomic_cas:
 #  error "!!!unknown CONCH_MARCH_TYPE!!!"
 # endif
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!undefined CONCH_MARCH_TYPE!!!"
 #endif

@@ -20,15 +20,15 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 #include <conch/c_string.h>
 #include <conch/c_stdio.h>
-
-
-#include <unistd.h>
-#include <fcntl.h>
+#include <conch/c_unistd.h>
+#include <conch/c_float.h>
+#include <conch/c_math.h>
 
 
 typedef struct stdio_file {
@@ -68,7 +68,7 @@ static size_t _stdio_write(_FILE *fp, const uint8_t *buf, size_t len)
 
 	/* file buffer */
 	while (k) {
-		r = write(f->fd, f->wbase, k);
+		r = conch_write(f->fd, f->wbase, k);
 		if (r < 0) {
 			f->wpos = f->wend = f->wbase = NULL;
 			f->flags |= FG_ERR;
@@ -80,7 +80,7 @@ static size_t _stdio_write(_FILE *fp, const uint8_t *buf, size_t len)
 
 	/* input buffer */
 	while (len) {
-		r = write(f->fd, buf, len);
+		r = conch_write(f->fd, buf, len);
 		if (r < 0) {
 			f->wpos = f->wend = f->wbase = NULL;
 			f->flags |= FG_ERR;
@@ -115,10 +115,10 @@ static int32_t _stdio_fflush(_FILE *fp)
 	}
 
 	if (f->flags & FG_SEEK && f->rpos != f->rend) {
-		r = lseek(f->fd, 0, SEEK_CUR);
+		r = conch_lseek(f->fd, 0, X_SEEK_CUR);
 		if (r > 0) {
 			r -= (ssize_t)(f->rend - f->rpos);
-			lseek(f->fd, r, SEEK_SET);
+			conch_lseek(f->fd, r, X_SEEK_SET);
 		}
 	}
 
@@ -145,6 +145,10 @@ static size_t _stdio_fread(void *t, size_t m, size_t n, _FILE *fp)
 	size_t k, len = m * n;
 	ssize_t r;
 
+	if (!len)
+		return 0;
+
+	/* initialize read buffer */
 	if (!f->rend || f->wend) {
 		if (f->wpos != f->wbase)
 			_stdio_write(fp, NULL, 0);
@@ -160,7 +164,7 @@ static size_t _stdio_fread(void *t, size_t m, size_t n, _FILE *fp)
 
 	if (f->rpos == f->rend) {
 		f->rpos = f->rend = f->buf;
-		r = read(f->fd, f->buf, f->buf_size);
+		r = conch_read(f->fd, f->buf, f->buf_size);
 		if (r <= 0) {
 			f->flags |= r ? FG_ERR : FG_EOF;
 			return 0;
@@ -181,7 +185,7 @@ static size_t _stdio_fread(void *t, size_t m, size_t n, _FILE *fp)
 	}
 
 	while (len) {
-		r = read(f->fd, buf, len);
+		r = conch_read(f->fd, buf, len);
 		if (r <= 0) {
 			f->flags |= r ? FG_ERR : FG_EOF;
 			return ((m * n) - len) / m;
@@ -190,7 +194,7 @@ static size_t _stdio_fread(void *t, size_t m, size_t n, _FILE *fp)
 		len -= r;
 	}
 
-	return m ? n : 0;
+	return n;
 }
 
 /* @func: _stdio_fwrite (static)
@@ -209,6 +213,10 @@ static size_t _stdio_fwrite(const void *s, size_t m, size_t n, _FILE *fp)
 	const uint8_t *buf = s;
 	size_t k, w, len = m * n;
 
+	if (!len)
+		return 0;
+
+	/* initialize write buffer */
 	if (!f->wend) {
 		if (f->flags & FG_NOWR) {
 			f->flags |= FG_ERR;
@@ -221,13 +229,20 @@ static size_t _stdio_fwrite(const void *s, size_t m, size_t n, _FILE *fp)
 	}
 
 	k = (size_t)(f->wend - f->wpos);
-	if (len > k) {
+	if (len > k) { /* len > remaining */
 		k = _stdio_write(fp, buf, len);
 		return (k == len) ? n : (k / m);
 	}
 
+	/* text stream */
 	if (f->flags & FG_TEXT) {
 		for (k = len; k && buf[k - 1] != '\n'; k--);
+		if (len == 1 && k == 1) {
+			*f->wpos++ = *buf;
+			_stdio_write(f, NULL, 0);
+			return 1;
+		}
+
 		if (k) {
 			w = _stdio_write(f, buf, k);
 			if (w < k)
@@ -240,7 +255,7 @@ static size_t _stdio_fwrite(const void *s, size_t m, size_t n, _FILE *fp)
 	conch_memcpy(f->wpos, buf, len);
 	f->wpos += len;
 
-	return m ? n : 0;
+	return n;
 }
 
 static int32_t _stdio_fseek(_FILE *fp, int64_t off, int32_t whence)
@@ -249,7 +264,7 @@ static int32_t _stdio_fseek(_FILE *fp, int64_t off, int32_t whence)
 	ssize_t r;
 
 	switch (whence) {
-		case SEEK_SET: case SEEK_CUR: case SEEK_END:
+		case X_SEEK_SET: case X_SEEK_CUR: case X_SEEK_END:
 			break;
 		default:
 			return -1;
@@ -258,7 +273,7 @@ static int32_t _stdio_fseek(_FILE *fp, int64_t off, int32_t whence)
 	_stdio_fflush(fp);
 
 	if (f->flags & FG_SEEK) {
-		r = lseek(f->fd, off, whence);
+		r = conch_lseek(f->fd, off, whence);
 		if (r < 0)
 			return -1;
 	}
@@ -273,7 +288,7 @@ static int64_t _stdio_ftell(_FILE *fp)
 	ssize_t r;
 
 	if (f->flags & FG_SEEK) {
-		r = lseek(f->fd, 0, SEEK_CUR);
+		r = conch_lseek(f->fd, 0, X_SEEK_CUR);
 		if (r < 0)
 			return -1;
 
@@ -291,7 +306,7 @@ static int64_t _stdio_ftell(_FILE *fp)
 
 static void _stdio_rewind(_FILE *fp)
 {
-	_stdio_fseek(fp, 0, SEEK_SET);
+	_stdio_fseek(fp, 0, X_SEEK_SET);
 }
 
 static int32_t _stdio_fgetc(_FILE *fp)
@@ -328,12 +343,34 @@ static int32_t _stdio_fgets(char *buf, int32_t len, _FILE *fp)
 
 static int32_t _stdio_fputs(const char *s, _FILE *fp)
 {
-	size_t n = strlen(s);
+	size_t n = conch_strlen(s);
 	if (!_stdio_fwrite(s, 1, n, fp))
 		return -1;
 
 	return 0;
 }
+
+static int32_t _call_out(const char *s, int32_t len, void *arg)
+{
+	if (!_stdio_fwrite(s, 1, len, (_FILE *)arg))
+		return -1;
+
+	return 0;
+}
+
+int32_t conch_vfprintf(_FILE *fp, const char *fmt, va_list ap)
+{
+	return __conch_printf(fmt, ap, fp, _call_out);
+}
+
+int32_t conch_fprintf(_FILE *fp, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	return conch_vfprintf(fp, fmt, ap);
+}
+
 
 int main(void)
 {
@@ -342,16 +379,497 @@ int main(void)
 	_FILE fp_stdout;
 	uint8_t buf[1024], buf2[1024];
 
-	memset(&fp_stdout, 0, sizeof(_FILE));
+	conch_memset(&fp_stdout, 0, sizeof(_FILE));
 	fp_stdout.flags |= FG_TEXT;
-//	fp_stdout.flags |= FG_NORD;
+	fp_stdout.flags |= FG_NORD;
 	fp_stdout.fd = 1;
 	fp_stdout.buf = buf;
 	fp_stdout.buf_size = sizeof(buf);
 
-	stdio_fwrite("h\nh%de\nh", 1, 8, &fp_stdout);
-	stdio_fread(buf2, 1, 1, &fp_stdout);
-	stdio_fflush(&fp_stdout);
+	_stdio_fwrite("h\nh%de\nh", 1, 8, &fp_stdout);
+//	_stdio_fread(buf2, 1, 1, &fp_stdout);
+	_stdio_fflush(&fp_stdout);
+
+	conch_fprintf(&fp_stdout, "%s\n", "Hello, World!");
+
+#define __stdout stdout
+
+	/* signed */
+	fprintf(__stdout,
+		"0.1 A: hhd: %hhd %hhd\n", INT8_MIN, INT8_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"0.2 B: hhd: %hhd %hhd\n", INT8_MIN, INT8_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"1.1 A: hhd: %hhd %hhd\n", INT32_MIN, INT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"1.2 B: hhd: %hhd %hhd\n", INT32_MIN, INT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"2.1 A: hd: %hd %hd\n", INT16_MIN, INT16_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"2.2 B: hd: %hd %hd\n", INT16_MIN, INT16_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"3.1 A: hd: %hd %hd\n", INT32_MIN, INT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"3.2 B: hd: %hd %hd\n", INT32_MIN, INT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"4.1 A: d: %d %d\n", INT32_MIN, INT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"4.2 B: d: %d %d\n", INT32_MIN, INT32_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"5.1 A: d: %d %d\n", INT64_MIN, INT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"5.2 B: d: %d %d\n", INT64_MIN, INT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"6.1 A: ld: %ld %ld\n", INT64_MIN, INT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"6.2 B: ld: %ld %ld\n", INT64_MIN, INT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"7.1 A: lld: %lld %lld\n", INT64_MIN, INT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"7.2 B: lld: %lld %lld\n", INT64_MIN, INT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	/* unsigned */
+	fprintf(__stdout,
+		"8.1 A: hhu: %hhu\n", UINT8_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"8.2 B: hhu: %hhu\n", UINT8_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"9.1 A: hhu: %hhu\n", UINT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"9.2 B: hhu: %hhu\n", UINT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"10.1 A: hu: %hu\n", UINT16_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"10.2 B: hu: %hu\n", UINT16_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"11.1 A: hu: %hu\n", UINT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"11.2 B: hu: %hu\n", UINT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"12.1 A: u: %u\n", UINT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"12.2 B: u: %u\n", UINT32_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"13.1 A: u: %u\n", UINT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"13.2 B: u: %u\n", UINT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"14.1 A: lu: %lu\n", UINT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"14.2 B: lu: %lu\n", UINT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	/* signed */
+	fprintf(__stdout,
+		"15.1 A: hhx: %hhx %hhx\n", INT8_MIN, INT8_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"15.2 B: hhx: %hhx %hhx\n", INT8_MIN, INT8_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"16.1 A: hhx: %hhx %hhx\n", INT32_MIN, INT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"16.2 B: hhx: %hhx %hhx\n", INT32_MIN, INT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"17.1 A: hx: %hx %hx\n", INT16_MIN, INT16_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"17.2 B: hx: %hx %hx\n", INT16_MIN, INT16_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"18.1 A: hx: %hx %hx\n", INT32_MIN, INT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"18.2 B: hx: %hx %hx\n", INT32_MIN, INT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"19.1 A: x: %x %x\n", INT32_MIN, INT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"19.2 B: x: %x %x\n", INT32_MIN, INT32_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"20.1 A: x: %x %x\n", INT64_MIN, INT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"20.2 B: x: %x %x\n", INT64_MIN, INT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"21.1 A: lx: %lx %lx\n", INT64_MIN, INT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"21.2 B: lx: %lx %lx\n", INT64_MIN, INT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"22.1 A: llx: %llx %llx\n", INT64_MIN, INT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"22.2 B: llx: %llx %llx\n", INT64_MIN, INT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	/* unsigned hex */
+	fprintf(__stdout,
+		"23.1 A: llu: %llu\n", UINT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"23.2 B: llu: %llu\n", UINT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"24.1 A: hhx: %hhx\n", UINT8_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"24.2 B: hhx: %hhx\n", UINT8_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"25.1 A: hhx: %hhx\n", UINT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"25.2 B: hhx: %hhx\n", UINT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"26.1 A: hx: %hx\n", UINT16_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"26.2 B: hx: %hx\n", UINT16_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"27.1 A: hx: %hx\n", UINT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"27.2 B: hx: %hx\n", UINT32_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"28.1 A: x: %x\n", UINT32_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"28.2 B: x: %x\n", UINT32_MAX);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"29.1 A: x: %x\n", UINT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"29.2 B: x: %x\n", UINT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"30.1 A: lx: %lx\n", UINT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"30.2 B: lx: %lx\n", UINT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"31.1 A: llx: %llx\n", UINT64_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"31.2 B: llx: %llx\n", UINT64_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	/* floating */
+	fprintf(__stdout,
+		"32.1 A: f: %.380f\n", X_FP_DBL_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"32.2 B: f: %.380f\n", X_FP_DBL_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"33.1 A: f: %.380f\n", -X_FP_DBL_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"33.2 B: f: %.380f\n", -X_FP_DBL_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"34.1 A: f: %.380f\n", X_FP_DBL_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"34.2 B: f: %.380f\n", X_FP_DBL_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"35.1 A: f: %.380f\n", -X_FP_DBL_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"35.2 B: f: %.380f\n", -X_FP_DBL_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"36.1 A: f: %.380f\n", -X_FP_DBL_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"36.2 B: f: %.380f\n", -X_FP_DBL_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	/* character and string */
+	fprintf(__stdout,
+		"37.1 A: c: %c\n", 'w');
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"37.2 B: c: %c\n", 'w');
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"38.1 A: c: %9c\n", 'w');
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"38.2 B: c: %9c\n", 'w');
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"39.1 A: s: %s\n", "Hello, World");
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"39.2 B: s: %s\n", "Hello, World");
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"40.1 A: s: %.6s\n", "Hello, World");
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"40.2 B: s: %.6s\n", "Hello, World");
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"41.1 A: s: %19s\n", "Hello, World");
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"41.2 B: s: %19s\n", "Hello, World");
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"42.1 A: s: %-19s-\n", "Hello, World");
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"42.2 B: s: %-19s-\n", "Hello, World");
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"43.1 A: s: %33s-\n", "Hello, World");
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"43.2 B: s: %33s-\n", "Hello, World");
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"44.1 A: s: %33s ω %s-\n", "Hello, World ω", NULL);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"44.2 B: s: %33s ω %s-\n", "Hello, World ω", NULL);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"45.1 A: s: %*s ω %s-\n", -33, "Hello, World ω", NULL);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"45.2 B: s: %*s ω %s-\n", -33, "Hello, World ω", NULL);
+	_stdio_fflush(&fp_stdout);
+
+	/* align */
+	fprintf(__stdout,
+		"46.1 A: %20lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"46.2 B: %20lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"47.1 A: %020lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"47.2 B: %020lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"48.1 A: %-20lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"48.2 B: %-20lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"49.1 A: %-020lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"49.2 B: %-020lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"50.1 A: %-.20lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"50.2 B: %-.20lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"51.1 A: %-0.20lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"51.2 B: %-0.20lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"52.1 A: %#.20lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"52.2 B: %#.20lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+	fprintf(__stdout,
+		"53.1 A: %40.20lx$\n", INT64_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"53.2 B: %40.20lx$\n", INT64_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"54.1 A: %040c$\n", 'A');
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"54.2 B: %040c$\n", 'A');
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"55.1 A: %40c$\n", 'A');
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"55.2 B: %40c$\n", 'A');
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"56.1 A: %-40c$\n", 'A');
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"56.2 B: %-40c$\n", 'A');
+	_stdio_fflush(&fp_stdout);
+
+	/* floating */
+	fprintf(__stdout,
+		"57.1 A: %.324f\n", 0.0);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"57.2 B: %.324f\n", 0.0);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"58.1 A: %.324f\n", 17.9729);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"58.2 B: %.324f\n", 17.9729);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"59.1 A: %.324f\n", 1.79729);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"59.2 B: %.324f\n", 1.79729);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"60.1 A: %.324f\n", 0.179729);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"60.2 B: %.324f\n", 0.179729);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"61.1 A: %.324f\n", X_FP_DBL_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"61.2 B: %.324f\n", X_FP_DBL_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"62.1 A: %.324f\n", X_FP_DBL_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"62.2 B: %.324f\n", X_FP_DBL_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"63.1 A: %.0f\n", X_FP_DBL_MIN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"63.2 B: %.0f\n", X_FP_DBL_MIN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"64.1 A: %.0f\n", X_FP_DBL_MAX);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"64.2 B: %.0f\n", X_FP_DBL_MAX);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"65.1 A: %.324f\n", 0.001897);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"65.2 B: %.324f\n", 0.001897);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"66.1 A: %.324f\n", 527.1481286241434);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"66.2 B: %.324f\n", 527.1481286241434);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"66.1 A: %f\n", NAN);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"66.2 B: %f\n", NAN);
+	_stdio_fflush(&fp_stdout);
+
+	fprintf(__stdout,
+		"66.1 A: %f\n", INFINITY);
+	fflush(__stdout);
+	conch_fprintf(&fp_stdout,
+		"66.2 B: %f\n", INFINITY);
+	_stdio_fflush(&fp_stdout);
 
 	return 0;
 }

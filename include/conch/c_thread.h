@@ -1,6 +1,6 @@
-/* @file: pw_bcrypt.h
+/* @file: c_thread.h
  * #desc:
- *    The definitions of bcrypt password-hash.
+ *    The definitions of multi-thread.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,26 +20,25 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_PW_BCRYPT_H
-#define _CONCH_PW_BCRYPT_H
+#ifndef _CONCH_C_THREAD_H
+#define _CONCH_C_THREAD_H
 
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 
 
-#define BCRYPT_HASHPASS_LEN 24
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* pw_bcrypt.c */
+/* c_thread_tls.S */
+
 extern
-void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,
-		const uint8_t *salt, uint32_t salt_len, uint8_t *ohp,
-		uint32_t k)
+void *conch_thread_tls_get(void)
+;
+extern
+void conch_thread_tls_set(void *tls)
 ;
 
 #ifdef __cplusplus

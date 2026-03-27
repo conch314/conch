@@ -74,6 +74,11 @@ struct random_ctx {
 extern "C" {
 #endif
 
+/* c_stdlib_Exit.c */
+extern
+void conch_Exit(int32_t status)
+;
+
 /* c_stdlib_abs.c */
 extern
 int conch_abs(int n)

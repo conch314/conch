@@ -1,6 +1,6 @@
-/* @file: pw_bcrypt.h
+/* @file: c_start_main.c
  * #desc:
- *    The definitions of bcrypt password-hash.
+ *    The implementations of c runtime entry.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,31 +20,32 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_PW_BCRYPT_H
-#define _CONCH_PW_BCRYPT_H
-
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
+#include <conch/c_stdlib.h>
 
 
-#define BCRYPT_HASHPASS_LEN 24
+char **___envp = NULL;
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* pw_bcrypt.c */
 extern
-void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,
-		const uint8_t *salt, uint32_t salt_len, uint8_t *ohp,
-		uint32_t k)
+int main(int argc, char *const *argv, char *const *envp)
 ;
 
-#ifdef __cplusplus
+
+/* @func: _start_main
+ * #desc:
+ *    c runtime entry.
+ *
+ * #1: sp [in/out] stack pointer
+ */
+void _start_main(long *sp)
+{
+	int argc = (int)sp[0];
+	char **argv = (char **)&sp[1];
+	___envp = (char **)&sp[argc + 2];
+
+	int r = main(argc, argv, ___envp);
+
+	conch_Exit(r);
 }
-#endif
-
-
-#endif

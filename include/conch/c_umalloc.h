@@ -26,7 +26,7 @@
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
-#include <conch/list.h>
+#include <conch/ds_list.h>
 
 
 /* stack 16-byte aligend */
@@ -40,9 +40,7 @@ struct umalloc_chunk_node {
 	size_t size;
 #ifdef CONCH_MARCH_BITS
 # if (CONCH_MARCH_BITS == CONCH_MARCH_32)
-	uint32_t _allgend1; /* 8+4+(4+4+4)+8 */
-	uint32_t _allgend2;
-	uint32_t _allgend3;
+	uint32_t _allgend[3]; /* 8+4+(4+4+4)+8 */
 # endif
 #else
 # error "!!!undefined CONCH_MARCH_BITS!!!"

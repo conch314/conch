@@ -1,6 +1,6 @@
-/* @file: pw_bcrypt.h
+/* @file: c_stdlib_abort.h
  * #desc:
- *    The definitions of bcrypt password-hash.
+ *    The implementations of standard library.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,31 +20,18 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_PW_BCRYPT_H
-#define _CONCH_PW_BCRYPT_H
-
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
+#include <conch/c_signal.h>
+#include <conch/c_unistd.h>
 
 
-#define BCRYPT_HASHPASS_LEN 24
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* pw_bcrypt.c */
-extern
-void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,
-		const uint8_t *salt, uint32_t salt_len, uint8_t *ohp,
-		uint32_t k)
-;
-
-#ifdef __cplusplus
+/* @func: conch_abort
+ * #desc:
+ *    cause abnormal process termination.
+ */
+void conch_abort(void)
+{
+	conch_kill(conch_getpid(), X_SIGABRT);
 }
-#endif
-
-
-#endif

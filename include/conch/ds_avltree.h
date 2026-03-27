@@ -49,7 +49,7 @@ struct avl_root {
 extern "C" {
 #endif
 
-/* avltree.c */
+/* ds_avltree.c */
 extern
 void conch_avl_balance(struct avl_root *root, struct avl_node *node)
 ;

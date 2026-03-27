@@ -11,8 +11,14 @@ for f in "$@"; do
 			|sed 's/:\s*//'); do
 		d=$(sed -n '/^\/\* @func: '$j'/,/{/p' $f \
 			|sed '/^\/\* @func:/,/\*\/$/d')
+
+		sed -n '/@func:\s*'$j'/,/{/p' $f \
+		|grep '#[0-9]\+:' \
+		|grep -v '#[0-9]\+:\s*\([A-Za-z0-9_]\+\).*$' \
+		&& echo ">>>> $j"
+
 		for i in $(sed -n '/@func:\s*'$j'/,/{/p' $f \
-				|grep '#[0-9]\+:' \
+				|grep '#[0-9]\+:\s*\([A-Za-z0-9_]\+\).*$' \
 				|sed 's/^\s*\* #[0-9]\+:\s*\([A-Za-z0-9_]\+\).*$/\1/'); do
 			grep -q "\b$i\b" <<EOF
 $d

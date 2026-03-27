@@ -27,13 +27,13 @@
 #ifdef CONCH_PLATFORM
 # if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
 #  include <linux/unistd.h>
-#  include <linux/mman.h>
+/*#  include <linux/mman.h>
 #  include <linux/signal.h>
 #  include <linux/time.h>
 #  include <linux/fcntl.h>
 #  include <linux/fs.h>
 #  include <linux/stat.h>
-#  include <linux/errno.h>
+#  include <linux/errno.h>*/
 # else
 #  error "!!!unknown CONCH_PLATFORM!!!"
 # endif
