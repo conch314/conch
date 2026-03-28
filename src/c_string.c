@@ -41,11 +41,11 @@ void *conch_memcpy(void *t, const void *s, size_t len)
 		return t;
 
 #if 1 /* little endian */
-#	define LS >>
-#	define RS <<
+# define LS >>
+# define RS <<
 #else
-#	define LS <<
-#	define RS >>
+# define LS <<
+# define RS >>
 #endif
 
 	volatile uint8_t *_t = t, *_s = (uint8_t *)s;

@@ -559,7 +559,7 @@ static void _gen_bitlen(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
  * #desc:
  *    build dynamic huffman tree.
  *
- * #1: ctx  [in/out] struct struct context
+ * #1: ctx  [in/out] deflate struct context
  * #2: desc [in/out] tree description
  */
 static void _build_tree(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
@@ -653,6 +653,7 @@ static void _build_tree(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
 		ctx->heap[1] = node++;
 		_heapdown(ctx, tree, 1);
 	} while (ctx->heap_size > 1);
+
 	ctx->heap[--ctx->heap_back] = ctx->heap[1]; /* root node */
 
 	/* generate bits length */
@@ -676,7 +677,7 @@ static void _build_tree(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
  * #desc:
  *    scan tree length to bit-length tree.
  *
- * #1: ctx  [in/out] struct struct context
+ * #1: ctx  [in/out] deflate struct context
  * #2: tree [in/out] input tree
  * #3: n    [in/out] codes number
  */
@@ -732,7 +733,7 @@ static void _scan_tree(struct deflate_ctx *ctx, struct deflate_ctdata *tree,
  * #desc:
  *    send tree length according to bit-length tree.
  *
- * #1: ctx  [in/out] struct struct context
+ * #1: ctx  [in/out] deflate struct context
  * #2: tree [in]     input tree
  * #3: n    [in/out] codes number
  */
@@ -794,7 +795,7 @@ static void _send_tree(struct deflate_ctx *ctx,
  * #desc:
  *    send huffman coding block.
  *
- * #1: ctx   [in/out] struct struct context
+ * #1: ctx   [in/out] deflate struct context
  * #2: ltree [in]     literal/length tree
  * #3: dtree [in]     distance tree
  */
@@ -964,9 +965,9 @@ static void _flush_block(struct deflate_ctx *ctx, int32_t flush)
 		SEND_BITS(ctx, 0x01 & flush, 1);
 		SEND_BITS(ctx, 0x01, 2);
 		_send_block(ctx, static_ltree, static_dtree);
-	}
+	} /* stored is not implemented */
 
-	/* initialization block */
+	/* initialize block */
 	_init_block(ctx);
 }
 
@@ -1503,7 +1504,7 @@ int32_t conch_deflate_init(struct deflate_ctx *ctx, int32_t lev)
 	ctx->desc_bltree.elems = DEFLATE_BL_CODES;
 	ctx->desc_bltree.bits_max = DEFLATE_BL_BITS_MAX;
 
-	/* initialization block */
+	/* initialize block */
 	_init_block(ctx);
 
 	BITS_ADD_INIT(&ctx->bits_ctx);

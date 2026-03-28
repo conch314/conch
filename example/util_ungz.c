@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 				_usage();
 				return 0;
 			default:
-				printf("unknown '%c' option!\n", OPT_ARGS(*arg, r));
+				printf("unknown '%c' option!\n", OPT_ARGC(arg, r));
 				return 1;
 		}
 	}

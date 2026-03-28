@@ -79,6 +79,11 @@ extern
 void conch_Exit(int32_t status)
 ;
 
+/* c_stdlib_abort.c */
+extern
+void conch_abort(void)
+;
+
 /* c_stdlib_abs.c */
 extern
 int conch_abs(int n)
@@ -122,6 +127,14 @@ long long conch_strtoll(const char *s, char **e, int32_t b)
 ;
 extern
 unsigned long long conch_strtoull(const char *s, char **e, int32_t b)
+;
+
+/* c_stdlib_exit.c */
+extern
+int32_t conch_atexit(void (*func)(void))
+;
+extern
+void conch_exit(int32_t status)
 ;
 
 /* c_stdlib_malloc.c */

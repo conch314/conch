@@ -421,7 +421,7 @@ static int32_t _json_object(struct json_ctx *ctx)
 		}
 
 		switch (st) {
-			case 0: /* begin { */
+			case 0: /* begin '{' */
 				if (ctx->call(JSON_OBJECT_TYPE,
 						NULL,
 						0,

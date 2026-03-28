@@ -57,7 +57,6 @@ struct swissmap_head {
 		.call_hash = _hash, \
 		.call_cmp = _cmp \
 		}
-
 #define SWISSMAP_INIT(x, _ctrl, _array, _wsize, \
 		_total_size, _hash, _cmp) \
 	(x)->group = _ctrl; \
@@ -76,8 +75,9 @@ struct swissmap_head {
 #define SWISSMAP_CLIGN(x) (((x) + 3) / 4)
 #define SWISSMAP_ALIGN(x) (4 * SWISSMAP_CLIGN(x))
 
-#define SWISSMAP_ACTRL(x, n) ((x)->group[(n) >> 2]._ctrl[(n) & 3])
-#define SWISSMAP_ARRAY(x, n) ((void *)((char *)(x)->array + head->wsize * (n)))
+#define SWISSMAP_CTRL_OF(x, n) ((x)->group[(n) >> 2]._ctrl[(n) & 3])
+#define SWISSMAP_ARRAY_OF(x, n) \
+	((void *)((char *)(x)->array + head->wsize * (n)))
 
 #define SWISSMAP_FACTOR(x) (((x)->size * 1000) / (x)->total_size)
 #define SWISSMAP_SIZE(x) ((x)->size)

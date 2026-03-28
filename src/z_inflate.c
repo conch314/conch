@@ -386,7 +386,7 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 	if (!ctx->flush) {
 		ctx->s = s;
 		ctx->s_len = len;
-	} else {
+	} else { /* continue */
 		if (ctx->flush == 2) {
 			conch_memcpy(ctx->window,
 				ctx->window + ctx->len, INFLATE_WSIZE);
