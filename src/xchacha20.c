@@ -23,7 +23,7 @@
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
-#include <conch/chacha20.h>
+#include <conch/xchacha20.h>
 
 
 /* key padding constant */

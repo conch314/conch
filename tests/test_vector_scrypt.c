@@ -66,9 +66,9 @@ void print_vector(struct test_vector *v)
 	print_hex(v->in_pass, v->in_pass_len);
 	printf("vector in_salt: %u\n ", v->in_salt_len);
 	print_hex(v->in_salt, v->in_salt_len);
-	printf("vector in_n: %u\n ", v->in_n);
-	printf("vector in_r: %u\n ", v->in_r);
-	printf("vector in_p: %u\n ", v->in_p);
+	printf("vector in_n: %u\n", v->in_n);
+	printf("vector in_r: %u\n", v->in_r);
+	printf("vector in_p: %u\n", v->in_p);
 	printf("vector out_dk: %u\n ", v->out_dk_len);
 	print_hex(v->out_dk, v->out_dk_len);
 }

@@ -187,13 +187,18 @@ void *conch_memmove(void *t, const void *s, size_t len)
  * #3: len [in]  length
  * #r:     [ret] target pointer
  */
-void *conch_memset(void *t, int8_t c, size_t len)
+void *conch_memset(void *t, int32_t c, size_t len)
 {
-	int8_t cc[4] = { c, c, c, c };
-	volatile int8_t *_t = t;
+	uint8_t cc[4];
+	volatile uint8_t *_t = t;
+
+	cc[0] = (uint8_t)c;
+	cc[1] = (uint8_t)c;
+	cc[2] = (uint8_t)c;
+	cc[3] = (uint8_t)c;
 
 	for (; ((uintptr_t)_t & 3) && len; len--)
-		*_t++ = c;
+		*_t++ = (uint8_t)c;
 
 	for (; len > 15; len -= 16) {
 		((uint32_t *)_t)[0] = *((uint32_t *)cc);
@@ -209,7 +214,7 @@ void *conch_memset(void *t, int8_t c, size_t len)
 	}
 
 	while (len--)
-		*_t++ = c;
+		*_t++ = (uint8_t)c;
 
 	return t;
 }
@@ -223,7 +228,7 @@ void *conch_memset(void *t, int8_t c, size_t len)
  * #3: len [in]  length
  * #r:     [ret] target location / NULL pointer
  */
-void *conch_memchr(const void *s, uint8_t c, size_t len)
+void *conch_memchr(const void *s, int32_t c, size_t len)
 {
 	for (uint8_t *t = (uint8_t *)s; len--; t++) {
 		if (*t == c)
@@ -242,7 +247,7 @@ void *conch_memchr(const void *s, uint8_t c, size_t len)
  * #3: len [in]  length
  * #r:     [ret] target location / NULL pointer
  */
-void *conch_memrchr(const void *s, uint8_t c, size_t len)
+void *conch_memrchr(const void *s, int32_t c, size_t len)
 {
 	for (uint8_t *t = (uint8_t *)s + len; len--; ) {
 		if (*--t == c)
@@ -385,7 +390,7 @@ char *conch_strncat(char *t, const char *s, size_t len)
  * #2: c [in]  character
  * #r:   [ret] string pointer
  */
-char *conch_strchr(const char *s, uint8_t c)
+char *conch_strchr(const char *s, int32_t c)
 {
 	for (; *s != '\0'; s++) {
 		if (*((uint8_t *)s) == c)
@@ -403,7 +408,7 @@ char *conch_strchr(const char *s, uint8_t c)
  * #2: c [in]  character
  * #r:   [ret] string pointer
  */
-char *conch_strrchr(const char *s, uint8_t c)
+char *conch_strrchr(const char *s, int32_t c)
 {
 	size_t n = conch_strlen(s) + 1;
 

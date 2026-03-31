@@ -138,6 +138,12 @@ XXHASH
   xxhash_spec.md
     https://raw.githubusercontent.com/Cyan4973/xxHash/refs/heads/dev/doc/xxhash_spec.md
 
+LZ4
+  lz4_Block_format.md
+    https://github.com/lz4/lz4/raw/refs/heads/dev/doc/lz4_Block_format.md
+  lz4_Frame_format.md
+    https://github.com/lz4/lz4/raw/refs/heads/dev/doc/lz4_Frame_format.md
+
 ML-KEM (Module-Lattice-Based Key-Encapsulation Mechanism Standard)
   NIST.FIPS.203.ipd.pdf
     https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.ipd.pdf

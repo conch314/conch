@@ -23,7 +23,7 @@
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
-#include <conch/salsa20.h>
+#include <conch/xsalsa20.h>
 
 
 /* key padding constant */

@@ -28,7 +28,6 @@
 #include <conch/c_stdint.h>
 
 
-/* chacha20 */
 #define CHACHA20_KEY_LEN 32
 #define CHACHA20_RAN_LEN 8
 #define CHACHA20_CTR_LEN 8
@@ -53,29 +52,6 @@ struct chacha20_ctx {
 #define CHACHA20_KEYSTREAM(x, n) ((x)->out.keystream[n])
 
 
-/* xchacha20 */
-#define XCHACHA20_KEY_LEN 32
-#define XCHACHA20_RAN_LEN 24
-#define XCHACHA20_CTR_LEN 8
-
-#define XCHACHA20_ROUNDS 20
-#define XCHACHA20_BLOCKSIZE 64
-
-struct xchacha20_ctx {
-	uint32_t state[16];
-	union {
-		uint32_t state[16];
-		uint8_t keystream[XCHACHA20_BLOCKSIZE];
-	} out;
-};
-
-#define XCHACHA20_NEW(x) struct xchacha20_ctx x
-
-#define XCHACHA20_COUNT0(x) ((x)->state[12])
-#define XCHACHA20_COUNT1(x) ((x)->state[13])
-#define XCHACHA20_KEYSTREAM(x, n) ((x)->out.keystream[n])
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,19 +70,6 @@ void conch_chacha20_block(struct chacha20_ctx *ctx, int32_t n)
 ;
 extern
 void conch_chacha20_crypto(struct chacha20_ctx *ctx, uint8_t *buf,
-		size_t len)
-;
-
-/* xchacha20.c */
-extern
-void conch_xchacha20_init(struct xchacha20_ctx *ctx, const uint8_t *key,
-		const uint8_t *ran, const uint8_t *ctr)
-;
-extern
-void conch_xchacha20_block(struct xchacha20_ctx *ctx, int32_t n)
-;
-extern
-void conch_xchacha20_crypto(struct xchacha20_ctx *ctx, uint8_t *buf,
 		size_t len)
 ;
 

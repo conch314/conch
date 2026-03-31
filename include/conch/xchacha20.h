@@ -1,6 +1,6 @@
-/* @file: c_stdio.h
+/* @file: xchacha20.h
  * #desc:
- *    The implementations of standard input/output.
+ *    The definitions of xchacha20 stream encryption.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,33 +20,51 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_C_STDIO_H
-#define _CONCH_C_STDIO_H
+#ifndef _CONCH_XCHACHA20_H
+#define _CONCH_XCHACHA20_H
 
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
-#include <conch/c_stdarg.h>
 
 
-#undef EOF
-#define EOF (-1)
+#define XCHACHA20_KEY_LEN 32
+#define XCHACHA20_RAN_LEN 24
+#define XCHACHA20_CTR_LEN 8
+
+#define XCHACHA20_ROUNDS 20
+#define XCHACHA20_BLOCKSIZE 64
+
+struct xchacha20_ctx {
+	uint32_t state[16];
+	union {
+		uint32_t state[16];
+		uint8_t keystream[XCHACHA20_BLOCKSIZE];
+	} out;
+};
+
+#define XCHACHA20_NEW(x) struct xchacha20_ctx x
+
+#define XCHACHA20_COUNT0(x) ((x)->state[12])
+#define XCHACHA20_COUNT1(x) ((x)->state[13])
+#define XCHACHA20_KEYSTREAM(x, n) ((x)->out.keystream[n])
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* c_stdio__printf.c */
+/* xchacha20.c */
 extern
-int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
-		int32_t (*out)(const char *, int32_t, void *))
+void conch_xchacha20_init(struct xchacha20_ctx *ctx, const uint8_t *key,
+		const uint8_t *ran, const uint8_t *ctr)
 ;
-
-/* c_stdio__scanf.c */
 extern
-int32_t __conch_scanf(const char *s, char **e, const char *fmt,
-		va_list *ap)
+void conch_xchacha20_block(struct xchacha20_ctx *ctx, int32_t n)
+;
+extern
+void conch_xchacha20_crypto(struct xchacha20_ctx *ctx, uint8_t *buf,
+		size_t len)
 ;
 
 #ifdef __cplusplus

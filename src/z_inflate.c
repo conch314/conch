@@ -396,8 +396,8 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 		ctx->len = 0;
 	}
 
-	uint8_t *s1, *s2;
 	int32_t sym;
+	uint8_t *s1, *s2;
 	uint32_t v, t;
 	do {
 		switch (ctx->state) {

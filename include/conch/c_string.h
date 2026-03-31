@@ -40,13 +40,13 @@ extern
 void *conch_memmove(void *t, const void *s, size_t len)
 ;
 extern
-void *conch_memset(void *t, int8_t c, size_t len)
+void *conch_memset(void *t, int32_t c, size_t len)
 ;
 extern
-void *conch_memchr(const void *s, uint8_t c, size_t len)
+void *conch_memchr(const void *s, int32_t c, size_t len)
 ;
 extern
-void *conch_memrchr(const void *s, uint8_t c, size_t len)
+void *conch_memrchr(const void *s, int32_t c, size_t len)
 ;
 extern
 int32_t conch_memcmp(const void *s1, const void *s2, size_t len)
@@ -70,10 +70,10 @@ extern
 char *conch_strncat(char *t, const char *s, size_t len)
 ;
 extern
-char *conch_strchr(const char *s, uint8_t c)
+char *conch_strchr(const char *s, int32_t c)
 ;
 extern
-char *conch_strrchr(const char *s, uint8_t c)
+char *conch_strrchr(const char *s, int32_t c)
 ;
 extern
 int32_t conch_strcmp(const char *s1, const char *s2)

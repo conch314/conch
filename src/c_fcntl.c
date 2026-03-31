@@ -47,6 +47,7 @@ int32_t conch_fcntl(int32_t fd, int32_t cmd, ...)
 	va_list ap;
 	va_start(ap, cmd);
 	unsigned long arg = va_arg(ap, unsigned long);
+	va_end(ap);
 
 	ret = (int32_t)conch_syscall_linux(__NR_fcntl,
 		fd,
@@ -124,9 +125,14 @@ static int32_t _openat(int32_t fd, const char *path, int32_t flags,
  */
 int32_t conch_openat(int32_t fd, const char *path, int32_t flags, ...)
 {
+	xmode_t mode = 0;
 	va_list ap;
 	va_start(ap, flags);
-	xmode_t mode = va_arg(ap, xmode_t);
+
+	if (flags & X_O_CREAT)
+		mode = va_arg(ap, xmode_t);
+
+	va_end(ap);
 
 	return _openat(fd, path, flags, mode);
 }
@@ -142,9 +148,14 @@ int32_t conch_openat(int32_t fd, const char *path, int32_t flags, ...)
  */
 int32_t conch_open(const char *path, int32_t flags, ...)
 {
+	xmode_t mode = 0;
 	va_list ap;
 	va_start(ap, flags);
-	xmode_t mode = va_arg(ap, xmode_t);
+
+	if (flags & X_O_CREAT)
+		mode = va_arg(ap, xmode_t);
+
+	va_end(ap);
 
 	return _openat(X_AT_FDCWD, path, flags, mode);
 }

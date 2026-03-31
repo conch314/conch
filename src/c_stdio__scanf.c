@@ -130,7 +130,7 @@ e:
  * #r:     [ret] >0: number of matching, <0: format error
  */
 int32_t __conch_scanf(const char *s, char **e, const char *fmt,
-		va_list ap)
+		va_list *ap)
 {
 	int32_t flags, buf_len, specifiers, len, b, neg, n = 0;
 	const char *p;
@@ -257,19 +257,19 @@ int32_t __conch_scanf(const char *s, char **e, const char *fmt,
 					break;
 
 				if (flags & FG_LONG) {
-					*va_arg(ap, long *) =
+					*va_arg(*ap, long *) =
 						(long)v;
 				} else if (flags & FG_LONG_LONG) {
-					*va_arg(ap, long long *) =
+					*va_arg(*ap, long long *) =
 						(long long)v;
 				} else if (flags & FG_SHORT) {
-					*va_arg(ap, short *) =
+					*va_arg(*ap, short *) =
 						(short)v;
 				} else if (flags & FG_CHAR) {
-					*va_arg(ap, char *) =
+					*va_arg(*ap, char *) =
 						(char)v;
 				} else {
-					*va_arg(ap, int *) =
+					*va_arg(*ap, int *) =
 						(int)v;
 				}
 				break;
@@ -311,22 +311,22 @@ int32_t __conch_scanf(const char *s, char **e, const char *fmt,
 					break;
 
 				if (specifiers == 'p') {
-					*va_arg(ap, void **) =
+					*va_arg(*ap, void **) =
 						(void *)v;
 				} else if (flags & FG_LONG) {
-					*va_arg(ap, unsigned long *) =
+					*va_arg(*ap, unsigned long *) =
 						(unsigned long)v;
 				} else if (flags & FG_LONG_LONG) {
-					*va_arg(ap, unsigned long long *) =
+					*va_arg(*ap, unsigned long long *) =
 						(unsigned long long)v;
 				} else if (flags & FG_SHORT) {
-					*va_arg(ap, unsigned short *) =
+					*va_arg(*ap, unsigned short *) =
 						(unsigned short)v;
 				} else if (flags & FG_CHAR) {
-					*va_arg(ap, unsigned char *) =
+					*va_arg(*ap, unsigned char *) =
 						(unsigned char)v;
 				} else {
-					*va_arg(ap, unsigned int *) =
+					*va_arg(*ap, unsigned int *) =
 						(unsigned int)v;
 				}
 				break;
@@ -337,7 +337,7 @@ int32_t __conch_scanf(const char *s, char **e, const char *fmt,
 				if (flags & FG_SKIP)
 					break;
 
-				*va_arg(ap, char *) = *s++;
+				*va_arg(*ap, char *) = *s++;
 				break;
 			case 's': /* string */
 				p = s;
@@ -353,7 +353,7 @@ int32_t __conch_scanf(const char *s, char **e, const char *fmt,
 				if (flags & FG_SKIP)
 					break;
 
-				p2 = va_arg(ap, char *);
+				p2 = va_arg(*ap, char *);
 				conch_memcpy(p2, p, len);
 				p2[len] = '\0';
 				break;
@@ -369,7 +369,7 @@ int32_t __conch_scanf(const char *s, char **e, const char *fmt,
 				if (flags & FG_SKIP)
 					break;
 
-				p2 = va_arg(ap, char *);
+				p2 = va_arg(*ap, char *);
 				conch_memcpy(p2, p, len);
 				p2[len] = '\0';
 				break;
@@ -382,7 +382,7 @@ int32_t __conch_scanf(const char *s, char **e, const char *fmt,
 				if (flags & FG_SKIP)
 					break;
 
-				*va_arg(ap, double *) = f;
+				*va_arg(*ap, double *) = f;
 				break;
 			default:
 				n = -n;

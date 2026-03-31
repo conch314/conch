@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <conch/c_stdint.h>
 #include <conch/c_string.h>
-#include <conch/salsa20.h>
+#include <conch/xsalsa20.h>
 
 
 void print_hex(const uint8_t *buf, uint32_t n)

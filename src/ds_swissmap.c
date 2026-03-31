@@ -71,7 +71,7 @@ void *conch_swissmap_insert(struct swissmap_head *head,
 			for (; !(_ctrl[j] & 0x80) && j < 4; j++);
 			_ctrl[j] = h2;
 			head->size++;
-			return SWISSMAP_ARRAY(head, pos + j);
+			return SWISSMAP_ARRAY_OF(head, pos + j);
 		}
 
 		x ^= _mask;
@@ -81,7 +81,7 @@ void *conch_swissmap_insert(struct swissmap_head *head,
 
 		_ctrl = head->group[pos >> 2]._ctrl;
 		for (; j < 4; j++) {
-			void *p = SWISSMAP_ARRAY(head, pos + j);
+			void *p = SWISSMAP_ARRAY_OF(head, pos + j);
 			if (_ctrl[j] == h2 && !head->call_cmp(p, key, len))
 				return p;
 		}
@@ -122,7 +122,7 @@ void *conch_swissmap_find(struct swissmap_head *head,
 
 		_ctrl = head->group[pos >> 2]._ctrl;
 		for (size_t j = 0; j < 4; j++) {
-			void *p = SWISSMAP_ARRAY(head, pos + j);
+			void *p = SWISSMAP_ARRAY_OF(head, pos + j);
 			if (_ctrl[j] == h2 && !head->call_cmp(p, key, len))
 				return p;
 		}
@@ -163,7 +163,7 @@ void *conch_swissmap_delete(struct swissmap_head *head,
 
 		_ctrl = head->group[pos >> 2]._ctrl;
 		for (size_t j = 0; j < 4; j++) {
-			void *p = SWISSMAP_ARRAY(head, pos + j);
+			void *p = SWISSMAP_ARRAY_OF(head, pos + j);
 			if (_ctrl[j] == h2 && !head->call_cmp(p, key, len)) {
 				_ctrl[j] = SWISSMAP_DELETE;
 				head->size--;

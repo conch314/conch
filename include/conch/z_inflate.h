@@ -200,6 +200,7 @@ struct inflate_ctx {
 	int32_t t_i;
 	int32_t t_j;
 	int32_t t_k;
+
 	int32_t last;
 	int32_t state;
 	int32_t flush;

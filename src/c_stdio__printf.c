@@ -672,7 +672,7 @@ static int32_t _printf_pad(struct printf_ctx *ctx, char c, int32_t len)
  * #4: out [in]  callback (string, length, arg)
  * #r:     [ret] 0: no error, -1: error
  */
-int32_t __conch_printf(const char *fmt, va_list ap, void *arg,
+int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
 		int32_t (*out)(const char *, int32_t, void *))
 {
 	struct printf_ctx ctx = {
@@ -736,7 +736,7 @@ e:
 				ctx.flags &= ~FG_ALIGN_RIGHT;
 
 			if (*fmt == '*') { /* dynamic */
-				ctx.align = va_arg(ap, int32_t);
+				ctx.align = va_arg(*ap, int32_t);
 				fmt++;
 			} else {
 				ctx.align = (int32_t)conch_strtol(fmt,
@@ -749,7 +749,7 @@ e:
 		if (*fmt == '.') {
 			fmt++;
 			if (*fmt == '*') { /* dynamic */
-				ctx.precise = va_arg(ap, int32_t);
+				ctx.precise = va_arg(*ap, int32_t);
 				fmt++;
 			} else {
 				ctx.precise = (int32_t)conch_strtol(fmt,
@@ -802,19 +802,19 @@ e:
 			case 'd': /* decimal */
 			case 'i':
 				if (ctx.flags & FG_LONG) {
-					ctx.va.i = va_arg(ap,
+					ctx.va.i = va_arg(*ap,
 						long);
 				} else if (ctx.flags & FG_LONG_LONG) {
-					ctx.va.i = va_arg(ap,
+					ctx.va.i = va_arg(*ap,
 						long long);
 				} else if (ctx.flags & FG_SHORT) {
-					ctx.va.i = (signed short)va_arg(ap,
+					ctx.va.i = (signed short)va_arg(*ap,
 						int);
 				} else if (ctx.flags & FG_CHAR) {
-					ctx.va.i = (signed char)va_arg(ap,
+					ctx.va.i = (signed char)va_arg(*ap,
 						int);
 				} else {
-					ctx.va.i = va_arg(ap,
+					ctx.va.i = va_arg(*ap,
 						int);
 				}
 
@@ -827,19 +827,19 @@ e:
 			case 'X':
 			case 'p': /* pointer */
 				if (ctx.flags & FG_LONG || *fmt == 'p') {
-					ctx.va.i = va_arg(ap,
+					ctx.va.i = va_arg(*ap,
 						unsigned long);
 				} else if (ctx.flags & FG_LONG_LONG) {
-					ctx.va.i = va_arg(ap,
+					ctx.va.i = va_arg(*ap,
 						unsigned long long);
 				} else if (ctx.flags & FG_SHORT) {
-					ctx.va.i = (unsigned short)va_arg(ap,
+					ctx.va.i = (unsigned short)va_arg(*ap,
 						unsigned int);
 				} else if (ctx.flags & FG_CHAR) {
-					ctx.va.i = (unsigned char)va_arg(ap,
+					ctx.va.i = (unsigned char)va_arg(*ap,
 						unsigned int);
 				} else {
-					ctx.va.i = va_arg(ap,
+					ctx.va.i = va_arg(*ap,
 						unsigned int);
 				}
 
@@ -847,13 +847,13 @@ e:
 					return -1;
 				break;
 			case 'c': /* character */
-				ctx.va.c = (char)va_arg(ap, int);
+				ctx.va.c = (char)va_arg(*ap, int);
 
 				if (_printf_c(&ctx))
 					return -1;
 				break;
 			case 's': /* string */
-				ctx.va.s = va_arg(ap, char *);
+				ctx.va.s = va_arg(*ap, char *);
 
 				if (_printf_s(&ctx))
 					return -1;
@@ -864,7 +864,7 @@ e:
 			case 'G': case 'a': case 'A':
 				if (!(ctx.flags & FG_PRECISE))
 					ctx.precise = 6;
-				ctx.va.f = va_arg(ap, double);
+				ctx.va.f = va_arg(*ap, double);
 
 				if (_printf_f(&ctx))
 					return -1;
