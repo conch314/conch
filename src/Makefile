@@ -5,7 +5,7 @@ AR = ar
 AR_FLAGS = rc
 
 CC = cc
-CFLAGS = -O1 -g -std=c99 -Wall -Wextra -Wpedantic -Wshadow -Wno-format-pedantic -Wno-trigraphs -fno-builtin -fno-inline-functions -finline-hint-functions # -Wsign-compare -Wconversion 
+CFLAGS = -O1 -g -std=c99 -Wall -Wextra -Wpedantic -Wshadow -Wno-format-pedantic -Wno-trigraphs -fno-builtin -fno-inline-functions -finline-hint-functions -Wsign-compare -Wconversion
 CPPFLAGS =
 HEADERS = -I../include
 

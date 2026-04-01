@@ -45,8 +45,8 @@ int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
 
 /* c_stdio__scanf.c */
 extern
-int32_t __conch_scanf(const char *s, char **e, const char *fmt,
-		va_list *ap)
+int32_t __conch_scanf(const char *fmt, va_list *ap, void *arg,
+		int32_t (*get)(int32_t, void *))
 ;
 
 #ifdef __cplusplus

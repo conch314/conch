@@ -229,7 +229,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		e -= 28;
 	}
 
-	if (v < 0) {
+	if (v < 0.0) {
 		a = z = r = big;
 	} else {
 		a = z = r = big + (sizeof(big) / sizeof(uint32_t))
@@ -264,6 +264,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 			z--;
 		e -= sh;
 	}
+
 	while (e < 0) { /* negative */
 		int32_t sh = MIN(9, -e);
 		uint32_t carry = 0;
@@ -568,7 +569,7 @@ static int32_t _printf_f(struct printf_ctx *ctx)
 	int32_t flags = ctx->flags;
 	double v = ctx->va.f;
 
-	if (v < 0)
+	if (v < 0.0)
 		neg = 1;
 
 	switch (conch_fpclassify(v)) {
@@ -808,14 +809,13 @@ e:
 					ctx.va.i = va_arg(*ap,
 						long long);
 				} else if (ctx.flags & FG_SHORT) {
-					ctx.va.i = (signed short)va_arg(*ap,
-						int);
+					ctx.va.i = (signed short)
+						va_arg(*ap, int);
 				} else if (ctx.flags & FG_CHAR) {
-					ctx.va.i = (signed char)va_arg(*ap,
-						int);
+					ctx.va.i = (signed char)
+						va_arg(*ap, int);
 				} else {
-					ctx.va.i = va_arg(*ap,
-						int);
+					ctx.va.i = va_arg(*ap, int);
 				}
 
 				if (_printf_di(&ctx))
@@ -833,14 +833,13 @@ e:
 					ctx.va.i = va_arg(*ap,
 						unsigned long long);
 				} else if (ctx.flags & FG_SHORT) {
-					ctx.va.i = (unsigned short)va_arg(*ap,
-						unsigned int);
+					ctx.va.i = (unsigned short)
+						va_arg(*ap, unsigned int);
 				} else if (ctx.flags & FG_CHAR) {
-					ctx.va.i = (unsigned char)va_arg(*ap,
-						unsigned int);
+					ctx.va.i = (unsigned char)
+						va_arg(*ap, unsigned int);
 				} else {
-					ctx.va.i = va_arg(*ap,
-						unsigned int);
+					ctx.va.i = va_arg(*ap, unsigned int);
 				}
 
 				if (_printf_oux(&ctx))
@@ -864,6 +863,7 @@ e:
 			case 'G': case 'a': case 'A':
 				if (!(ctx.flags & FG_PRECISE))
 					ctx.precise = 6;
+
 				ctx.va.f = va_arg(*ap, double);
 
 				if (_printf_f(&ctx))

@@ -40,11 +40,17 @@ static double _strtod_num(const char *s, char **e, int32_t b)
 {
 	double x = 0.0;
 	for (int32_t d = 0; *s != '\0'; s++) {
+		if (b == 10 && (*s == 'E' || *s == 'e')) {
+			break;
+		} else if (b == 16 && (*s == 'P' || *s == 'p')) {
+			break;
+		}
+
 		if (*s >= '0' && *s <= '9') {
 			d = (*s - '0');
-		} else if (*s >= 'A' && *s <= 'Z') {
+		} else if (*s >= 'A' && *s <= 'F') {
 			d = (*s - 'A') + 10;
-		} else if (*s >= 'a' && *s <= 'z') {
+		} else if (*s >= 'a' && *s <= 'f') {
 			d = (*s - 'a') + 10;
 		} else {
 			break;
@@ -84,6 +90,8 @@ static double _strtod(const char *s, char **e)
 			s++;
 		}
 	}
+
+	for (; *s == '0'; s++);
 
 	char *ee = NULL;
 	if (!e)
