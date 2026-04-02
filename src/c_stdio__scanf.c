@@ -97,17 +97,11 @@ static int32_t _scanf_di(struct scanf_ctx *ctx, va_list *ap)
 			ctx->get(0, ctx->arg);
 		} else if (c >= '0' && c <= '7') {
 			b = 8;
-			ctx->get(0, ctx->arg);
+		} else if (conch_strchr(SC_SPACE, c)) {
+			goto e;
 		}
 		if (ctx->specifiers == 'd' && b != 10)
 			return -1;
-	}
-
-	while (1) {
-		c = ctx->get(1, ctx->arg);
-		if (c != '0')
-			break;
-		ctx->get(0, ctx->arg);
 	}
 
 	/* convert to number */
@@ -138,6 +132,7 @@ static int32_t _scanf_di(struct scanf_ctx *ctx, va_list *ap)
 		st = 1;
 	}
 
+e:
 	if (ctx->flags & FG_SKIP)
 		return 0;
 
@@ -214,14 +209,9 @@ static int32_t _scanf_oux(struct scanf_ctx *ctx, va_list *ap)
 			if (b != 16)
 				return -1;
 			ctx->get(0, ctx->arg);
+		} else if (conch_strchr(SC_SPACE, c)) {
+			goto e;
 		}
-	}
-
-	while (1) {
-		c = ctx->get(1, ctx->arg);
-		if (c != '0')
-			break;
-		ctx->get(0, ctx->arg);
 	}
 
 	/* convert to number */
@@ -252,6 +242,7 @@ static int32_t _scanf_oux(struct scanf_ctx *ctx, va_list *ap)
 		st = 1;
 	}
 
+e:
 	if (ctx->flags & FG_SKIP)
 		return 0;
 
@@ -473,6 +464,8 @@ static int32_t _scanf_f(struct scanf_ctx *ctx, va_list *ap)
 		ctx->get(0, ctx->arg);
 	}
 
+	/* NOTE: format constraint are not strict */
+
 	c = ctx->get(1, ctx->arg);
 	if (c == '-' || c == '+') {
 		neg = (c == '-') ? 1 : 0;
@@ -487,14 +480,9 @@ static int32_t _scanf_f(struct scanf_ctx *ctx, va_list *ap)
 		if (c == 'X' || c == 'x') {
 			b = 16;
 			ctx->get(0, ctx->arg);
+		} else if (conch_strchr(SC_SPACE, c)) {
+			goto e;
 		}
-	}
-
-	while (1) {
-		c = ctx->get(1, ctx->arg);
-		if (c != '0')
-			break;
-		ctx->get(0, ctx->arg);
 	}
 
 	/* integer */
@@ -605,6 +593,7 @@ static int32_t _scanf_f(struct scanf_ctx *ctx, va_list *ap)
 		}
 	}
 
+e:
 	if (ctx->flags & FG_SKIP)
 		return 0;
 

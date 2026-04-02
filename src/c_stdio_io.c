@@ -598,7 +598,7 @@ static void _stdio_clearerr(_FILE *fp)
 
 static int32_t _call_out(const char *s, int32_t len, void *arg)
 {
-	if (!_stdio_fwrite(s, 1, len, (_FILE *)arg))
+	if (len && !_stdio_fwrite(s, 1, len, (_FILE *)arg))
 		return -1;
 
 	return 0;
@@ -1256,15 +1256,17 @@ int main(void)
 	char s1[8], s2[12];
 	double f1;
 
-	sscanf("123 -0x123 01223 hello He[a]o 1.0071e10 0x12",
+	conch_sscanf("123 -0x123 0 hello He[a]o 1.0071e10 0x12",
 		"%*d %i %o %8s %10[][A-Za-z] %f %x",
 		&d1, &d2, s1, s2, &f1, &d3);
 	conch_fprintf(fp_stdout,
 		"%d %d %s %s %.15f %#x\n", d1, d2, s1, s2, f1, d3);
+	_stdio_fflush(fp_stdout);
 
 	conch_scanf("%d %i %c", &d1, &d2, &d3);
 	conch_fprintf(fp_stdout,
 		"%d %d %c\n", d1, d2, d3);
+	_stdio_fflush(fp_stdout);
 
 	return 0;
 }

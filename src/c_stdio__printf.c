@@ -672,7 +672,7 @@ static int32_t _printf_pad(struct printf_ctx *ctx, char c, int32_t len)
  * #2: ap  [in]  variable parameter pointer
  * #3: arg [in]  callback arg
  * #4: out [in]  callback (string, length, arg)
- * #r:     [ret] 0: no error, -1: error
+ * #r:     [ret] 0: no error, -1: format error, -2: output error
  */
 int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
 		int32_t (*out)(const char *, int32_t, void *))
@@ -687,12 +687,12 @@ int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
 			fmt++;
 			if (*fmt == '%') {
 				if (ctx.pad(&ctx, *fmt, 1))
-					return -1;
+					return -2;
 				continue;
 			}
 		} else {
 			if (ctx.pad(&ctx, *fmt, 1))
-				return -1;
+				return -2;
 			continue;
 		}
 
@@ -820,7 +820,7 @@ e:
 				}
 
 				if (_printf_di(&ctx))
-					return -1;
+					return -2;
 				break;
 			case 'o': /* octal */
 			case 'u': /* decimal */
@@ -844,19 +844,19 @@ e:
 				}
 
 				if (_printf_oux(&ctx))
-					return -1;
+					return -2;
 				break;
 			case 'c': /* character */
 				ctx.va.c = (char)va_arg(*ap, int);
 
 				if (_printf_c(&ctx))
-					return -1;
+					return -2;
 				break;
 			case 's': /* string */
 				ctx.va.s = va_arg(*ap, char *);
 
 				if (_printf_s(&ctx))
-					return -1;
+					return -2;
 				break;
 			case 'e': /* floating */
 			case 'E':
@@ -868,7 +868,7 @@ e:
 				ctx.va.f = va_arg(*ap, double);
 
 				if (_printf_f(&ctx))
-					return -1;
+					return -2;
 				break;
 			default:
 				return -1;
