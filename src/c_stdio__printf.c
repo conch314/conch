@@ -246,7 +246,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 	/* max precision */
-	pre = (pre < 0) ? -pre : pre;
+	pre = (pre > 0) ? pre : 0;
 	pre = MIN(pre, DOU2STR_DF_PREMAX);
 	need = ((pre + (X_FP_DBL_MANT_DIG / 3) + 8) / 9) + 1;
 
@@ -284,10 +284,11 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 
 	if (intlen <= 0) {
 		p[n++] = '0';
-		if (pre > 0) { /* prefix padding */
+		if (pre > 0 && intlen < 0) { /* prefix padding */
 			p[n++] = '.';
-			n = _out_pad(n, p, '0', -intlen);
-			pre -= MIN(-intlen, pre);
+			intlen = MIN(-intlen, pre); 
+			n = _out_pad(n, p, '0', intlen);
+			pre -= intlen;
 			intlen = 0;
 		}
 	}

@@ -494,7 +494,7 @@ static _FILE *_stdio_fopen(const char *path, const char *mode)
 		return NULL;
 	}
 
-	if (conch_lseek(f, 0, X_SEEK_CUR) >= 0)
+	if (conch_lseek(f->fd, 0, X_SEEK_CUR) >= 0)
 		f->flags |= FG_SEEK;
 
 	return (_FILE *)f;
@@ -513,11 +513,12 @@ static int32_t _stdio_fclose(_FILE *fp)
 
 	_stdio_fflush(fp);
 
-	if (!(f->flags & FG_PERM)) {
-		if (conch_close(f->fd))
-			return -1;
-		free(f);
-	}
+	if (f->flags & FG_PERM)
+		return -1;
+	if (conch_close(f->fd))
+		return -1;
+
+	free(f);
 
 	return 0;
 }
@@ -633,6 +634,88 @@ int32_t conch_fprintf(_FILE *fp, const char *fmt, ...)
 	return 0;
 }
 
+static int32_t _call_get(int32_t peek, void *arg)
+{
+	const char **p = (const char **)arg;
+
+	return peek ? (**p) : (*((*p)++));
+}
+
+int32_t conch_vsscanf(const char *s, const char *fmt, va_list ap)
+{
+	const char *p = s;
+	va_list _ap;
+	va_copy(_ap, ap);
+
+	if (__conch_scanf(fmt, &_ap, (void *)&p, _call_get)) {
+		va_end(_ap);
+		return -1;
+	}
+
+	va_end(_ap);
+
+	return 0;
+}
+
+int32_t conch_sscanf(const char *s, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	if (conch_vsscanf(s, fmt, ap)) {
+		va_end(ap);
+		return -1;
+	}
+
+	va_end(ap);
+
+	return 0;
+}
+
+struct getc_ctx {
+	int32_t st;
+	int32_t c;
+};
+
+static int32_t _call_getc(int32_t peek, void *arg)
+{
+	struct getc_ctx *ctx = arg;
+	int32_t c;
+
+	switch (ctx->st) {
+		case 0:
+			ctx->c = c = fgetc(stdin);
+			if (peek)
+				ctx->st = 1;
+			break;
+		case 1:
+			c = ctx->c;
+			if (!peek)
+				ctx->st = 0;
+			break;
+		default:
+			return -1;
+	}
+
+	return c;
+}
+
+int32_t conch_scanf(const char *fmt, ...)
+{
+	struct getc_ctx ctx = { 0 };
+	va_list ap;
+	va_start(ap, fmt);
+
+	if (__conch_scanf(fmt, &ap, &ctx, _call_getc)) {
+		va_end(ap);
+		return -1;
+	}
+
+	va_end(ap);
+
+	return 0;
+}
+
 int main(void)
 {
 //	printf("h\nh%de\n", 1);
@@ -649,7 +732,7 @@ int main(void)
 	_fp_stdout.buf_size = sizeof(buf);
 
 	_FILE *fp_stdout = (_FILE *)&_fp_stdout;
-	//_FILE *fp_stdout = _stdio_fopen("t.bin", "w+");
+//	_FILE *fp_stdout = _stdio_fopen("t.bin", "w+");
 
 	_stdio_fwrite("h\nh%de\nh", 1, 8, fp_stdout);
 	_stdio_fread(buf2, 1, 1, fp_stdout);
@@ -1168,6 +1251,20 @@ int main(void)
 	printf("%.6f - %zu MiB (%.2f MiB/s)\n", time,
 		len / 1024 / 1024,
 		(len / time) / 1024 / 1024);
+
+	int32_t d1, d2, d3;
+	char s1[8], s2[12];
+	double f1;
+
+	sscanf("123 -0x123 01223 hello He[a]o 1.0071e10 0x12",
+		"%*d %i %o %8s %10[][A-Za-z] %f %x",
+		&d1, &d2, s1, s2, &f1, &d3);
+	conch_fprintf(fp_stdout,
+		"%d %d %s %s %.15f %#x\n", d1, d2, s1, s2, f1, d3);
+
+	conch_scanf("%d %i %c", &d1, &d2, &d3);
+	conch_fprintf(fp_stdout,
+		"%d %d %c\n", d1, d2, d3);
 
 	return 0;
 }

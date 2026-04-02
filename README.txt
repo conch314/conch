@@ -40,7 +40,7 @@ INCLUDES:
   TOTP (SHA1, SHA256, SHA512)
   Bcrypt
   Scrypt
-  SipHash24
+  SipHash24 (with x24)
   Poly1305
   xxHash (32/64)
   CRC (16/32/64)

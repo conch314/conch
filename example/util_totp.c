@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 				_usage();
 				return 0;
 			default:
-				printf("unknown '%c' option!\n", OPT_ARGS(arg, r));
+				printf("unknown '%c' option!\n", OPT_ARGC(arg, r));
 				return 1;
 		}
 	}
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 	uint32_t c = conch_totp_sha1((uint8_t *)buf, len, t / ts, cl);
 
 	printf("time: %llu / %u = %llu\n", t, ts, t / ts);
-	printf("code: %u\n", c);
+	printf("code: %0*u\n", cl, c);
 
 	return 0;
 }

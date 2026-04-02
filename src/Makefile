@@ -5,11 +5,11 @@ AR = ar
 AR_FLAGS = rc
 
 CC = cc
-CFLAGS = -O1 -g -std=c99 -Wall -Wextra -Wpedantic -Wshadow -Wno-format-pedantic -Wno-trigraphs -fno-builtin -fno-inline-functions -finline-hint-functions -Wsign-compare -Wconversion
+CFLAGS = -O1 -g -std=c99 -Wall -Wextra -Wpedantic -Wshadow -Wno-format-pedantic -Wno-trigraphs -fno-builtin -fno-inline-functions -finline-hint-functions #-Wsign-compare -Wconversion
 CPPFLAGS =
 HEADERS = -I../include
 
-static_library_liba_SRCS = aes_ext.c aes_sbox.c base16.c base32.c base64.c bits_add.c bits_get.c blake2b.c blake2s.c blowfish.c bn4352.c bn6400.c bn8448.c c_getopt.c c_math_double.c c_stdlib_abs.c c_stdlib_atof.c c_stdlib_atoi.c c_stdlib_rand.c c_string.c chacha20.c crc16.c crc32.c crc64.c curve25519.c curve448.c des.c ds_avltree.c ds_list.c ds_rbtree.c ds_swissmap.c hkdf_blake2b.c hkdf_blake2s.c hkdf_md5.c hkdf_sha1.c hkdf_sha256.c hkdf_sha3.c hkdf_sha512.c hmac_blake2b.c hmac_blake2s.c hmac_md5.c hmac_sha1.c hmac_sha256.c hmac_sha3.c hmac_sha512.c md5.c mlkem_1024.c mlkem_512.c mlkem_768.c nist-p256.c nist-p384.c nist-p521.c pbkdf2_blake2b.c pbkdf2_blake2s.c pbkdf2_sha1.c pbkdf2_sha256.c pbkdf2_sha3.c pbkdf2_sha512.c poly1305.c pw_bcrypt.c pw_scrypt.c rc4.c ringbuf.c rsa2048.c rsa3072.c rsa4096.c salsa20.c sha1.c sha256.c sha3.c sha512.c siphash24.c totp_sha1.c totp_sha256.c totp_sha512.c xchacha20.c xsalsa20.c xxhash32.c xxhash64.c z_deflate.c z_inflate.c
+static_library_liba_SRCS = aes_ext.c aes_sbox.c base16.c base32.c base64.c bits_add.c bits_get.c blake2b.c blake2s.c blowfish.c bn4352.c bn6400.c bn8448.c c_getopt.c c_math_double.c c_stdio__printf.c c_stdio__scanf.c c_stdlib_abs.c c_stdlib_atof.c c_stdlib_atoi.c c_stdlib_qsort.c c_stdlib_rand.c c_string.c cfg_ini_parse.c cfg_json_parse.c chacha20.c crc16.c crc32.c crc64.c curve25519.c curve448.c des.c ds_avltree.c ds_list.c ds_rbtree.c ds_swissmap.c hkdf_blake2b.c hkdf_blake2s.c hkdf_md5.c hkdf_sha1.c hkdf_sha256.c hkdf_sha3.c hkdf_sha512.c hmac_blake2b.c hmac_blake2s.c hmac_md5.c hmac_sha1.c hmac_sha256.c hmac_sha3.c hmac_sha512.c md5.c mlkem_1024.c mlkem_512.c mlkem_768.c nist-p256.c nist-p384.c nist-p521.c pbkdf2_blake2b.c pbkdf2_blake2s.c pbkdf2_sha1.c pbkdf2_sha256.c pbkdf2_sha3.c pbkdf2_sha512.c poly1305.c pw_bcrypt.c pw_scrypt.c rc4.c ringbuf.c rsa2048.c rsa3072.c rsa4096.c salsa20.c sha1.c sha256.c sha3.c sha512.c siphash24.c totp_sha1.c totp_sha256.c totp_sha512.c xchacha20.c xsalsa20.c xxhash32.c xxhash64.c z_deflate.c z_inflate.c
 static_library_liba_OBJS = $(static_library_liba_SRCS:.c=.o)
 static_library_liba = liba.a
 

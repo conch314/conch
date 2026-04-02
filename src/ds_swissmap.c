@@ -62,7 +62,7 @@ void *conch_swissmap_insert(struct swissmap_head *head,
 	size_t n = head->total_size;
 	size_t m = h1 % n;
 	for (size_t i = 0; i < n; i += 4) {
-		size_t pos = ((m + i) % n) & ~0x3;
+		size_t pos = ((m + i) % n) & ~0x3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
 		size_t j = 0;
@@ -112,7 +112,7 @@ void *conch_swissmap_find(struct swissmap_head *head,
 	size_t n = head->total_size;
 	size_t m = h1 % n;
 	for (size_t i = 0; i < n; i += 4) {
-		size_t pos = ((m + i) % n) & ~0x3;
+		size_t pos = ((m + i) % n) & ~0x3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
 		x ^= _mask;
@@ -153,7 +153,7 @@ void *conch_swissmap_delete(struct swissmap_head *head,
 	size_t n = head->total_size;
 	size_t m = h1 % n;
 	for (size_t i = 0; i < n; i += 4) {
-		size_t pos = ((m + i) % n) & ~0x3;
+		size_t pos = ((m + i) % n) & ~0x3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
 		x ^= _mask;

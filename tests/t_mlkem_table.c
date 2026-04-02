@@ -30,8 +30,8 @@
 
 #define MONT_MUL(a, b) _montgomery_reduce((int32_t)(a) * (b))
 
-static int16_t mlkem_table[128];
-static int16_t tmp[128];
+int16_t mlkem_table[128];
+int16_t tmp[128];
 
 static int16_t _bit_reverse(int16_t c, int16_t len)
 {
@@ -45,7 +45,7 @@ static int16_t _bit_reverse(int16_t c, int16_t len)
 	return r >> 1;
 }
 
-int16_t _montgomery_reduce(int32_t a)
+static int16_t _montgomery_reduce(int32_t a)
 {
 	int16_t t = (int16_t)a * MLKEM_QINV;
 	t = (a - (int32_t)t * MLKEM_Q) >> 16;
@@ -53,7 +53,7 @@ int16_t _montgomery_reduce(int32_t a)
 	return t;
 }
 
-static void mlkem_table_init(void)
+void mlkem_table_init(void)
 {
 	tmp[0] = MLKEM_MONT;
 	for (int32_t i = 1; i < 128; i++) /* multiplied by montgomery factor */
@@ -69,7 +69,7 @@ static void mlkem_table_init(void)
 	}
 }
 
-static void mlkem_table_print(char *s1, char *s2)
+void mlkem_table_print(char *s1, char *s2)
 {
 	printf("/* %s */\n", s1);
 	printf("static const int16_t %szetas = {\n\t", s2);

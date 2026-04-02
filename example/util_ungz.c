@@ -86,7 +86,8 @@ static int32_t _ungz(FILE *rfp, FILE *wfp, int32_t is_v)
 				fwrite(INFLATE_BUF(&ctx),
 					1, INFLATE_LEN(&ctx), wfp);
 				crc = conch_crc32_lsb(crc_t, crc,
-					INFLATE_BUF(&ctx), INFLATE_LEN(&ctx));
+					INFLATE_BUF(&ctx),
+					INFLATE_LEN(&ctx));
 				if (r == INFLATE_IS_END)
 					goto e;
 			}
@@ -104,7 +105,8 @@ static int32_t _ungz(FILE *rfp, FILE *wfp, int32_t is_v)
 			fwrite(INFLATE_BUF(&ctx),
 				1, INFLATE_LEN(&ctx), wfp);
 			crc = conch_crc32_lsb(crc_t, crc,
-				INFLATE_BUF(&ctx), INFLATE_LEN(&ctx));
+				INFLATE_BUF(&ctx),
+				INFLATE_LEN(&ctx));
 			if (r == INFLATE_IS_END)
 				goto e;
 		}
@@ -114,7 +116,8 @@ e:
 	if (INFLATE_OFFSET(&ctx, len) == len) {
 		fread(buf, 1, 8, rfp);
 	} else {
-		conch_memcpy(buf, buf + INFLATE_OFFSET(&ctx, len),
+		conch_memcpy(buf,
+			buf + INFLATE_OFFSET(&ctx, len),
 			len - INFLATE_OFFSET(&ctx, len));
 		len = len - INFLATE_OFFSET(&ctx, len);
 		if (len < 8) {

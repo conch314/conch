@@ -210,11 +210,7 @@ static int32_t _scanf_oux(struct scanf_ctx *ctx, va_list *ap)
 	if (c == '0') {
 		ctx->get(0, ctx->arg);
 		c = ctx->get(1, ctx->arg);
-		if (c == 'B' || c == 'b') {
-			if (b != 2)
-				return -1;
-			ctx->get(0, ctx->arg);
-		} else if (c == 'X' || c == 'x') {
+		if (c == 'X' || c == 'x') {
 			if (b != 16)
 				return -1;
 			ctx->get(0, ctx->arg);
@@ -632,7 +628,6 @@ int32_t __conch_scanf(const char *fmt, va_list *ap, void *arg,
 		int32_t (*get)(int32_t, void *))
 {
 	int32_t c, n = 0;
-	char *p;
 	struct scanf_ctx ctx = {
 		.arg = arg, .get = get
 		};
