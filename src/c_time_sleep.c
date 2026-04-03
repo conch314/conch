@@ -1,6 +1,6 @@
-/* @file: c_unistd_fork.c
+/* @file: c_time_sleep.c
  * #desc:
- *    The implementations of unix standard.
+ *    The implementations of time functions.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -21,30 +21,31 @@
  */
 
 #include <conch/config.h>
+#include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 #include <conch/c_errno.h>
-#include <conch/c_sys_types.h>
-#include <conch/c_signal.h>
-#include <conch/c_unistd.h>
+#include <conch/c_time.h>
 #include <conch/c_syscall.h>
 
 
-/* @func: conch_fork
+/* @func: nanosleep
  * #desc:
- *    create a child process.
+ *    nanoseconds sleep function.
  *
- * #r: [ret] 0: current process, >0: child process id, -1: errno
+ * #1: req [in]  request time
+ * #2: rem [out] remaining time / NULL
+ * #r:     [ret] 0: no error, -1: errno
  */
-xpid_t conch_fork(void)
+int32_t conch_nanosleep(const struct xtimespec *req, struct xtimespec *rem)
 {
 #ifdef CONCH_PLATFORM
 # if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
 
-	xpid_t ret;
+	int32_t ret;
 
-	ret = (xpid_t)conch_syscall_linux(__NR_clone,
-		X_SIGCHLD,
-		0);
+	ret = (int32_t)conch_syscall_linux(__NR_nanosleep,
+		req,
+		rem);
 
 	if (ret < 0) {
 		/* errno */

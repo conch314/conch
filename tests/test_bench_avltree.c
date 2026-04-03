@@ -37,8 +37,8 @@ struct T {
 
 int32_t cmp(void *n, void *a)
 {
-	int32_t key_a = container_of(a, struct T, node)->key;
-	int32_t key_b = container_of(n, struct T, node)->key;
+	int32_t key_a = AVL_ENTRY(a, struct T, node)->key;
+	int32_t key_b = AVL_ENTRY(n, struct T, node)->key;
 
 	return (key_a > key_b) ? 1 : ((key_a < key_b) ? -1 : 0);
 }
@@ -71,10 +71,10 @@ void test_avltree(void)
 
 	/* first and last */
 	p = conch_avl_first(&root);
-	printf("first: k:%d %p\n", container_of(p, struct T, node)->key, p);
+	printf("first: k:%d %p\n", AVL_ENTRY(p, struct T, node)->key, p);
 
 	p = conch_avl_last(&root);
-	printf("last: k:%d %p\n", container_of(p, struct T, node)->key, p);
+	printf("last: k:%d %p\n", AVL_ENTRY(p, struct T, node)->key, p);
 
 	/* search */
 	start = clock();

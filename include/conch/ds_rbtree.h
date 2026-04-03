@@ -51,6 +51,8 @@ struct rb_root {
 #define RB_ROOT_NEW(x) struct rb_root x = { NULL }
 #define RB_ROOT_INIT(x) (x)->node = NULL
 
+#define RB_ENTRY(x, type, member) container_of(x, type, member)
+
 #define RB_PCOLOR_SET0(x) (x)->pcolor = 0
 #define RB_PARENT(x) ((struct rb_node *)((x)->pcolor & ~3UL))
 #define RB_COLOR(x) ((x)->pcolor & 1)

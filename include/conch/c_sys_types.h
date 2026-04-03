@@ -28,6 +28,9 @@
 #include <conch/c_stdint.h>
 
 
+#ifdef CONCH_PLATFORM
+# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+
 typedef ssize_t xoff_t;
 typedef int64_t xoff64_t;
 
@@ -55,6 +58,13 @@ typedef uint32_t xuseconds_t;
 
 typedef int64_t xclock_t;
 typedef int32_t xclockid_t;
+
+# else
+#  error "!!!unknown CONCH_PLATFORM!!!"
+# endif
+#else
+# error "!!!undefined CONCH_PLATFORM!!!"
+#endif
 
 
 #endif

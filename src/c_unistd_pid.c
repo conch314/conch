@@ -21,7 +21,6 @@
  */
 
 #include <conch/config.h>
-#include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 #include <conch/c_errno.h>
 #include <conch/c_sys_types.h>

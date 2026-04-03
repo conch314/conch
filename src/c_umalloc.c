@@ -250,7 +250,7 @@ void *conch_umalloc(struct umalloc_ctx *ctx, size_t size)
 	}
 
 	LIST_FOR_EACH(ctx->chunk.node, pos) {
-		node = container_of(pos, struct umalloc_chunk_node, list);
+		node = LIST_ENTRY(pos, struct umalloc_chunk_node, list);
 		chunk = &node->chunk;
 		if (GET_BIG(chunk))
 			continue;
@@ -290,7 +290,7 @@ int32_t conch_umalloc_free(struct umalloc_ctx *ctx, void *p)
 		return -1;
 
 	if (GET_BIG(chunk)) {
-		node = container_of(chunk, struct umalloc_chunk_node, chunk);
+		node = LIST_ENTRY(chunk, struct umalloc_chunk_node, chunk);
 		conch_list_del(&ctx->chunk, &node->list);
 		if (ctx->call_free(node, node->size, ctx->arg))
 			return -2;
@@ -303,7 +303,7 @@ int32_t conch_umalloc_free(struct umalloc_ctx *ctx, void *p)
 
 	ctx->idle = NULL;
 	if (!chunk->prev_size && GET_END(chunk)) {
-		node = container_of(chunk, struct umalloc_chunk_node, chunk);
+		node = LIST_ENTRY(chunk, struct umalloc_chunk_node, chunk);
 		conch_list_del(&ctx->chunk, &node->list);
 		if (ctx->call_free(node, node->size, ctx->arg))
 			return -2;
@@ -324,7 +324,7 @@ int32_t conch_umalloc_free_all(struct umalloc_ctx *ctx)
 	struct umalloc_chunk_node *node;
 	while (ctx->chunk.node) {
 		LIST_FOR_EACH(ctx->chunk.node, pos) {
-			node = container_of(pos,
+			node = LIST_ENTRY(pos,
 				struct umalloc_chunk_node, list);
 			conch_list_del(&ctx->chunk, &node->list);
 			if (ctx->call_free(node, node->size, ctx->arg))

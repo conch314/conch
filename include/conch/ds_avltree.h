@@ -41,6 +41,8 @@ struct avl_root {
 #define AVL_ROOT_NEW(x) struct avl_root x = { NULL }
 #define AVL_ROOT_INIT(x) (x)->node = NULL
 
+#define AVL_ENTRY(x, type, member) container_of(x, type, member)
+
 #define AVL_HEIGHT(x) ((x) ? (x)->bf : 0)
 #define AVL_MAX(a, b) (((a) > (b)) ? (a) : (b))
 

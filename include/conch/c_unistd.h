@@ -114,6 +114,11 @@ extern
 int32_t conch_setgroups(int32_t size, xgid_t gids[])
 ;
 
+/* c_unistd_sleep.c */
+extern
+int32_t conch_sleep(uint32_t n)
+;
+
 #ifdef __cplusplus
 }
 #endif

@@ -30,7 +30,7 @@ struct T {
 	int32_t key;
 };
 
-#define GET_KEY(x) ((x) ? (container_of(x, struct T, node)->key) : -1)
+#define GET_KEY(x) ((x) ? (LIST_ENTRY(x, struct T, node)->key) : -1)
 
 void test_list(void)
 {

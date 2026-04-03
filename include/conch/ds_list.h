@@ -38,6 +38,8 @@ struct list_head {
 #define LIST_NEW(x) struct list_head x = { NULL }
 #define LIST_INIT(x) (x)->node = NULL
 
+#define LIST_ENTRY(x, type, member) container_of(x, type, member)
+
 #define LIST_PREV(x) ((x)->prev ? \
 	((x)->prev->next ? (x)->prev : NULL) : NULL)
 #define LIST_NEXT(x) ((x)->next)
@@ -46,7 +48,7 @@ struct list_head {
 	for (struct list_node *name = node; \
 			name; \
 			name = LIST_NEXT(name))
-#define LIST_FOR_REVEACH(node, name) \
+#define LIST_FOR_PREV_EACH(node, name) \
 	for (struct list_node *name = node; \
 			name; \
 			name = LIST_PREV(name))

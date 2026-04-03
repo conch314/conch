@@ -8,6 +8,7 @@ INCLUDES:
   util_ungz
   util_totp
   util_entropy
+  simple_bwt
 
  src/
   C
@@ -18,6 +19,7 @@ INCLUDES:
   Ring-Buffer
   AES
   DES
+  RC4
   Blowfish
   ChaCha20
   Salsa20

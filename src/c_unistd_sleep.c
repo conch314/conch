@@ -1,4 +1,4 @@
-/* @file: c_unistd_fork.c
+/* @file: c_unistd_sleep.c
  * #desc:
  *    The implementations of unix standard.
  *
@@ -22,42 +22,25 @@
 
 #include <conch/config.h>
 #include <conch/c_stdint.h>
-#include <conch/c_errno.h>
-#include <conch/c_sys_types.h>
-#include <conch/c_signal.h>
+#include <conch/c_time.h>
 #include <conch/c_unistd.h>
-#include <conch/c_syscall.h>
 
 
-/* @func: conch_fork
+/* @func: conch_sleep
  * #desc:
- *    create a child process.
+ *    sleep for a specified number of seconds.
  *
- * #r: [ret] 0: current process, >0: child process id, -1: errno
+ * #1: seconds
+ * #r: 0: no error, -1: errno
  */
-xpid_t conch_fork(void)
+int32_t conch_sleep(uint32_t n)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+	struct xtimespec a, b;
+	a.tv_sec = n;
+	a.tv_nsec = 0;
 
-	xpid_t ret;
-
-	ret = (xpid_t)conch_syscall_linux(__NR_clone,
-		X_SIGCHLD,
-		0);
-
-	if (ret < 0) {
-		/* errno */
-		x_errno = -ret;
+	if (conch_nanosleep(&a, &b))
 		return -1;
-	}
 
-	return ret;
-
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
-#else
-# error "!!!undefined CONCH_PLATFORM!!!"
-#endif
+	return b.tv_sec;
 }
