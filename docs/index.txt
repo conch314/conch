@@ -116,6 +116,14 @@ cSHAKE, KMAC, TupleHash and ParallelHash Algorithms
   NIST.SP.800-185.pdf
     http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf
 
+Galois/Counter Mode (GCM) and GMAC
+  nistspecialpublication800-38d.pdf
+    https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
+
+Galois/Counter Mode of Operation (GCM)
+  gcm-spec.pdf
+    https://csrc.nist.rip/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-spec.pdf
+
 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
   rfc-5869.txt
     https://www.rfc-editor.org/rfc/rfc5869.txt

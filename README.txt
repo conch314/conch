@@ -44,6 +44,7 @@ INCLUDES:
   Scrypt
   SipHash24 (with x24)
   Poly1305
+  GHASH
   xxHash (32/64)
   CRC (16/32/64)
   Deflate
