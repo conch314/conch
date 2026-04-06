@@ -1,6 +1,6 @@
-/* @file: poly1305.h
+/* @file: ghash.h
  * #desc:
- *    The definitions of poly1305 message authentication code.
+ *    The definitions of galois message authentication code.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,60 +20,55 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _CONCH_POLY1305_H
-#define _CONCH_POLY1305_H
+#ifndef _CONCH_GHASH_H
+#define _CONCH_GHASH_H
 
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 
 
-#define POLY1305_KEY_LEN 32
-#define POLY1305_TAG_LEN 16
+#define GHASH_KEY_LEN 16
+#define GHASH_TAG_LEN 16
 
-#define POLY1305_BLOCKSIZE 16
+#define GHASH_BLOCKSIZE 16
 
-struct poly1305_ctx {
-	uint32_t h[5];
-	uint32_t r[5];
-	uint32_t s[5];
+struct ghash_ctx {
+	uint64_t h[16][2];
+	uint8_t s[GHASH_BLOCKSIZE];
+	uint8_t buf[GHASH_BLOCKSIZE];
 	uint32_t count;
-	union {
-		uint8_t buf[POLY1305_BLOCKSIZE];
-		uint8_t tag[POLY1305_TAG_LEN];
-	} u;
 };
 
-#define POLY1305_NEW(x) struct poly1305_ctx x
+#define GHASH_NEW(x) struct ghash_ctx x
 
-#define POLY1305_TAG(x, n) ((x)->u.tag[n])
+#define GHASH_IV(x, n) ((x)->s[n])
+#define GHASH_TAG(x, n) GHASH_IV(x, n)
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* poly1305.c */
+/* ghash.c */
 extern
-void conch_poly1305_init(struct poly1305_ctx *ctx, const uint8_t *key)
+void conch_ghash_init(struct ghash_ctx *ctx, const uint8_t *key)
 ;
 extern
-void conch_poly1305_block(struct poly1305_ctx *ctx, const uint8_t *s,
-		uint32_t padbit)
+void conch_ghash_gfmul(struct ghash_ctx *ctx, uint8_t x[16])
 ;
 extern
-void conch_poly1305_tag(struct poly1305_ctx *ctx, uint8_t *tag)
+void conch_ghash_block(struct ghash_ctx *ctx, const uint8_t *s)
 ;
 extern
-void conch_poly1305_process(struct poly1305_ctx *ctx, const uint8_t *s,
+void conch_ghash_process(struct ghash_ctx *ctx, const uint8_t *s,
 		size_t len)
 ;
 extern
-void conch_poly1305_finish(struct poly1305_ctx *ctx)
+void conch_ghash_finish(struct ghash_ctx *ctx)
 ;
 extern
-void conch_poly1305(struct poly1305_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_ghash(struct ghash_ctx *ctx, const uint8_t *s, size_t len)
 ;
 
 #ifdef __cplusplus

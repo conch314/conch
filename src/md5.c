@@ -80,10 +80,10 @@ static void _md5_compress(struct md5_ctx *ctx, const uint8_t *s)
 	D = ctx->state[3];
 
 	for (int32_t i = 0; i < 16; i++) {
-		m[i] = ((uint32_t)s[0])
-			| ((uint32_t)s[1]) << 8
-			| ((uint32_t)s[2]) << 16
-			| ((uint32_t)s[3]) << 24;
+		m[i] = (uint32_t)s[0]
+			| (uint32_t)s[1] << 8
+			| (uint32_t)s[2] << 16
+			| (uint32_t)s[3] << 24;
 		s += 4;
 	}
 

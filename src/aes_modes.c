@@ -1,6 +1,6 @@
-/* @file: aes_ext.c
+/* @file: aes_modes.c
  * #desc:
- *    The implementations of AES extended cipher mode.
+ *    The implementations of block cipher modes of operation.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -151,11 +151,11 @@ void conch_aes_crypto_ctr(struct aes_ctx *ctx, uint8_t *ran,
 {
 	union {
 		uint32_t count0;
-		uint8_t counter[AES_BLOCKSIZE];
+		uint8_t ctr[AES_BLOCKSIZE];
 	} u;
 
 	for (int32_t i = 0; i < AES_BLOCKSIZE; i++)
-		u.counter[i] = ran[i];
+		u.ctr[i] = ran[i];
 
 	uint32_t n = AES_BLOCKSIZE;
 	while (len) {
@@ -171,6 +171,6 @@ void conch_aes_crypto_ctr(struct aes_ctx *ctx, uint8_t *ran,
 
 		u.count0++;
 		for (int32_t i = 0; i < AES_BLOCKSIZE; i++)
-			ran[i] = u.counter[i];
+			ran[i] = u.ctr[i];
 	}
 }

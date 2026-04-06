@@ -343,15 +343,33 @@ void test_salsa20(void)
 
 int main(void)
 {
+#ifndef NO_AES_ECB
 	test_aes_ecb();
+#endif
+#ifndef NO_AES_CBC
 	test_aes_cbc();
+#endif
+#ifndef NO_AES_CFB
 	test_aes_cfb();
+#endif
+#ifndef NO_AES_OFB
 	test_aes_ofb();
+#endif
+#ifndef NO_AES_CTR
 	test_aes_ctr();
+#endif
+#ifndef NO_DES
 	test_des();
+#endif
+#ifndef NO_RC4
 	test_rc4();
+#endif
+#ifndef NO_CHACHA20
 	test_chacha20();
+#endif
+#ifndef NO_SALSA20
 	test_salsa20();
+#endif
 
 	return 0;
 }

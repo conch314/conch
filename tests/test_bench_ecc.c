@@ -344,11 +344,21 @@ void test_p521(void)
 
 int main(void)
 {
+#ifndef NO_CURVE25519
 	test_curve25519();
+#endif
+#ifndef NO_CURVE448
 	test_curve448();
+#endif
+#ifndef NO_P256
 	test_p256();
+#endif
+#ifndef NO_P384
 	test_p384();
+#endif
+#ifndef NO_P521
 	test_p521();
+#endif
 
 	return 0;
 }

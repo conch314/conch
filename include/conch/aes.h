@@ -57,7 +57,7 @@ struct aes_ctx {
 extern "C" {
 #endif
 
-/* aes_ext.c */
+/* aes_modes.c */
 extern
 void conch_aes_encrypt_cbc(struct aes_ctx *ctx, uint8_t *iv,
 		uint8_t *state)

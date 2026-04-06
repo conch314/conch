@@ -65,10 +65,10 @@ static void _sha1_compress(struct sha1_ctx *ctx, const uint8_t *s)
 	E = ctx->state[4];
 
 	for (int32_t i = 0; i < 16; i++) {
-		m[i] = ((uint32_t)s[0]) << 24
-			| ((uint32_t)s[1]) << 16
-			| ((uint32_t)s[2]) << 8
-			| ((uint32_t)s[3]);
+		m[i] = (uint32_t)s[0] << 24
+			| (uint32_t)s[1] << 16
+			| (uint32_t)s[2] << 8
+			| (uint32_t)s[3];
 		s += 4;
 	}
 

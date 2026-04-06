@@ -29,6 +29,7 @@
 #include <conch/blake2.h>
 #include <conch/xxhash.h>
 #include <conch/poly1305.h>
+#include <conch/ghash.h>
 #include <conch/siphash24.h>
 
 
@@ -306,6 +307,29 @@ void test_poly1305(void)
 		(len / time) / 1024 / 1024);
 }
 
+void test_ghash(void)
+{
+	clock_t start, end;
+	double time;
+	uint64_t len;
+
+	GHASH_NEW(ctx);
+
+	len = 0;
+	conch_ghash_init(&ctx, g_buf);
+
+	start = clock();
+	for (int32_t i = 0; i < 200; i++) {
+		conch_ghash_process(&ctx, g_buf, sizeof(g_buf));
+		len += sizeof(g_buf);
+	}
+	conch_ghash_finish(&ctx);
+	end = clock();
+	time = (double)(end - start) / CLOCKS_PER_SEC;
+	printf("ghash: %.6f (%.2f MiB/s)\n", time,
+		(len / time) / 1024 / 1024);
+}
+
 void test_siphash24(void)
 {
 	clock_t start, end;
@@ -327,17 +351,42 @@ void test_siphash24(void)
 
 int main(void)
 {
+#ifndef NO_MD5
 	test_md5();
+#endif
+#ifndef NO_SHA1
 	test_sha1();
+#endif
+#ifndef NO_SHA256
 	test_sha256();
+#endif
+#ifndef NO_SHA512
 	test_sha512();
+#endif
+#ifndef NO_SHA3
 	test_sha3();
+#endif
+#ifndef NO_BLAKE2B
 	test_blake2b();
+#endif
+#ifndef NO_BLAKE2S
 	test_blake2s();
+#endif
+#ifndef NO_XXHASH32
 	test_xxhash32();
+#endif
+#ifndef NO_XXHASH64
 	test_xxhash64();
+#endif
+#ifndef NO_POLY1305
 	test_poly1305();
+#endif
+#ifndef NO_GHASH
+	test_ghash();
+#endif
+#ifndef NO_SIPHASH24
 	test_siphash24();
+#endif
 
 	return 0;
 }
