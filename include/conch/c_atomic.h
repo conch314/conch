@@ -32,8 +32,7 @@ typedef volatile int32_t spinlock_t;
 #define SPIN_SINGLE(x) conch_atomic_cas(x, 0, 1)
 #define SPIN_LOCK(x) \
 	do { \
-		int32_t ___lock = conch_atomic_cas(x, 0, 1); \
-		while (___lock && conch_atomic_cas(x, 0, 1)); \
+		while (conch_atomic_cas(x, 0, 1)); \
 	} while (0)
 #define SPIN_UNLOCK(x) \
 	do { \

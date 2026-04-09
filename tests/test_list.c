@@ -34,7 +34,7 @@ struct T {
 
 void test_list(void)
 {
-	LIST_NEW(head);
+	LIST_HEAD_NEW(head);
 	struct T node[8];
 
 	for (int32_t i = 0; i < 8; i++)
@@ -222,6 +222,10 @@ void test_list(void)
 			GET_KEY(pos),
 			GET_KEY(pos->prev),
 			GET_KEY(pos->next));
+	}
+
+	LIST_FOR_PREV_EACH(&node[0].node, pos) {
+		printf("n:%d\n", GET_KEY(pos));
 	}
 }
 

@@ -38,7 +38,8 @@ struct avl_root {
 	struct avl_node *node;
 };
 
-#define AVL_ROOT_NEW(x) struct avl_root x = { NULL }
+#define AVL_ROOT_SET0 { NULL }
+#define AVL_ROOT_NEW(x) struct avl_root x = AVL_ROOT_SET0
 #define AVL_ROOT_INIT(x) (x)->node = NULL
 
 #define AVL_ENTRY(x, type, member) container_of(x, type, member)

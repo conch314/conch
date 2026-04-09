@@ -906,9 +906,8 @@ void conch_bn4352_umul(bn4352_t *r,
 		goto e;
 	}
 
-	uint32_t carry = 0;
 	for (int32_t i = 0; i < BN4352_N; i++) {
-		carry = 0;
+		uint32_t carry = 0;
 		for (int32_t j = 0; j < BN4352_N; j++) {
 			if ((i + j) >= BN4352_N)
 				break;

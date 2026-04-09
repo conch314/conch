@@ -35,8 +35,9 @@ struct list_head {
 	struct list_node *node;
 };
 
-#define LIST_NEW(x) struct list_head x = { NULL }
-#define LIST_INIT(x) (x)->node = NULL
+#define LIST_HEAD_SET0 { NULL }
+#define LIST_HEAD_NEW(x) struct list_head x = LIST_HEAD_SET0
+#define LIST_HEAD_INIT(x) (x)->node = NULL
 
 #define LIST_ENTRY(x, type, member) container_of(x, type, member)
 

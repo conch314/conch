@@ -46,9 +46,9 @@ struct swissmap_head {
 	int32_t (*call_cmp)(void *, const void *, size_t);
 };
 
-#define SWISSMAP_NEW(name, _ctrl, _array, _wsize, \
+#define SWISSMAP_SET(_ctrl, _array, _wsize, \
 		_total_size, _hash, _cmp) \
-	struct swissmap_head name = { \
+	{ \
 		.group = _ctrl, \
 		.array = _array, \
 		.wsize = _wsize, \
@@ -56,7 +56,12 @@ struct swissmap_head {
 		.total_size = _total_size, \
 		.call_hash = _hash, \
 		.call_cmp = _cmp \
-		}
+	}
+#define SWISSMAP_NEW(name, _ctrl, _array, _wsize, \
+		_total_size, _hash, _cmp) \
+	struct swissmap_head name = \
+		SWISSMAP_SET(_ctrl, _array, _wsize, \
+			_total_size, _hash, _cmp)
 #define SWISSMAP_INIT(x, _ctrl, _array, _wsize, \
 		_total_size, _hash, _cmp) \
 	(x)->group = _ctrl; \

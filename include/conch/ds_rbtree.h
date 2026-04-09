@@ -48,7 +48,8 @@ struct rb_root {
 	struct rb_node *node;
 };
 
-#define RB_ROOT_NEW(x) struct rb_root x = { NULL }
+#define RB_ROOT_SET0 { NULL }
+#define RB_ROOT_NEW(x) struct rb_root x = RB_ROOT_SET0
 #define RB_ROOT_INIT(x) (x)->node = NULL
 
 #define RB_ENTRY(x, type, member) container_of(x, type, member)

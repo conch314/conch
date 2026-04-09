@@ -906,9 +906,8 @@ void conch_bn8448_umul(bn8448_t *r,
 		goto e;
 	}
 
-	uint32_t carry = 0;
 	for (int32_t i = 0; i < BN8448_N; i++) {
-		carry = 0;
+		uint32_t carry = 0;
 		for (int32_t j = 0; j < BN8448_N; j++) {
 			if ((i + j) >= BN8448_N)
 				break;

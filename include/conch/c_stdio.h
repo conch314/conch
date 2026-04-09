@@ -32,6 +32,17 @@
 #undef EOF
 #define EOF (-1)
 
+typedef struct {
+	char _; /* internal implemented */
+} xFILE;
+
+extern
+xFILE *x_stdin;
+extern
+xFILE *x_stdout;
+extern
+xFILE *x_stderr;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +58,98 @@ int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
 extern
 int32_t __conch_scanf(const char *fmt, va_list *ap, void *arg,
 		int32_t (*get)(int32_t, void *))
+;
+
+/* c_stdio_io.c */
+extern
+int32_t conch_fflush(xFILE *fp)
+;
+extern
+size_t conch_fread(void *t, size_t m, size_t n, xFILE *fp)
+;
+extern
+size_t conch_fwrite(const void *s, size_t m, size_t n, xFILE *fp)
+;
+extern
+int32_t conch_fseek(xFILE *fp, int64_t off, int32_t whence)
+;
+extern
+int64_t conch_ftell(xFILE *fp)
+;
+extern
+void conch_rewind(xFILE *fp)
+;
+extern
+int32_t conch_fgetc(xFILE *fp)
+;
+extern
+char *conch_fgets(char *buf, int32_t len, xFILE *fp)
+;
+extern
+int32_t conch_fputc(int32_t c, xFILE *fp)
+;
+extern
+int32_t conch_fputs(const char *s, xFILE *fp)
+;
+extern
+xFILE *conch_fopen(const char *path, const char *mode)
+;
+extern
+int32_t conch_fclose(xFILE *fp)
+;
+extern
+int32_t conch_setvbuf(xFILE *fp, uint8_t *buf, int32_t type,
+		size_t size)
+;
+extern
+int32_t conch_feof(xFILE *fp)
+;
+extern
+int32_t conch_ferror(xFILE *fp)
+;
+extern
+void conch_clearerr(xFILE *fp)
+;
+
+/* c_stdio_printf.c */
+extern
+int32_t conch_vfprintf(xFILE *fp, const char *fmt, va_list ap)
+;
+extern
+int32_t conch_fprintf(xFILE *fp, const char *fmt, ...)
+;
+extern
+int32_t conch_vprintf(const char *fmt, va_list ap)
+;
+extern
+int32_t conch_printf(const char *fmt, ...)
+;
+
+/* c_stdio_scanf.c */
+extern
+int32_t conch_vfscanf(xFILE *fp, const char *fmt, va_list ap)
+;
+extern
+int32_t conch_vscanf(const char *fmt, va_list ap)
+;
+extern
+int32_t conch_scanf(const char *fmt, ...)
+;
+
+/* c_stdio_snprintf.c */
+extern
+int32_t conch_vsnprintf(char *buf, size_t len, const char *fmt, va_list ap)
+;
+extern
+int32_t conch_snprintf(char *buf, size_t len, const char *fmt, ...)
+;
+
+/* c_stdio_sscanf.c */
+extern
+int32_t conch_vsscanf(const char *s, const char *fmt, va_list ap)
+;
+extern
+int32_t conch_sscanf(const char *s, const char *fmt, ...)
 ;
 
 #ifdef __cplusplus

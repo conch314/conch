@@ -60,13 +60,13 @@ struct umalloc_ctx {
 
 #define UMALLOC_NEW(name, alloc, free, _arg) \
 	struct umalloc_ctx name = { \
-		.chunk.node = NULL, \
+		.chunk = LIST_HEAD_SET0, \
 		.call_alloc = alloc, \
 		.call_free = free, \
 		.arg = _arg \
 		}
 #define UMALLOC_INIT(x, alloc, free, _arg) \
-	(x)->chunk.node = NULL; \
+	LIST_HEAD_INIT(&(x)->chunk); \
 	(x)->call_alloc = alloc; \
 	(x)->call_free = free; \
 	(x)->arg = _arg

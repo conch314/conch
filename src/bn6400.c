@@ -906,9 +906,8 @@ void conch_bn6400_umul(bn6400_t *r,
 		goto e;
 	}
 
-	uint32_t carry = 0;
 	for (int32_t i = 0; i < BN6400_N; i++) {
-		carry = 0;
+		uint32_t carry = 0;
 		for (int32_t j = 0; j < BN6400_N; j++) {
 			if ((i + j) >= BN6400_N)
 				break;
