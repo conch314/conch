@@ -1,6 +1,6 @@
 /* @file: c_sys_mman.h
  * #desc:
- *    The definitions of.
+ *    The definitions of memory management.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

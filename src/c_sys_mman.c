@@ -1,6 +1,6 @@
 /* @file: c_sys_mman.c
  * #desc:
- *    The implementations of.
+ *    The implementations of memory management.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -53,6 +53,19 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 		return X_MAP_FAILED;
 	}
 
+#ifdef CONCH_MARCH_BITS
+# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
+
+	ret = (void *)conch_syscall_linux(__NR_mmap2,
+		addr,
+		len,
+		prot,
+		flags,
+		fd,
+		off / 4096);
+
+# elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
+
 	ret = (void *)conch_syscall_linux(__NR_mmap,
 		addr,
 		len,
@@ -60,6 +73,13 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 		flags,
 		fd,
 		off);
+
+# else
+#  error "!!!unknown CONCH_MARCH_BITS!!!"
+# endif
+#else
+# error "!!!undefined CONCH_MARCH_BITS!!!"
+#endif
 
 	if ((ssize_t)ret < 0) {
 		/* errno */

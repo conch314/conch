@@ -1,6 +1,6 @@
 /* @file: c_fcntl.c
  * #desc:
- *    The implementations of.
+ *    The implementations of file control options.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

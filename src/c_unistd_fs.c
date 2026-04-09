@@ -122,7 +122,7 @@ xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
 #ifdef CONCH_MARCH_BITS
 # if (CONCH_MARCH_BITS == CONCH_MARCH_32)
 
-	ret = (xoff_t)conch_syscall_linux(__NR_llseek,
+	ret = (xoff_t)conch_syscall_linux(__NR__llseek,
 		fd,
 		off >> 32,
 		off & 0xffffffff,

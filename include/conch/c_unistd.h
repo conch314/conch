@@ -1,6 +1,6 @@
 /* @file: c_unistd.h
  * #desc:
- *    The definitions of.
+ *    The definitions of unix standard.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

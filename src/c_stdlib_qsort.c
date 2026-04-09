@@ -1,6 +1,6 @@
 /* @file: c_stdlib_qsort.c
  * #desc:
- *    The implementations of.
+ *    The implementations of standard library.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
