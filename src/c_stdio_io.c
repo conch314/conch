@@ -74,7 +74,7 @@ static struct stdio_file __stdin = {
 	};
 
 static struct stdio_file __stdout = {
-	.flags = FG_PERM | FG_NORD,
+	.flags = FG_PERM | FG_TEXT | FG_NORD,
 	.fd = 1,
 	.buf = __stdin.vbuf,
 	.buf_size = X_BUFSIZ,

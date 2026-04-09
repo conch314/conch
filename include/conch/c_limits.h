@@ -35,7 +35,7 @@
 #define CHAR_MAX 0x7f
 
 #undef SCHAR_MIN
-#undef SCHAR_MIN
+#undef SCHAR_MAX
 #undef UCHAR_MAX
 #define SCHAR_MIN (-0x80)
 #define SCHAR_MAX 0x7f

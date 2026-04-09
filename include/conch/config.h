@@ -56,7 +56,11 @@
 # elif defined(__x86_64__)
 #  define CONCH_MARCH_TYPE CONCH_MARCH_X86_64
 # elif (defined(__arm__) || defined(__thumb__) || defined(__ARM_EABI__))
-#  define CONCH_MARCH_TYPE CONCH_MARCH_ARM_32
+#  if (defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7R__) || __ARM_ARCH >= 7)
+#   define CONCH_MARCH_TYPE CONCH_MARCH_ARM_32
+#  else
+#   error "!!!only support arm-v7a!!!"
+#  endif
 # elif defined(__aarch64__)
 #  define CONCH_MARCH_TYPE CONCH_MARCH_ARM_64
 # elif (defined(__riscv) || defined(__riscv_xlen))
