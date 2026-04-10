@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# check the parameters number order in the file.
+# check the parameters number order in the C file.
 #
 
 
@@ -15,7 +15,7 @@ BEGIN {
 	if (s ~ /^\/\* @func:/)
 		n = 1;
 
-	if (s ~ /^ \* #[0-9]:/) {
+	if (s ~ /^ \* #[0-9]+:/) {
 		sub(/^ \* #/, "", s);
 		sub(/:.*/, "", s);
 		if (s != n) {

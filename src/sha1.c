@@ -53,7 +53,7 @@
  *    sha1 compression function.
  *
  * #1: ctx [in/out] sha1 struct context
- * #2: s   [in]     input block (length: SHA1_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 static void _sha1_compress(struct sha1_ctx *ctx, const uint8_t *s)
 {

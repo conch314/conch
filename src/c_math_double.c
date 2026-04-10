@@ -38,6 +38,7 @@ int32_t conch_fpclassify(double x)
 		double f;
 		uint64_t i;
 	} u = { x };
+
 	uint64_t e = (u.i >> 52) & 0x7ff;
 	uint64_t f = u.i & 0xfffffffffffffULL;
 
@@ -81,8 +82,8 @@ double conch_floor(double x)
 		double f;
 		uint64_t i;
 	} u = { x };
-	uint32_t e = ((u.i >> 52) & 0x7ff) - 1023;
 
+	int32_t e = ((u.i >> 52) & 0x7ff) - 1023;
 	if (e > 51)
 		return x;
 	if (e < 0)
@@ -128,6 +129,7 @@ double conch_frexp(double x, int32_t *e)
 		double f;
 		uint64_t i;
 	} u = { x };
+
 	int32_t ee = (u.i >> 52) & 0x7ff;
 
 	if (!ee) {
@@ -163,7 +165,8 @@ double conch_modf(double x, double *n)
 		double f;
 		uint64_t i;
 	} u = { x };
-	uint32_t e = ((u.i >> 52) & 0x7ff) - 1023;
+
+	int32_t e = ((u.i >> 52) & 0x7ff) - 1023;
 
 	if (e > 51) {
 		*n = x;
@@ -237,11 +240,11 @@ double conch_ldexp(double x, int32_t n)
  */
 double conch_cos(double x)
 {
-	int32_t dneg = 1;
+	int32_t neg = 1;
 	x = conch_fmod(x, M_PI * 2);
 	if (x > M_PI) {
 		x -= M_PI;
-		dneg = -1;
+		neg = -1;
 	}
 
 	/* taylor series running product */
@@ -253,7 +256,7 @@ double conch_cos(double x)
 		sign *= -1;
 	}
 
-	return m * dneg;
+	return m * neg;
 }
 
 /* @func: conch_sin
@@ -265,11 +268,11 @@ double conch_cos(double x)
  */
 double conch_sin(double x)
 {
-	int32_t dneg = 1;
+	int32_t neg = 1;
 	x = conch_fmod(x, M_PI * 2);
 	if (x > M_PI) {
 		x -= M_PI;
-		dneg = -1;
+		neg = -1;
 	}
 
 	/* taylor series running product */
@@ -281,7 +284,7 @@ double conch_sin(double x)
 		sign *= -1;
 	}
 
-	return m * dneg;
+	return m * neg;
 }
 
 /* @func: conch_tan

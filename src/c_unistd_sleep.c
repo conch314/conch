@@ -30,8 +30,8 @@
  * #desc:
  *    sleep for a specified number of seconds.
  *
- * #1: seconds
- * #r: 0: no error, -1: errno
+ * #1: n [in]  seconds
+ * #r:   [ret] 0: no error, -1: errno
  */
 int32_t conch_sleep(uint32_t n)
 {

@@ -28,7 +28,7 @@
 #include <conch/c_syscall.h>
 
 
-/* @func: nanosleep
+/* @func: conch_nanosleep
  * #desc:
  *    nanoseconds sleep function.
  *

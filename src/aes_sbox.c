@@ -545,12 +545,12 @@ static void _aes_keyexp(struct aes_ctx *ctx, const uint8_t *key)
 	}
 }
 
-/* @func: aes_init
+/* @func: conch_aes_init
  * #desc:
  *    aes initialization function.
  *
  * #1: ctx  [out] aes struct context
- * #2: key  [in]  input key (length: AES_*_KEYLEN)
+ * #2: key  [in]  input key
  * #3: type [in]  aes type
  * #r:      [ret] 0: no error, -1: type error
  */

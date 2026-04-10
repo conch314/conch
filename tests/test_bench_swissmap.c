@@ -66,7 +66,7 @@ void test_swissmap(void)
 	struct T *array = malloc(sizeof(struct T) * SWISSMAP_ALIGN(TSIZE));
 	struct T *p;
 
-	SWISSMAP_NEW(head, ctrl, array, sizeof(struct T),
+	SWISSMAP_HEAD_NEW(head, ctrl, array, sizeof(struct T),
 		SWISSMAP_ALIGN(TSIZE), hash, cmp);
 	conch_swissmap_empty(&head);
 

@@ -32,7 +32,7 @@
  *    hkdf-sha1 key derivation function.
  *
  * #1: ikm      [in]  ikm
- * #2: ikm      [in]  ikm length
+ * #2: ikm_len  [in]  ikm length
  * #3: salt     [in]  salt
  * #4: salt_len [in]  salt length
  * #5: info     [in]  info

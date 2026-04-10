@@ -67,7 +67,7 @@ static const uint32_t sha256_constants[64] = {
  *    sha256 compression function.
  *
  * #1: ctx [in/out] sha256 struct context
- * #2: s   [in]     input block (length: SHA256_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 static void _sha256_compress(struct sha256_ctx *ctx, const uint8_t *s)
 {

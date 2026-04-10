@@ -357,7 +357,7 @@ static void _des_permute_ip1(uint8_t *out, uint8_t *in)
  *    des initialization function.
  *
  * #1: ctx [out] des context struct
- * #2: key [in]  input key (length: DES_KEYLEN)
+ * #2: key [in]  input key
  */
 void conch_des_init(struct des_ctx *ctx, const uint8_t *key)
 {
@@ -400,7 +400,7 @@ void conch_des_init(struct des_ctx *ctx, const uint8_t *key)
  *    des encryption and decryption function.
  *
  * #1: ctx        [in]     des struct context
- * #2: buf        [in/out] buffer (length: DES_BLOCKSIZE)
+ * #2: buf        [in/out] block buffer
  * #3: is_decrypt [in]     0: encrypt, 1: decrypt
  */
 void conch_des_crypto(struct des_ctx *ctx, uint8_t *buf, int32_t is_decrypt)

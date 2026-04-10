@@ -173,8 +173,8 @@ void conch_keccak_f1600(uint64_t state[5][5])
  * #1: state [in/out] state buffer
  * #2: in    [in]     input buffer (length: >=rate)
  * #3: len   [in]     input length
- * #4: len   [in]     bitrate length (byte)
- * #r: rate  [in]     remaining length
+ * #4: rate  [in]     bitrate length (byte)
+ * #r:       [ret]    remaining length
  */
 size_t conch_keccak_absorb(uint64_t state[5][5], const uint8_t *in,
 		size_t len, uint32_t rate)

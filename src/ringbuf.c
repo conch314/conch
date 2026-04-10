@@ -26,14 +26,14 @@
 #include <conch/ringbuf.h>
 
 
-/* @func: ringbuf_write
+/* @func: conch_ringbuf_write
  * #desc:
  *    write to the ring buffer.
  *
  * #1: head [in/out] ring buffer head
  * #2: s    [in]     input buffer
  * #3: len  [in]     input length
- * #r:      [rdt]    length of write
+ * #r:      [ret]    length of write
  */
 uint32_t conch_ringbuf_write(struct ringbuf_head *head, const uint8_t *s,
 		uint32_t len)
@@ -57,7 +57,7 @@ uint32_t conch_ringbuf_write(struct ringbuf_head *head, const uint8_t *s,
 	return len;
 }
 
-/* @func: ringbuf_read
+/* @func: conch_ringbuf_read
  * #desc:
  *    read from the ring buffer.
  *
@@ -88,7 +88,7 @@ uint32_t conch_ringbuf_read(struct ringbuf_head *head, uint8_t *s,
 	return len;
 }
 
-/* @func: ringbuf_peek
+/* @func: conch_ringbuf_peek
  * #desc:
  *    peek only the ring buffer.
  *

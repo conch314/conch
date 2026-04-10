@@ -596,7 +596,7 @@ static int32_t _stdio_setvbuf(xFILE *fp, uint8_t *buf, int32_t type,
 	return 0;
 }
 
-/* @func: _stdio_clearerr (static)
+/* @func: _stdio_feof (static)
  * #desc:
  *    get the eof flags function.
  *
@@ -610,7 +610,7 @@ static int32_t _stdio_feof(xFILE *fp)
 	return (f->flags & FG_EOF) ? -1 : 0;
 }
 
-/* @func: _stdio_clearerr (static)
+/* @func: _stdio_ferror (static)
  * #desc:
  *    get the error flags function.
  *

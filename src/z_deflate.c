@@ -977,7 +977,7 @@ static void _flush_block(struct deflate_ctx *ctx, int32_t flush)
  *
  * #1: ctx  [in/out] deflate struct context
  * #2: dist [in]     distance (0: literal)
- * #3: ll   [in]     literal and length (length: - DEFLATE_MATCH_MIN)
+ * #3: ll   [in]     literal and length (length - DEFLATE_MATCH_MIN)
  * #r:      [ret]    0: not full, 1: symbol full
  */
 static int32_t _symbol_add(struct deflate_ctx *ctx, uint32_t dist, uint32_t ll)

@@ -604,7 +604,7 @@ static void _polyvec_reduce(struct polyvec *r)
 		_poly_reduce(&r->vec[i]);
 }
 
-/* @func: _poly_add (static)
+/* @func: _polyvec_add (static)
  * #desc:
  *    polynomial vector additional (no modular reduction).
  *

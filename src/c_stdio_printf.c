@@ -97,10 +97,9 @@ int32_t conch_fprintf(xFILE *fp, const char *fmt, ...)
  * #desc:
  *    formatted output conversion.
  *
- * #1: fp  [in/out] stdio file struct
- * #2: fmt [in]     format string
- * #3: ap  [in]     variable parameter
- * #r:     [ret]    >=0: output length, -1: errno
+ * #1: fmt [in]  format string
+ * #2: ap  [in]  variable parameter
+ * #r:     [ret] >=0: output length, -1: errno
  */
 int32_t conch_vprintf(const char *fmt, va_list ap)
 {
@@ -117,10 +116,9 @@ int32_t conch_vprintf(const char *fmt, va_list ap)
  * #desc:
  *    formatted output conversion.
  *
- * #1: fp  [in/out] stdio file struct
- * #2: fmt [in]     format string
- * #N:     [in]     variable parameter
- * #r:     [ret]    >=0: output length, -1: errno
+ * #1: fmt [in]  format string
+ * #N:     [in]  variable parameter
+ * #r:     [ret] >=0: output length, -1: errno
  */
 int32_t conch_printf(const char *fmt, ...)
 {

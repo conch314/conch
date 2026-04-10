@@ -41,7 +41,7 @@
  *    poly1305 initialization function.
  *
  * #1: ctx [out] poly1305 struct context
- * #2: key [in]  input key (length: POLY1305_KEY_LEN)
+ * #2: key [in]  input key
  */
 void conch_poly1305_init(struct poly1305_ctx *ctx, const uint8_t *key)
 {
@@ -65,7 +65,7 @@ void conch_poly1305_init(struct poly1305_ctx *ctx, const uint8_t *key)
  *    poly1305 block processing function.
  *
  * #1: ctx    [in/out] poly1305 struct context
- * #2: s      [in]     input block (length: POLY1305_BLOCKSIZE)
+ * #2: s      [in]     input block
  * #3: padbit [in]     padding bit
  */
 void conch_poly1305_block(struct poly1305_ctx *ctx, const uint8_t *s,
@@ -153,7 +153,7 @@ void conch_poly1305_block(struct poly1305_ctx *ctx, const uint8_t *s,
  *    output poly1305 authentication tag.
  *
  * #1: ctx [in]  poly1305 struct context
- * #2: tag [out] result tag (length: POLY1305_TAG_LEN)
+ * #2: tag [out] result tag
  */
 void conch_poly1305_tag(struct poly1305_ctx *ctx, uint8_t *tag)
 {

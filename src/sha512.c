@@ -83,7 +83,7 @@ static const uint64_t sha512_constants[80] = {
  *    sha512 compression function.
  *
  * #1: ctx [in/out] sha512 struct context
- * #2: s   [in]     input block (length: SHA512_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 static void _sha512_compress(struct sha512_ctx *ctx, const uint8_t *s)
 {

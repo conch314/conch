@@ -41,7 +41,7 @@
  *    xxh64 compress function.
  *
  * #1: ctx [in/out] xxh64 struct context
- * #2: s   [in]     input block (length: XXHASH64_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 static void _xxhash64_compress(struct xxhash64_ctx *ctx, const uint8_t *s)
 {

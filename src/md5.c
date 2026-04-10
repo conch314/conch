@@ -69,7 +69,7 @@ static const uint32_t md5_number[64] = {
  *    md5 compression function.
  *
  * #1: ctx [in/out] md5 struct context
- * #2: s   [in]     input block (length: MD5_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 static void _md5_compress(struct md5_ctx *ctx, const uint8_t *s)
 {

@@ -772,7 +772,7 @@ static int32_t _json_array(struct json_ctx *ctx)
 	return -1;
 }
 
-/* @func: json_parse
+/* @func: conch_json_parse
  * #desc:
  *    json (javascript object notation) parser.
  *

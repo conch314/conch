@@ -35,7 +35,7 @@
  * #2: pass_len [in]  password length
  * #3: salt     [in]  salt
  * #4: salt_len [in]  salt length
- * #5: ohp      [out] output hashpass (length: BCRYPT_HASHPASS_LEN)
+ * #5: ohp      [out] output hashpass
  * #6: k        [in]  cost (2^N)
  */
 void conch_bcrypt_hashpass(const uint8_t *pass, uint32_t pass_len,

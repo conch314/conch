@@ -69,7 +69,7 @@ int32_t conch_clock_gettime(int32_t cid, struct xtimespec *ts)
  *    set the clock and time function.
  *
  * #1: cid [in]  clock type
- * #2:     [in]  timespec struct
+ * #2: ts  [in]  timespec struct
  * #r:     [ret] 0: no error, -1: errno
  */
 int32_t conch_clock_settime(int32_t cid, const struct xtimespec *ts)

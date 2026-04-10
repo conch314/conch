@@ -70,7 +70,7 @@ static const uint64_t rem4bit[16] = {
  *    ghash initialization function.
  *
  * #1: ctx [out] ghash struct context
- * #2: key [in]  input key (length: GHASH_KEY_LEN)
+ * #2: key [in]  input key
  */
 void conch_ghash_init(struct ghash_ctx *ctx, const uint8_t *key)
 {
@@ -166,7 +166,7 @@ void conch_ghash_gfmul(struct ghash_ctx *ctx, uint8_t x[16])
  *    ghash block processing function.
  *
  * #1: ctx [in/out] ghash struct context
- * #2: s   [in]     input block (length: GHASH_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 void conch_ghash_block(struct ghash_ctx *ctx, const uint8_t *s)
 {

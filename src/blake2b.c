@@ -70,7 +70,7 @@ static const uint8_t blake2b_sigma[12][16] = {
  *    blake2b compression function.
  *
  * #1: ctx [in/out] blake2b struct context
- * #2: s   [in]     input block (length: BLAKE2B_BLOCKSIZE)
+ * #2: s   [in]     input block
  */
 static void _blake2b_compress(struct blake2b_ctx *ctx, const uint8_t *s)
 {

@@ -200,7 +200,7 @@ xuid_t conch_geteuid(void)
  * #desc:
  *    set the user id of the process.
  *
- * #1: uid [un]  user id
+ * #1: uid [in]  user id
  * #r:     [ret] 0: no error, -1: errno
  */
 int32_t conch_setuid(xuid_t uid)
@@ -233,7 +233,7 @@ int32_t conch_setuid(xuid_t uid)
  * #desc:
  *    set the effective user id of the process.
  *
- * #1: euid [un]  effective user id
+ * #1: euid [in]  effective user id
  * #r:      [ret] 0: no error, -1: errno
  */
 int32_t conch_seteuid(xuid_t euid)
@@ -318,7 +318,7 @@ xgid_t conch_getegid(void)
  * #desc:
  *    set the group id of the process.
  *
- * #1: gid [un]  group id
+ * #1: gid [in]  group id
  * #r:     [ret] 0: no error, -1: errno
  */
 int32_t conch_setgid(xgid_t gid)
@@ -351,7 +351,7 @@ int32_t conch_setgid(xgid_t gid)
  * #desc:
  *    set the effective group id of the process.
  *
- * #1: egid [un]  effective group id
+ * #1: egid [in]  effective group id
  * #r:      [ret] 0: no error, -1: errno
  */
 int32_t conch_setegid(xgid_t egid)
