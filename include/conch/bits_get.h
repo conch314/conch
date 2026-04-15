@@ -36,10 +36,9 @@ struct bits_get_ctx {
 	uint16_t cur; /* current used bits of the buffer value */
 };
 
+#define BITS_GET_CTX_SET0 { .len = 0, .pos = 0, .cur = 0 }
 #define BITS_GET_NEW(name) \
-	struct bits_get_ctx name = { \
-		.len = 0, .pos = 0, .cur = 0 \
-		}
+	struct bits_get_ctx name = BITS_GET_CTX_SET0
 #define BITS_GET_INIT(x) \
 	(x)->len = 0; \
 	(x)->pos = 0; \

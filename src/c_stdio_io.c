@@ -33,11 +33,6 @@
 #include <conch/c_atomic.h>
 
 
-#define X_BUFSIZ 4096
-#define X_IOFBF 0
-#define X_IOLBF 1
-#define X_IONBF 2
-
 struct stdio_file {
 	int32_t flags;
 	int32_t fd;

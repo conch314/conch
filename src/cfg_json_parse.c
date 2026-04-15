@@ -63,7 +63,7 @@ enum {
 	TOKEN_ARRAY_END,
 	TOKEN_OBJECT,
 	TOKEN_OBJECT_END,
-	TOKEN_VALUE,
+	TOKEN_OBJKEY,
 	TOKEN_NEXT,
 	TOKEN_STRING,
 	TOKEN_NUMBER,
@@ -109,7 +109,7 @@ static int32_t _json_token(char c)
 		case ',':
 			return TOKEN_NEXT;
 		case ':':
-			return TOKEN_VALUE;
+			return TOKEN_OBJKEY;
 		case '"':
 		case '\'':
 			return TOKEN_STRING;
@@ -440,13 +440,13 @@ static int32_t _json_object(struct json_ctx *ctx)
 						ctx->str--;
 						ctx->len--;
 						break;
-					case TOKEN_STRING: /* value name */
+					case TOKEN_STRING: /* object key */
 						k = _json_string(ctx);
 						if (k < 0) {
-							ctx->err = JSON_ERR_OBJECT_VALUE;
+							ctx->err = JSON_ERR_OBJECT_OBJKEY;
 							return -1;
 						}
-						if (ctx->call(JSON_VALUE_TYPE,
+						if (ctx->call(JSON_OBJKEY_TYPE,
 								ctx->str - k + 1,
 								k - 2,
 								ctx->arg))
@@ -467,7 +467,7 @@ static int32_t _json_object(struct json_ctx *ctx)
 						return -1;
 				}
 				break;
-			case 2: /* value ':' */
+			case 2: /* ':' */
 				switch (_json_token(c)) {
 					case TOKEN_COMMENT:
 						k = _json_comment(ctx);
@@ -478,11 +478,11 @@ static int32_t _json_object(struct json_ctx *ctx)
 						ctx->str--;
 						ctx->len--;
 						break;
-					case TOKEN_VALUE:
+					case TOKEN_OBJKEY:
 						st = 3;
 						break;
 					default:
-						ctx->err = JSON_ERR_OBJECT_VALUE;
+						ctx->err = JSON_ERR_OBJECT_OBJKEY;
 						return -1;
 				}
 				break;
@@ -777,7 +777,7 @@ static int32_t _json_array(struct json_ctx *ctx)
  *    json (javascript object notation) parser.
  *
  * #1: ctx [in/out] json struct context
- * #2: s   [in]     input buffer
+ * #2: s   [in]     input string
  * #r:     [ret]    0: no error, -1: error, -2: call error
  */
 int32_t conch_json_parse(struct json_ctx *ctx, const char *s)

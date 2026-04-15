@@ -27,10 +27,10 @@
 
 /* @func: conch_fpclassify
  * #desc:
- *    classify real floating-point type.
+ *    classify real floating-point type.  
  *
- * #1: x [in]  input value
- * #r:   [ret] floating-point type
+ * #1: x [in]  number
+ * #r:   [ret] type
  */
 int32_t conch_fpclassify(double x)
 {
@@ -39,13 +39,12 @@ int32_t conch_fpclassify(double x)
 		uint64_t i;
 	} u = { x };
 
-	uint64_t e = (u.i >> 52) & 0x7ff;
-	uint64_t f = u.i & 0xfffffffffffffULL;
-
-	if (!e)
-		return f ? X_FP_SUBNORMAL : X_FP_ZERO;
-	if (e == 0x7ff)
-		return f ? X_FP_NAN : X_FP_INFINITE;
+	int32_t e = (u.i >> 52) & 0x7ff;
+	if (!e) {
+		return (u.i << 1) ? X_FP_SUBNORMAL : X_FP_ZERO;
+	} else if (e == 0x7ff) {
+		return (u.i << 12) ? X_FP_NAN : X_FP_INFINITE;
+	}
 
 	return X_FP_NORMAL;
 }
@@ -54,7 +53,7 @@ int32_t conch_fpclassify(double x)
  * #desc:
  *    return an floating-point absolute value.
  *
- * #1: x [in]  input value
+ * #1: x [in]  number
  * #r:   [ret] absolute value
  */
 double conch_fabs(double x)
@@ -69,12 +68,44 @@ double conch_fabs(double x)
 	return u.f;
 }
 
+/* @func: conch_ceil
+ * #desc:
+ *    returns the smallest integer value that is not less than x.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] smallest integer of x
+ */
+double conch_ceil(double x)
+{
+	union {
+		double f;
+		uint64_t i;
+	} u = { x };
+
+	int32_t e = ((u.i >> 52) & 0x7ff) - 1023;
+	if (e > 51) {
+		return x;
+	} else if (e < 0) {
+		return (u.i >> 63) ? -0.0 : 1.0;
+	}
+
+	uint64_t m = 1ULL << (52 - e);
+	if (!(u.i & (m - 1))) /* integer */
+		return x;
+
+	if (x > 0.0) /* correction */
+		u.i += m;
+	u.i &= ~(m - 1); /* mask decimal part */
+
+	return u.f;
+}
+
 /* @func: conch_floor
  * #desc:
- *    compute the maximum integer value of x.
+ *    returns the largest integer value not greater than x.
  *
- * #1: x [in]  input value
- * #r:   [ret] maximum integer value
+ * #1: x [in]  number
+ * #r:   [ret] largest integer of x
  */
 double conch_floor(double x)
 {
@@ -84,27 +115,91 @@ double conch_floor(double x)
 	} u = { x };
 
 	int32_t e = ((u.i >> 52) & 0x7ff) - 1023;
-	if (e > 51)
+	if (e > 51) {
 		return x;
-	if (e < 0)
-		return (u.i << 63) ? -1.0 : 0.0;
+	} else if (e < 0) {
+		return (u.i >> 63) ? -1.0 : 0.0;
+	}
 
 	uint64_t m = 1ULL << (52 - e);
-	if (!(u.i & (m - 1)))
+	if (!(u.i & (m - 1))) /* integer */
 		return x;
 
-	if (x < 0.0)
+	if (x < 0.0) /* correction */
 		u.i += m;
-	u.i &= ~(m - 1);
+	u.i &= ~(m - 1); /* mask decimal part */
 
 	return u.f;
 }
 
+/* @func: conch_trunc
+ * #desc:
+ *    returns the round to integer value, toward zero.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] integer value
+ */
+double conch_trunc(double x)
+{
+	union {
+		double f;
+		uint64_t i;
+	} u = { x };
+
+	int32_t e = ((u.i >> 52) & 0x7ff) - 1023 + 12;
+	if (e > (51 + 12)) {
+		return x;
+	} else if (e < 12) {
+		e = 1;
+	} /* +12 subnormal */
+
+	uint64_t m = -1ULL >> e;
+	if (!(u.i & m))
+		return x;
+
+	u.i &= ~m;
+
+	return u.f;
+}
+
+/* @func: conch_round
+ * #desc:
+ *    returns the round to nearest integer, away from zero.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] integer value
+ */
+double conch_round(double x)
+{
+	union {
+		double f;
+		uint64_t i;
+	} u = { x };
+
+	int32_t e = ((u.i >> 52) & 0x7ff) - 1023;
+	if (e > 51)
+		return x;
+
+	double y;
+	if (u.i >> 63) {
+		y = conch_floor(-x);
+		if ((y + x) <= -0.5)
+			y += 1;
+		return -y;
+	}
+
+	y = conch_floor(x);
+	if ((y - x) <= -0.5)
+		y += 1;
+
+	return y;
+}
+
 /* @func: conch_fmod
  * #desc:
- *    remainder function.
+ *    floating-point remainder function.
  *
- * #1: x [in]  input value
+ * #1: x [in]  number
  * #2: y [in]  denominator
  * #r:   [ret] remainder
  */
@@ -117,9 +212,9 @@ double conch_fmod(double x, double y)
 
 /* @func: conch_frexp
  * #desc:
- *    extract the mantissa and exponent from floating-point.
+ *    extract floating-point mantissa and exponent.
  *
- * #1: x [in]  input value
+ * #1: x [in]  number
  * #2: e [out] exponent
  * #r:   [ret] mantissa
  */
@@ -131,7 +226,6 @@ double conch_frexp(double x, int32_t *e)
 	} u = { x };
 
 	int32_t ee = (u.i >> 52) & 0x7ff;
-
 	if (!ee) {
 		if (x) {
 			x = conch_frexp(x * 0x1p64, e);
@@ -151,11 +245,52 @@ double conch_frexp(double x, int32_t *e)
 	return u.f;
 }
 
+/* @func: conch_ldexp
+ * #desc:
+ *    multiply floating-point number by integral power of 2.
+ *
+ * #1: x [in]  number
+ * #2: e [in]  exponent
+ * #r:   [ret] return the x*2^e
+ */
+double conch_ldexp(double x, int32_t e)
+{
+	union {
+		double f;
+		uint64_t i;
+	} u = { x };
+
+	if (e > 1023) {
+		x *= 0x1p1023;
+		e -= 1023;
+		if (e > 1023) {
+			x *= 0x1p1023;
+			e -= 1023;
+			if (e > 1023)
+				e = 1023;
+		}
+	} else if (e < -1022) {
+		x *= 0x1p-1022 * 0x1p53;
+		e += 1022 - 53;
+		if (e < -1022) {
+			x *= 0x1p-1022 * 0x1p53;
+			e += 1022 - 53;
+			if (e < -1022)
+				e = -1022;
+		}
+	}
+
+	u.i = (uint64_t)(1023 + e) << 52;
+	x *= u.f;
+
+	return x;
+}
+
 /* @func: conch_modf
  * #desc:
- *    extract floating-point integer and decimals
+ *    extract floating-point integer and decimals.
  *
- * #1: x [in]  input value
+ * #1: x [in]  number
  * #2: n [out] integer
  * #r:   [ret] decimals
  */
@@ -167,13 +302,15 @@ double conch_modf(double x, double *n)
 	} u = { x };
 
 	int32_t e = ((u.i >> 52) & 0x7ff) - 1023;
-
 	if (e > 51) {
 		*n = x;
-		return 0.0;
-	}
-	if (e < 0) {
-		*n = 0.0;
+		if (e == 1024 && (u.i << 12))
+			return x;
+		u.i &= 0x8000000000000000ULL;
+		return u.f;
+	} else if (e < 0) {
+		u.i &= 0x8000000000000000ULL;
+		*n = u.f;
 		return x;
 	}
 
@@ -190,81 +327,56 @@ double conch_modf(double x, double *n)
 	return x - u.f;
 }
 
-/* @func: conch_ldexp
+/* @func: conch_sqrt
  * #desc:
- *    multiply by an integer power of 2.
+ *    square root function.
  *
- * #1: x [in]  input floating-point
- * #2: n [in]  exponent
- * #r:   [ret] return the x*2^n
+ * #1: x [in]  number
+ * #r:   [ret] square root of x
  */
-double conch_ldexp(double x, int32_t n)
+double conch_sqrt(double x)
 {
+	if (x < 0.0)
+		return NAN;
+
+#if 0
+
+	/* newton-raphson method */
+	double m = x, q = 1.0;
+	for (int32_t i = 0; i < 20; i++) {
+		m = (m + q) / 2;
+		q = x / m;
+	}
+
+	return m;
+
+#else
+
+	/* newton-raphson method */
 	union {
 		double f;
 		uint64_t i;
 	} u = { x };
 
-	if (n > 1023) {
-		x *= 0x1p1023;
-		n -= 1023;
-		if (n > 1023) {
-			x *= 0x1p1023;
-			n -= 1023;
-			if (n > 1023)
-				n = 1023;
-		}
-	} else if (n < -1022) {
-		x *= 0x1p-1022 * 0x1p53;
-		n += 1022 - 53;
-		if (n < -1022) {
-			x *= 0x1p-1022 * 0x1p53;
-			n += 1022 - 53;
-			if (n < -1022)
-				n = -1022;
-		}
-	}
+	u.i = 0x1ff7a3bea91d9b1bULL + (u.i >> 1);
 
-	u.i = (uint64_t)(1023 + n) << 52;
-	x *= u.f;
+	double m = u.f;
+	m = 0.5 * (m + x / m);
+	m = 0.5 * (m + x / m);
+	m = 0.5 * (m + x / m);
+	m = 0.5 * (m + x / m);
 
-	return x;
-}
+	return m;
 
-/* @func: conch_cos
- * #desc:
- *    cosine function.
- *
- * #1: x [in]  input value
- * #r:   [ret] cosine of value
- */
-double conch_cos(double x)
-{
-	int32_t neg = 1;
-	x = conch_fmod(x, M_PI * 2);
-	if (x > M_PI) {
-		x -= M_PI;
-		neg = -1;
-	}
-
-	/* taylor series running product */
-	int32_t sign = -1;
-	double m = 1.0, q = 1.0, x2 = x * x;
-	for (int32_t i = 1; i <= 10; i++) {
-		q *= x2 / ((2 * i) * (2 * i - 1.0));
-		m += sign * q;
-		sign *= -1;
-	}
-
-	return m * neg;
+#endif
 }
 
 /* @func: conch_sin
  * #desc:
  *    sine function.
  *
- * #1: x [in]  input value
- * #r:   [ret] sine of value
+ * #1: x [in]  number
+ * #r:   [ret] sine of x
  */
 double conch_sin(double x)
 {
@@ -278,8 +390,38 @@ double conch_sin(double x)
 	/* taylor series running product */
 	int32_t sign = -1;
 	double m = x, q = x, x2 = x * x;
-	for (int32_t i = 1; i <= 10; i++) {
+	for (int32_t i = 1; i <= 12; i++) {
 		q *= x2 / ((2 * i) * (2 * i + 1));
+		m += sign * q;
+		sign *= -1;
+	}
+
+	return m * neg;
+}
+
+/* @func: conch_cos
+ * #desc:
+ *    cosine function.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] cosine of x
+ */
+double conch_cos(double x)
+{
+	int32_t neg = 1;
+	x = conch_fmod(x, M_PI * 2);
+	if (x > M_PI) {
+		x -= M_PI;
+		neg = -1;
+	}
+
+	/* NOTE: https://austinhenley.com/blog/cosine.html */
+
+	/* taylor series running product */
+	int32_t sign = -1;
+	double m = 1.0, q = 1.0, x2 = x * x;
+	for (int32_t i = 1; i <= 12; i++) {
+		q *= x2 / ((2 * i) * (2 * i - 1.0));
 		m += sign * q;
 		sign *= -1;
 	}
@@ -291,8 +433,8 @@ double conch_sin(double x)
  * #desc:
  *    tangent function.
  *
- * #1: x [in]  input value
- * #r:   [ret] tangent of value
+ * #1: x [in]  number
+ * #r:   [ret] tangent of x
  */
 double conch_tan(double x)
 {
@@ -303,8 +445,8 @@ double conch_tan(double x)
  * #desc:
  *    arc cosine function.
  *
- * #1: x [in]  input value
- * #r:   [ret] arc cosine of value
+ * #1: x [in]  number
+ * #r:   [ret] arc cosine of x
  */
 double conch_acos(double x)
 {
@@ -313,7 +455,7 @@ double conch_acos(double x)
 
 	double m = M_PI_2;
 	for (int32_t i = 0; i < 5; i++)
-		m -= (conch_cos(m) - x) / (-conch_sin(m));
+		m -= (conch_cos(m) - x) / -conch_sin(m);
 
 	return m;
 }
@@ -322,8 +464,8 @@ double conch_acos(double x)
  * #desc:
  *    arc tangent function.
  *
- * #1: x [in]  input value
- * #r:   [ret] arc tangent of value
+ * #1: x [in]  number
+ * #r:   [ret] arc tangent of x
  */
 double conch_atan(double x)
 {
@@ -341,6 +483,8 @@ double conch_atan(double x)
 		q *= -x2;
 		m += q / (2 * i + 1);
 	}
+
+	return m;
 
 #else
 
@@ -364,59 +508,17 @@ double conch_atan(double x)
 		p *= x * x;
 	}
 
-#endif
-
 	return m;
-}
-
-/* @func: conch_sqrt
- * #desc:
- *    square root function.
- *
- * #1: x [in]  input value
- * #r:   [ret] square root of value
- */
-double conch_sqrt(double x)
-{
-	if (x < 0.0)
-		return NAN;
-
-#if 0
-
-	/* newton-raphson method */
-	double m = x, q = 1.0;
-	for (int32_t i = 0; i < 20; i++) {
-		m = (m + q) / 2;
-		q = x / m;
-	}
-
-#else
-
-	/* newton-raphson method */
-	union {
-		double f;
-		uint64_t i;
-	} u = { x };
-
-	u.i = 0x1ff7a3bea91d9b1bULL + (u.i >> 1);
-
-	double m = u.f;
-	m = 0.5 * (m + x / m);
-	m = 0.5 * (m + x / m);
-	m = 0.5 * (m + x / m);
-	m = 0.5 * (m + x / m);
 
 #endif
-
-	return m;
 }
 
 /* @func: conch_asin
  * #desc:
- *    arc cosine function.
+ *    arc sine function.
  *
- * #1: x [in]  input value
- * #r:   [ret] arc cosine of value
+ * #1: x [in]  number
+ * #r:   [ret] arc sine of x
  */
 double conch_asin(double x)
 {
@@ -434,34 +536,82 @@ double conch_asin(double x)
 
 /* @func: conch_exp
  * #desc:
- *    exponential function.
+ *    exponential function based on the natural logarithm.
  *
- * #1: x [in]  input value
- * #r:   [ret] cardinality exponent of value
+ * #1: x [in]  number
+ * #r:   [ret] return the power of e^x
  */
 double conch_exp(double x)
 {
-	x *= 1 / M_LN2;
-	int32_t n = (int32_t)x;
-	x -= n;
+	if (x > 709.782712893384)
+		return INFINITY;
+	if (x < -745.1332191019411)
+		return 0.0;
 
-	/* horner + remez poly */
-	double m = 0.00133335581;
-	m = m * x + 0.00961812911;
-	m = m * x + 0.05550410866;
-	m = m * x + 0.24022650695;
-	m = m * x + 0.69314718056;
-	m = m * x + 1.0;
+#if 0
 
-	return conch_ldexp(m, n);
+	/* taylor expansion */
+	double m = 1.0, q = 1.0;
+	for (int32_t i = 1; i <= 25; i++) {
+		q *= x / i;
+		m += q;
+	}
+
+	return m;
+
+#else
+
+	/* minimax coefficients */
+	static const double coeffs[13] = {
+		1.00000000000000000000,
+		1.00000000000000000000,
+		0.50000000000000000000,
+		0.16666666666666666667,
+		0.04166666666666666667,
+		0.00833333333333333333,
+		0.00138888888888888889,
+		0.00019841269841269841,
+		0.00002480158730158730,
+		0.00000275573192239859,
+		0.00000027557319223986,
+		0.00000002505210838544,
+		0.00000000208767569879
+		};
+
+	const double ln2_hi = 0.69314718055994528623;
+	const double ln2_lo = 2.31904681384629955842e-17;
+
+	int32_t e = (int32_t)conch_round(x * (1 / M_LN2));
+	double r = x - (ln2_hi * e) - (ln2_lo * e);
+
+	/* remez + horner's method */
+	x = coeffs[12];
+	for (int32_t i = 11; i >= 0; i--)
+		x = x * r + coeffs[i];
+
+	return conch_ldexp(x, e);
+
+#endif
+}
+
+/* @func: conch_exp2
+ * #desc:
+ *     base-2 exponential function.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] return the power of 2^x
+ */
+double conch_exp2(double x)
+{
+	return conch_exp(x * M_LN2);
 }
 
 /* @func: conch_log
  * #desc:
  *    natural logarithm function.
  *
- * #1: x [in]  input value
- * #r:   [ret] natural logarithm of value
+ * #1: x [in]  number
+ * #r:   [ret] natural logarithm of x
  */
 double conch_log(double x)
 {
@@ -470,60 +620,92 @@ double conch_log(double x)
 	if (x == 1)
 		return 0.0;
 
-	int32_t e;
-	x = conch_frexp(x, &e);
+#if 0
 
-	if (x < M_SQRT1_2) {
-		x *= 2.0;
-		e -= 1;
+	/* newton-raphson method */
+	double m = x, q = 0.0;
+	for (int32_t i = 0; i < 15; i++) {
+		q = conch_exp(m);
+		m -= (q - x) / q;
 	}
-	x -= 1.0;
-
-	/* horner + remez poly */
-	double m = 0.14218894;
-	m = m * x + -0.16679639;
-	m = m * x + 0.19992875;
-	m = m * x + -0.24997585;
-	m = m * x + 0.33333736;
-	m = m * x + -0.49999908;
-	m = m * x + 0.99999955;
-	m = m * x + -0.00027870118;
-
-	m += e * M_LN2;
 
 	return m;
+
+#else
+
+	int32_t e;
+	double f = conch_frexp(x, &e);
+
+	if (f < M_SQRT1_2) {
+		f *= 2.0;
+		e--;
+	}
+
+	/* minimax coefficients */
+	static const double coeffs[8] = {
+		2.00000000000000000000,
+		0.66666666666666666667,
+		0.40000000000000000000,
+		0.28571428571428571429,
+		0.22222222222222222222,
+		0.18181818181818181818,
+		0.15384615384615384615,
+		0.13333333333333333333 
+		};
+
+	const double ln2_hi = 0.69314718055994528623;
+	const double ln2_lo = 2.31904681384629955842e-17;
+
+	double s = (f - 1.0) / (f + 1.0);
+	double s2 = s * s;
+
+	/* remez + horner's method */
+	x = coeffs[7];
+	for (int32_t i = 6; i >= 0; i--)
+		x = x * s2 + coeffs[i];
+	x *= s;
+
+	return x + (ln2_hi * e) + (ln2_lo * e);
+
+#endif
 }
 
 /* @func: conch_log2
  * #desc:
- *    natural logarithm function of base 2.
+ *    base-2 natural logarithm function.
  *
- * #1: x [in]  input value
- * #r:   [ret] natural logarithm of value
+ * #1: x [in]  number
+ * #r:   [ret] base-2 natural logarithm of x
  */
 double conch_log2(double x)
 {
-	return conch_log(x) / M_LN2;
+	if (x <= 0.0)
+		return NAN;
+
+	return conch_log(x) * (1 / M_LN2);
 }
 
 /* @func: conch_log10
  * #desc:
- *    natural logarithm function of base 10.
+ *    base-10 natural logarithm function.
  *
- * #1: x [in]  input value
- * #r:   [ret] natural logarithm of value
+ * #1: x [in]  number
+ * #r:   [ret] base-10 natural logarithm of x
  */
 double conch_log10(double x)
 {
-	return conch_log(x) / M_LN10;
+	if (x <= 0.0)
+		return NAN;
+
+	return conch_log(x) * (1 / M_LN10);
 }
 
 /* @func: conch_log1p
  * #desc:
  *    logarithm of 1 plus argument.
  *
- * #1: x [in]  input value
- * #r:   [ret] natural logarithm of value
+ * #1: x [in]  number
+ * #r:   [ret] natural logarithm of 1+x
  */
 double conch_log1p(double x)
 {
@@ -533,45 +715,27 @@ double conch_log1p(double x)
 	return conch_log(1.0 + x);
 }
 
-/* @func: _pow (static)
- * #desc:
- *    power function.
- *
- * #1: x [in]  input value
- * #2: e [in]  exponent value
- * #r:   [ret] return x^e power value
- */
-static double _pow(double x, double e)
-{
-	double m = 1.0;
-	uint64_t abs_e = (uint64_t)conch_fabs(e);
-	while (abs_e > 0) {
-		if (abs_e % 2 == 1)
-			m *= x;
-		abs_e >>= 1;
-		x *= x;
-	}
-	m = (e < 0.0) ? (1.0 / m) : m;
-
-	return m;
-}
-
 /* @func: conch_pow
  * #desc:
  *    power function.
  *
- * #1: x [in]  input value
- * #2: e [in]  exponent value
- * #r:   [ret] return x^e power value
+ * #1: x [in]  number
+ * #2: e [in]  exponent
+ * #r:   [ret] return the power of x 
  */
 double conch_pow(double x, double e)
 {
-	double m = 0.0, q = 0.0;
-	m = _pow(conch_fabs(x), e);
+	if (e == 0.0)
+		return 1.0;
+	if (x == 1.0)
+		return 1.0;
+	if (x == 0.0) {
+		if (e > 0.0)
+			return 0.0;
+		return INFINITY;
+	}
+	if (x < 0.0 && conch_floor(e) != e)
+		return NAN;
 
-	q = e - (int64_t)e;
-	if (q != 0.0)
-		m *= conch_exp(q * conch_log(x));
-
-	return m;
+	return conch_exp(e * conch_log(conch_fabs(x)));
 }

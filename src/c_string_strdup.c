@@ -1,6 +1,6 @@
-/* @file: c_stdlib_abs.c
+/* @file: c_string_strdup.c
  * #desc:
- *    The implementations of standard library.
+ *    The implementations of string operations.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -21,41 +21,37 @@
  */
 
 #include <conch/config.h>
+#include <conch/c_stddef.h>
+#include <conch/c_string.h>
 #include <conch/c_stdlib.h>
 
 
-/* @func: conch_abs
+/* @func: conch_strndup
  * #desc:
- *    returns an integer absolute value.
+ *    duplicate a string.
  *
- * #1: n [in]  number
- * #r:   [ret] absolute value
+ * #1: s   [in]  input string
+ * #2: len [in]  input length
+ * #r:     [ret] returns a new string
  */
-int conch_abs(int n)
+char *conch_strndup(const char *s, size_t len)
 {
-	return (n < 0) ? -n : n;
+	char *p = conch_malloc(len + 1);
+	p[len] = '\0';
+
+	conch_memcpy(p, s, len);
+
+	return p;
 }
 
-/* @func: conch_labs
+/* @func: conch_strdup
  * #desc:
- *    returns an integer absolute value.
+ *    duplicate a string.
  *
- * #1: n [in]  number
- * #r:   [ret] absolute value
+ * #1: s [in]  input string
+ * #r:   [ret] returns a new string
  */
-long conch_labs(long n)
+char *conch_strdup(const char *s)
 {
-	return (n < 0) ? -n : n;
-}
-
-/* @func: conch_llabs
- * #desc:
- *    returns an integer absolute value.
- *
- * #1: n [in]  number
- * #r:   [ret] absolute value
- */
-long long conch_llabs(long long n)
-{
-	return (n < 0) ? -n : n;
+	return conch_strndup(s, conch_strlen(s));
 }

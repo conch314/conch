@@ -29,12 +29,25 @@
 #include <conch/c_stdarg.h>
 
 
-#undef EOF
-#define EOF (-1)
+#define X_SEEK_SET 0 /* absolute */
+#define X_SEEK_CUR 1 /* relative */
+#define X_SEEK_END 2 /* tail start */
+
+#define X_BUFSIZ 4096
+#define X_IOFBF 0 /* fully buffer */
+#define X_IOLBF 1 /* line buffer */
+#define X_IONBF 2 /* not buffer */
+
+#define X_EOF (-1) /* end-of-file */
 
 typedef struct {
 	char _; /* internal implemented */
 } xFILE;
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern
 xFILE *x_stdin;
@@ -42,11 +55,6 @@ extern
 xFILE *x_stdout;
 extern
 xFILE *x_stderr;
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* c_stdio__printf.c */
 extern

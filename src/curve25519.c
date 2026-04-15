@@ -1052,9 +1052,9 @@ static int32_t _ed25519_point_equal(const struct ed25519_point *xyz1,
 	uint32_t a[8], b[8], r = 0;
 	/*
 	 * if ((x1 * z2) - (x2 * z1))
-	 *   return 0;
+	 *   return 0
 	 * if ((y1 * z2) - (y2 * z1))
-	 *   return 0;
+	 *   return 0
 	 * return 1
 	 */
 
@@ -1114,7 +1114,7 @@ static void _ed25519_point_recover_x(const uint32_t y[8], uint32_t sign,
 	_fp25519_mul(x2, x2, x1);
 	_fp25519_mod(x2);
 
-	/* x = modpow(x2, (p + 3) / 8) % p */
+	/* x = modpow(x2, (p + 3) / 8, p) % p */
 	_fp25519_pow(x, x2, _ed25519_p38);
 	_fp25519_mod(x);
 
@@ -1307,8 +1307,7 @@ void conch_eddsa_ed25519_public_key(const uint8_t *pri, uint8_t *pub)
 	uint32_t _pri[8], _pub[8], _ran[8];
 	struct ed25519_point xyz1;
 
-	conch_eddsa_ed25519_nonce_key(pri, (uint8_t *)_pri,
-		(uint8_t *)_ran);
+	conch_eddsa_ed25519_nonce_key(pri, (uint8_t *)_pri, (uint8_t *)_ran);
 
 	/* _pub = compress(scalar(_pri, base)) */
 	_ed25519_scalar_mul(_pri, &_ed25519_base, &xyz1);
@@ -1333,17 +1332,14 @@ void conch_eddsa_ed25519_sign(const uint8_t *pri,
 	struct ed25519_point xyz1;
 	SHA512_NEW(sha_ctx);
 
-	conch_eddsa_ed25519_nonce_key(pri, (uint8_t *)_pri,
-		(uint8_t *)_ran);
+	conch_eddsa_ed25519_nonce_key(pri, (uint8_t *)_pri, (uint8_t *)_ran);
 	conch_eddsa_ed25519_public_key(pri, (uint8_t *)_pub);
 
 	/* r = sha(_ran + msg) % q */
 	conch_sha512_init(&sha_ctx);
-	conch_sha512_process(&sha_ctx,
-		(uint8_t *)_ran, EDDSA_ED25519_RAN_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)_ran, EDDSA_ED25519_RAN_LEN);
 	conch_sha512_process(&sha_ctx, msg, len);
-	conch_sha512_finish(&sha_ctx,
-		len + EDDSA_ED25519_RAN_LEN);
+	conch_sha512_finish(&sha_ctx, len + EDDSA_ED25519_RAN_LEN);
 	_sc25519_digest(&(SHA512_STATE(&sha_ctx, 0)), r);
 	_sc25519_mod(r);
 
@@ -1353,10 +1349,8 @@ void conch_eddsa_ed25519_sign(const uint8_t *pri,
 
 	/* h = sha(rs + _pub + msg) % q */
 	conch_sha512_init(&sha_ctx);
-	conch_sha512_process(&sha_ctx,
-		(uint8_t *)rs, EDDSA_ED25519_LEN);
-	conch_sha512_process(&sha_ctx,
-		(uint8_t *)_pub, EDDSA_ED25519_PUB_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED25519_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED25519_PUB_LEN);
 	conch_sha512_process(&sha_ctx, msg, len);
 	conch_sha512_finish(&sha_ctx,
 		len + (EDDSA_ED25519_LEN + EDDSA_ED25519_PUB_LEN));
@@ -1399,10 +1393,8 @@ int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 
 	/* h = sha(rs + _pub + msg) % q */
 	conch_sha512_init(&sha_ctx);
-	conch_sha512_process(&sha_ctx,
-		(uint8_t *)rs, EDDSA_ED25519_LEN);
-	conch_sha512_process(&sha_ctx,
-		(uint8_t *)_pub, EDDSA_ED25519_PUB_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED25519_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED25519_PUB_LEN);
 	conch_sha512_process(&sha_ctx, msg, len);
 	conch_sha512_finish(&sha_ctx,
 		len + (EDDSA_ED25519_LEN + EDDSA_ED25519_PUB_LEN));

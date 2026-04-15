@@ -34,11 +34,13 @@ struct ringbuf_head {
 	uint32_t write;
 };
 
-#define RINGBUF_NEW(name, _buf, _size) \
-	struct ringbuf_head name = { \
+#define RINGBUF_HEAD_SET(_buf, _size) \
+	{ \
 		.buf = _buf, .size = _size, \
 		.read = 0, .write = 0 \
-		}
+	}
+#define RINGBUF_NEW(name, _buf, _size) \
+	struct ringbuf_head name = RINGBUF_HEAD_SET(_buf, _size)
 #define RINGBUF_INIT(x, _buf, _size) \
 	(x)->buf = _buf; \
 	(x)->size = _size;\

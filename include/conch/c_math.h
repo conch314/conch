@@ -27,45 +27,44 @@
 #include <conch/c_stdint.h>
 
 
-#undef M_E
-#undef M_LOG2E
-#undef M_LOG10E
-#undef M_LN2
-#undef M_LN10
-#undef M_PI
-#undef M_PI_2
-#undef M_PI_4
-#undef M_1_PI
-#undef M_2_PI
-#undef M_2_SQRTPI
-#undef M_SQRT2
-#undef M_SQRT1_2
-
 /* logarithm e */
+#undef M_E
 #define M_E 2.7182818284590452354
 /* log2(e) */
+#undef M_LOG2E
 #define M_LOG2E 2.7182818284590452354
 /* log10(e) */
+#undef M_LOG10E
 #define M_LOG10E 0.43429448190325182765
 /* log(2) */
+#undef M_LN2
 #define M_LN2 0.69314718055994530942
 /* log(10) */
+#undef M_LN10
 #define M_LN10 2.30258509299404568402
 /* pi */
+#undef M_PI
 #define M_PI 3.14159265358979323846
 /* pi/2 */
+#undef M_PI_2
 #define M_PI_2 1.57079632679489661923
 /* pi/4 */
+#undef M_PI_4
 #define M_PI_4 0.78539816339744830962
 /* 1/pi */
+#undef M_1_PI
 #define M_1_PI 0.31830988618379067154
 /* 2/pi */
+#undef M_2_PI
 #define M_2_PI 0.63661977236758134308
 /* 2/sqrt(pi) */
+#undef M_2_SQRTPI
 #define M_2_SQRTPI 1.12837916709551257390
 /* square root of 2 */
+#undef M_SQRT2
 #define M_SQRT2 1.41421356237309504880
 /* 1/sqrt(2) */
+#undef M_SQRT1_2
 #define M_SQRT1_2 0.70710678118654752440
 
 #define X_FP_NAN 0
@@ -96,6 +95,12 @@ static const union {
 #define NAN (_NAN.f)
 #define INFINITY (_INFINITY.f)
 
+#define conch_isnan(x) (conch_fpclassify(x) == X_FP_NAN)
+#define conch_isinf(x) (conch_fpclassify(x) == X_FP_INFINITE)
+#define conch_isnormal(x) (conch_fpclassify(x) == X_FP_NORMAL)
+#define conch_isfinite(x) (conch_fpclassify(x) != X_FP_NAN \
+	&& conch_fpclassify(x) != X_FP_INFINITE)
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -109,7 +114,16 @@ extern
 double conch_fabs(double x)
 ;
 extern
+double conch_ceil(double x)
+;
+extern
 double conch_floor(double x)
+;
+extern
+double conch_trunc(double x)
+;
+extern
+double conch_round(double x)
 ;
 extern
 double conch_fmod(double x, double y)
@@ -118,16 +132,19 @@ extern
 double conch_frexp(double x, int32_t *e)
 ;
 extern
+double conch_ldexp(double x, int32_t e)
+;
+extern
 double conch_modf(double x, double *n)
 ;
 extern
-double conch_ldexp(double x, int32_t n)
-;
-extern
-double conch_cos(double x)
+double conch_sqrt(double x)
 ;
 extern
 double conch_sin(double x)
+;
+extern
+double conch_cos(double x)
 ;
 extern
 double conch_tan(double x)
@@ -139,13 +156,13 @@ extern
 double conch_atan(double x)
 ;
 extern
-double conch_sqrt(double x)
-;
-extern
 double conch_asin(double x)
 ;
 extern
 double conch_exp(double x)
+;
+extern
+double conch_exp2(double x)
 ;
 extern
 double conch_log(double x)

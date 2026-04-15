@@ -83,6 +83,11 @@
 # define CONCH_PLATFORM CONCH_PLATFORM_LINUX
 #endif
 
+/* using the platform's libc runtime */
+#if 0
+# define CONCH_PLATFORM_LIBC
+#endif
+
 #if 0
 # define CONCH_STDDEF_TYPEDEF
 # define CONCH_STDINT_TYPEDEF

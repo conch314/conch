@@ -166,7 +166,7 @@ struct xsiginfo_payload {
 typedef struct {
 	union {
 		struct xsiginfo_payload payload;
-		int32_t _pad[X_SI_MAX_SIZE / sizeof(int32_t)];
+		uint32_t _pad[X_SI_MAX_SIZE / sizeof(uint32_t)];
 	} u;
 } xsiginfo_t;
 

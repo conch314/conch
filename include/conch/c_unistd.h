@@ -32,12 +32,12 @@
 #ifdef CONCH_PLATFORM
 # if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
 
-/* absolute offset */
-#define X_SEEK_SET 0
-/* relative offset */
-#define X_SEEK_CUR 1
-/* tail start offset */
-#define X_SEEK_END 2
+#undef X_SEEK_SET
+#undef X_SEEK_CUR
+#undef X_SEEK_END
+#define X_SEEK_SET 0 /* absolute */
+#define X_SEEK_CUR 1 /* relative */
+#define X_SEEK_END 2 /* tail start */
 
 # else
 #  error "!!!unknown CONCH_PLATFORM!!!"

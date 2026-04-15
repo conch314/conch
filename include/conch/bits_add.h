@@ -36,10 +36,10 @@ struct bits_add_ctx {
 	uint16_t rem;  /* remaining bits of the value */
 };
 
+
+#define BITS_ADD_CTX_SET0 { .size = 0, .cur = 0, .rem = 0 }
 #define BITS_ADD_NEW(name) \
-	struct bits_add_ctx name = { \
-		.size = 0, .cur = 0, .rem = 0 \
-		}
+	struct bits_add_ctx name = BITS_ADD_CTX_SET0
 #define BITS_ADD_INIT(x) \
 	(x)->size = 0; \
 	(x)->cur = 0; \

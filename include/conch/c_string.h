@@ -97,6 +97,14 @@ extern
 char *conch_strtok_r(char *s, const char *sp, char **sl)
 ;
 
+/* c_string_strdup.c */
+extern
+char *conch_strndup(const char *s, size_t len)
+;
+extern
+char *conch_strdup(const char *s)
+;
+
 #ifdef __cplusplus
 }
 #endif

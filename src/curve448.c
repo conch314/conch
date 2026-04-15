@@ -924,9 +924,9 @@ static int32_t _ed448_point_equal(const struct ed448_point *xyz1,
 	uint32_t a[14], b[14], r = 0;
 	/*
 	 * if ((x1 * z2) - (x2 * z1))
-	 *   return 0;
+	 *   return 0
 	 * if ((y1 * z2) - (y2 * z1))
-	 *   return 0;
+	 *   return 0
 	 * return 1
 	 */
 
@@ -984,7 +984,7 @@ static void _ed448_point_recover_x(const uint32_t y[14], uint32_t sign,
 	_fp448_mul(x2, x2, x1);
 	_fp448_mod(x2);
 
-	/* x = modpow(x2, (p + 1) / 4) % p */
+	/* x = modpow(x2, (p + 1) / 4, p) % p */
 	_fp448_pow(x, x2, _ed448_p14);
 	_fp448_mod(x);
 
@@ -1154,8 +1154,7 @@ void conch_eddsa_ed448_public_key(const uint8_t *pri, uint8_t *pub)
 	uint32_t _pri[15], _pub[15], _ran[15];
 	struct ed448_point xyz1;
 
-	conch_eddsa_ed448_nonce_key(pri, (uint8_t *)_pri,
-		(uint8_t *)_ran);
+	conch_eddsa_ed448_nonce_key(pri, (uint8_t *)_pri, (uint8_t *)_ran);
 
 	/* _pub = compress(scalar(_pri, base)) */
 	_ed448_scalar_mul(_pri, &_ed448_base, &xyz1);
@@ -1181,16 +1180,13 @@ void conch_eddsa_ed448_sign(const uint8_t *pri,
 	struct ed448_point xyz1;
 	SHA3_NEW(sha_ctx);
 
-	conch_eddsa_ed448_nonce_key(pri, (uint8_t *)_pri,
-		(uint8_t *)_ran);
+	conch_eddsa_ed448_nonce_key(pri, (uint8_t *)_pri, (uint8_t *)_ran);
 	conch_eddsa_ed448_public_key(pri, (uint8_t *)_pub);
 
 	/* r = sha(ctx + _ran + msg) % q */
 	conch_sha3_init(&sha_ctx, SHA3_SHAKE256_TYPE, 114);
-	conch_sha3_process(&sha_ctx,
-		_ed448_ctx, ED448_CTX_LEN);
-	conch_sha3_process(&sha_ctx,
-		(uint8_t *)_ran, EDDSA_ED448_RAN_LEN);
+	conch_sha3_process(&sha_ctx, _ed448_ctx, ED448_CTX_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)_ran, EDDSA_ED448_RAN_LEN);
 	conch_sha3_process(&sha_ctx, msg, len);
 	conch_sha3_finish(&sha_ctx);
 	_sc448_digest(&(SHA3_STATE(&sha_ctx, 0)), r);
@@ -1202,12 +1198,9 @@ void conch_eddsa_ed448_sign(const uint8_t *pri,
 
 	/* h = sha(ctx + rs + _pub + msg) % q */
 	conch_sha3_init(&sha_ctx, SHA3_SHAKE256_TYPE, 114);
-	conch_sha3_process(&sha_ctx,
-		_ed448_ctx, ED448_CTX_LEN);
-	conch_sha3_process(&sha_ctx,
-		(uint8_t *)rs, EDDSA_ED448_LEN);
-	conch_sha3_process(&sha_ctx,
-		(uint8_t *)_pub, EDDSA_ED448_PUB_LEN);
+	conch_sha3_process(&sha_ctx, _ed448_ctx, ED448_CTX_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED448_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED448_PUB_LEN);
 	conch_sha3_process(&sha_ctx, msg, len);
 	conch_sha3_finish(&sha_ctx);
 	_sc448_digest(&(SHA3_STATE(&sha_ctx, 0)), h);
@@ -1250,12 +1243,9 @@ int32_t conch_eddsa_ed448_verify(const uint8_t *pub,
 
 	/* h = sha(ctx + rs + _pub + msg) % q */
 	conch_sha3_init(&sha_ctx, SHA3_SHAKE256_TYPE, 114);
-	conch_sha3_process(&sha_ctx,
-		_ed448_ctx, ED448_CTX_LEN);
-	conch_sha3_process(&sha_ctx,
-		(uint8_t *)rs, EDDSA_ED448_LEN);
-	conch_sha3_process(&sha_ctx,
-		(uint8_t *)_pub, EDDSA_ED448_PUB_LEN);
+	conch_sha3_process(&sha_ctx, _ed448_ctx, ED448_CTX_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED448_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED448_PUB_LEN);
 	conch_sha3_process(&sha_ctx, msg, len);
 	conch_sha3_finish(&sha_ctx);
 	_sc448_digest(&(SHA3_STATE(&sha_ctx, 0)), h);

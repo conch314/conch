@@ -59,9 +59,8 @@ struct swissmap_head {
 	}
 #define SWISSMAP_HEAD_NEW(name, _ctrl, _array, _wsize, \
 		_total_size, _hash, _cmp) \
-	struct swissmap_head name = \
-		SWISSMAP_HEAD_SET(_ctrl, _array, _wsize, \
-			_total_size, _hash, _cmp)
+	struct swissmap_head name = SWISSMAP_HEAD_SET(_ctrl, _array, \
+			_wsize, _total_size, _hash, _cmp)
 #define SWISSMAP_HEAD_INIT(x, _ctrl, _array, _wsize, \
 		_total_size, _hash, _cmp) \
 	(x)->group = _ctrl; \

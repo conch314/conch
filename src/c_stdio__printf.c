@@ -61,8 +61,8 @@ struct printf_ctx {
 #define FG_POSITIVE_NEG 0x200
 #define FG_PRECISE 0x400
 
-#define DOU2STR_DF_PREMAX 324
-#define DOU2STR_DF_LENMAX 680
+#define DOU2STR_DF_PREMAX 400
+#define DOU2STR_DF_LENMAX 1024
 
 
 /* @func: _out_pad (static)
@@ -214,11 +214,13 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 
 	v = conch_frexp(conch_fabs(v), &e);
 
+#if 0
 	/* integer length, log10(v) + e * log10(2) == log10(v * 2^e) */
 	if (v) {
 		intlen = (int32_t)conch_floor(conch_log10(v)
 			+ e * 0.3010299956639812 + 1);
 	}
+#endif
 
 	/* compensate precision */
 	v *= 2;
@@ -239,7 +241,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 	/* enlarge */
 	do {
 		*z = (uint32_t)v;
-		v = (v - (uint32_t)(*z++)) * 1000000000;
+		v = (v - *z++) * 1000000000;
 	} while (v);
 
 #undef MIN
@@ -282,9 +284,18 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		e += sh;
 	}
 
-	if (intlen <= 0) {
+	/* integer length, (r - a) * 9 + floor(log10(*a)) */
+	if (a < z) {
+		intlen = (int32_t)(r - a) * 9 + 1;
+		for (uint32_t k = 10; *a >= k; k *= 10)
+			intlen++;
+	}
+
+	/* TODO: 1.3 => 1.299999 rounding */
+
+	if (intlen < 1) {
 		p[n++] = '0';
-		if (pre > 0 && intlen < 0) { /* prefix padding */
+		if (pre > 0) { /* prefix padding */
 			p[n++] = '.';
 			intlen = MIN(-intlen, pre); 
 			n = _out_pad(n, p, '0', intlen);
@@ -570,7 +581,7 @@ static int32_t _printf_f(struct printf_ctx *ctx)
 	int32_t flags = ctx->flags;
 	double v = ctx->va.f;
 
-	if (v < 0.0)
+	if (ctx->va.i >> 63)
 		neg = 1;
 
 	switch (conch_fpclassify(v)) {

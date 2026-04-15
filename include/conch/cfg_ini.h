@@ -51,12 +51,14 @@ struct ini_ctx {
 	int32_t (*call_end)(void *);
 };
 
-#define INI_NEW(name, _call, _call_end, _arg) \
-	struct ini_ctx name = { \
+#define INI_CTX_SET(_call, _call_end, _arg) \
+	{ \
 		.call = _call, \
 		.call_end = _call_end, \
 		.arg = _arg \
-		}
+	}
+#define INI_NEW(name, _call, _call_end, _arg) \
+	struct ini_ctx name = INI_CTX_SET(_call, _call_end, _arg)
 #define INI_INIT(x, _call, _call_end, _arg) \
 	(x)->call = _call; \
 	(x)->call_end = _call_end; \

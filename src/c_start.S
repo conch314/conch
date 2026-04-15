@@ -67,6 +67,7 @@ _start:
 	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
 
 	mv a0, sp
+	mv s0, zero
 	tail _start_main
 
 # else
