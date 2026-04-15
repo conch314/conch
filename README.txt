@@ -12,6 +12,7 @@ INCLUDES:
 
  src/
   C
+  Csoft
   AVL-Tree
   RB-Tree
   Linked-list

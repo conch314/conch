@@ -183,3 +183,7 @@ Explicit Congestion Notification (ECN)
     https://www.rfc-editor.org/rfc/rfc3168.txt
   rfc-3168.html
     https://www.rfc-editor.org/rfc/rfc3168.html
+
+The JSON Data Interchange Syntax
+  ECMA-404_2nd_edition_december_2017.pdf
+    https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf
