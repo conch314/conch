@@ -24,7 +24,7 @@
 
 
 	.text
-	.globl conch_syscall_linux
+	.global conch_syscall_linux
 
 /* @func: conch_syscall_linux
  * #desc:

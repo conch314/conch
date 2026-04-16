@@ -24,8 +24,8 @@
 
 
 	.text
-	.globl _start
-	.globl _start_main
+	.global _start
+	.global _start_main
 
 /* @func: _start
  * #desc:

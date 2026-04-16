@@ -24,7 +24,7 @@
 
 
 	.text
-	.globl conch_atomic_cas
+	.global conch_atomic_cas
 
 /* @func: conch_atomic_cas
  * #desc:

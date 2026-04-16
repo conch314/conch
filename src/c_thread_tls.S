@@ -79,17 +79,20 @@ conch_thread_tls_set:
 # if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
 #  warning "!!!please use clone() to set up tls!!!"
 
+	xorl %eax, %eax
 	ret
 
 # elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
 #  warning "!!!please use clone() to set up tls!!!"
 
+	xorq %rax, %rax
 	ret
 
 # elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
 #  warning "!!!please use clone() to set up tls!!!"
 
 	// mcr p15, 0, r0, c13, c0, 3
+	mov r0, #0
 	bx lr
 
 # elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)

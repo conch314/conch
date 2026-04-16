@@ -1,6 +1,6 @@
-/* @file: c_start_main.c
+/* @file: c_setjmp.h
  * #desc:
- *    The implementations of c runtime entry.
+ *    The definitions of stack environment.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -20,32 +20,33 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef _CONCH_C_SETJMP_H
+#define _CONCH_C_SETJMP_H
+
 #include <conch/config.h>
-#include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
-#include <conch/c_stdlib.h>
 
 
-char **__conch_envp = NULL;
+struct jmpbuf {
+	unsigned long reg[128];
+};
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* c_setjmp.S */
 extern
-int main(int argc, char *const *argv, char *const *envp)
+int32_t conch_setjmp(struct jmpbuf *env)
+;
+extern
+void conch_longjmp(struct jmpbuf *env, int32_t val)
 ;
 
-
-/* @func: _start_main
- * #desc:
- *    c runtime entry.
- *
- * #1: sp [in/out] stack pointer
- */
-void _start_main(long *sp)
-{
-	int argc = (int)sp[0];
-	char **argv = (char **)&sp[1];
-	___envp = (char **)&sp[argc + 2];
-
-	int r = main(argc, argv, ___envp);
-
-	conch_Exit(r);
+#ifdef __cplusplus
 }
+#endif
+
+
+#endif
