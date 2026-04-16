@@ -829,40 +829,40 @@ static double _erf_horner(double r, int32_t n)
 		};
 
 	double p, q;
-	if (n == 1) { /* x < 0.84375 */
-		p = p_coeffs_1[4];
-		for (int32_t i = 3; i >= 0; i--)
-			p = p * r + p_coeffs_1[i];
-
-		q = q_coeffs_1[5];
-		for (int32_t i = 4; i >= 0; i--)
-			q = q * r + q_coeffs_1[i];
-	} else if (n == 2) { /* x < 1.25 */
-		p = p_coeffs_2[6];
-		for (int32_t i = 5; i >= 0; i--)
-			p = p * r + p_coeffs_2[i];
-
-		q = q_coeffs_2[6];
-		for (int32_t i = 5; i >= 0; i--)
-			q = q * r + q_coeffs_2[i];
-	} else if (n == 3) { /* x < 1/.35 ... 2.85714 */
-		p = p_coeffs_3[7];
-		for (int32_t i = 6; i >= 0; i--)
-			p = p * r + p_coeffs_3[i];
-
-		q = q_coeffs_3[8];
-		for (int32_t i = 6; i >= 0; i--)
-			q = q * r + q_coeffs_3[i];
-	} else if (n == 3) { /* x > 1/.35 */
-		p = p_coeffs_4[6];
-		for (int32_t i = 5; i >= 0; i--)
-			p = p * r + p_coeffs_4[i];
-
-		q = q_coeffs_4[7];
-		for (int32_t i = 6; i >= 0; i--)
-			q = q * r + q_coeffs_4[i];
-	} else {
-		return NAN;
+	switch (n) {
+		case 1: /* x < 0.84375 */
+			p = p_coeffs_1[4];
+			for (int32_t i = 3; i >= 0; i--)
+				p = p * r + p_coeffs_1[i];
+			q = q_coeffs_1[5];
+			for (int32_t i = 4; i >= 0; i--)
+				q = q * r + q_coeffs_1[i];
+			break;
+		case 2: /* x < 1.25 */
+			p = p_coeffs_2[6];
+			for (int32_t i = 5; i >= 0; i--)
+				p = p * r + p_coeffs_2[i];
+			q = q_coeffs_2[6];
+			for (int32_t i = 5; i >= 0; i--)
+				q = q * r + q_coeffs_2[i];
+			break;
+		case 3: /* x < 1/.35 ... 2.85714 */
+			p = p_coeffs_3[7];
+			for (int32_t i = 6; i >= 0; i--)
+				p = p * r + p_coeffs_3[i];
+			q = q_coeffs_3[8];
+			for (int32_t i = 6; i >= 0; i--)
+				q = q * r + q_coeffs_3[i];
+			break;
+		case 4: /* x > 1/.35 */
+			p = p_coeffs_4[6];
+			for (int32_t i = 5; i >= 0; i--)
+				p = p * r + p_coeffs_4[i];
+			q = q_coeffs_4[7];
+			for (int32_t i = 6; i >= 0; i--)
+				q = q * r + q_coeffs_4[i];
+		default:
+			return NAN;
 	}
 
 	return p / q;
@@ -889,24 +889,23 @@ double conch_erf(double x)
 	if (ix >= 0x7ff00000) /* nan=>nan, +-inf=>+-1 */
 		return (2 * sign) + (1.0 / x);
 
-	if (ix < 0x3e300000) {  /* |x| < 2^-28 */
-		if (ix < 0x00800000)
-			return (8 * x + 1.0270333367641007 * x) / 8;
-
-		return x + 0.1283791670955126 * x;
-	}
-
-	if (ix < 0x3ff40000) { /* x < 1.25 */
-		if (ix < 0x3feb0000) { /* x < 0.84375 */
-			r = x * x;
-			pq = _erf_horner(r, 1);
-			return x + x * pq;
+	if (ix < 0x3feb0000) { /* x < 0.84375 */
+		if (ix < 0x3e300000) {  /* |x| < 2^-28 */
+			if (ix < 0x00800000)
+				return (8 * x + 1.0270333367641007 * x) / 8;
+			return x + 0.1283791670955126 * x;
 		}
 
+		r = x * x;
+		pq = _erf_horner(r, 1);
+		return x + x * pq;
+	}
+
+	y = 0x1p-1022;
+	if (ix < 0x3ff40000) { /* x < 1.25 */
 		r = conch_fabs(x) - 1.0;
 		pq = _erf_horner(r, 2);
 		y = 1.0 - 0.8450629115104675 - pq;
-		return 1.0 - y;
 	} else if (ix < 0x40180000) { /* x < 6 */
 		x = conch_fabs(x);
 		r = 1.0 / (x * x);
@@ -921,12 +920,10 @@ double conch_erf(double x)
 		u.i &= ~0xffffffff;
 		y = conch_exp(-u.f * u.f - 0.5625)
 			* conch_exp((u.f - x) * (u.f + x) + pq) / x;
-
-		return 1.0 - y;
 	}
-	x = 1.0 - 0x1p-1022;
+	y = 1.0 - y;
 
-	return sign ? -x : x;
+	return sign ? -y : y;
 }
 
 /* @func: conch_erfc
@@ -956,11 +953,13 @@ double conch_erfc(double x)
 
 		r = x * x;
 		pq = _erf_horner(r, 1);
-		if (sign || ix < 0x3fd00000) /* x < 0.25 */
+		if (sign || ix < 0x3fd00000) { /* x < 1/4 */
 			return 1.0 - (x + x * pq);
-
-		return 0.5 - (x - 0.5 + x * pq);
+		} else {
+			return 0.5 - (x - 0.5 + x * pq);
+		}
 	}
+
 	if (ix < 0x403c0000) {  /* x < 28 */
 		if (ix < 0x3ff40000) { /* x < 1.25 */
 			r = conch_fabs(x) - 1.0;
@@ -981,10 +980,9 @@ double conch_erfc(double x)
 			y = conch_exp(-u.f * u.f - 0.5625)
 				* conch_exp((u.f - x) * (u.f + x) + pq) / x;
 		}
-		y = 1.0 - y;
 
-		return sign ? (2 - y) : y;
+		return sign ? (2.0 - y) : y;
 	}
 
-	return sign ? (2 - 0x1p-1022) : (0x1p-1022 * 0x1p-1022);
+	return sign ? (2.0 - 0x1p-1022) : (0x1p-1022 * 0x1p-1022);
 }
