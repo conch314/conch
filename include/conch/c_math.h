@@ -179,6 +179,12 @@ double conch_log1p(double x)
 extern
 double conch_pow(double x, double e)
 ;
+extern
+double conch_erf(double x)
+;
+extern
+double conch_erfc(double x)
+;
 
 #ifdef __cplusplus
 }

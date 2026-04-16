@@ -1,6 +1,6 @@
 /* @file: cfg_json_tree.c
  * #desc:
- *    The implementations of json parse tree.
+ *    The implementations of json tree parser.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -268,6 +268,8 @@ int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
 		_s = tree->stack;
 		while (_s) {
 			ss = _s;
+			if (_s->name)
+				conch_free(_s->name);
 			_s = _s->next;
 			conch_free(ss);
 		}

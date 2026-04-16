@@ -739,3 +739,252 @@ double conch_pow(double x, double e)
 
 	return conch_exp(e * conch_log(conch_fabs(x)));
 }
+
+/* @func: _erf_horner (static)
+ * #desc:
+ *   remez + horner's method of error function polynomial.
+ *
+ * #1: r [in]  number
+ * #2: n [in]  choose polynomial constant
+ * #r:   [ret] return the horner polynomial of x
+ */
+static double _erf_horner(double r, int32_t n)
+{
+	/* 0 ... 0.84375 */
+	static const double p_coeffs_1[5] = {
+		 1.28379167095512558561e-01,
+		-3.25042107247001499370e-01,
+		-2.84817495755985104766e-02,
+		-5.77027029648944159157e-03,
+		-2.37630166566501626084e-05,
+		};
+	static const double q_coeffs_1[6] = {
+		 1.00000000000000000000e+00,
+		 3.97917223959155352819e-01,
+		 6.50222499887672944485e-02,
+		 5.08130628187576562776e-03,
+		 1.32494738004321644526e-04,
+		-3.96022827877536812320e-06,
+		};
+	/* 0.84375 ... 1.25 */
+	static const double p_coeffs_2[7] = {
+		-2.36211856075265944077e-03,
+		 4.14856118683748331666e-01,
+		-3.72207876035701323847e-01,
+		 3.18346619901161753674e-01,
+		-1.10894694282396677476e-01,
+		 3.54783043256182359371e-02,
+		-2.16637559486879084300e-03
+		};
+	static const double q_coeffs_2[7] = {
+		1.00000000000000000000e+00,
+		1.06420880400844228286e-01,
+		5.40397917702171048937e-01,
+		7.18286544141962662868e-02,
+		1.26171219808761642112e-01,
+		1.36370839120290507362e-02,
+		1.19844998467991074170e-02
+		};
+	/* 1.25 ... 1/0.35 */
+	static const double p_coeffs_3[8] = {
+		-9.86494403484714822705e-03,
+		-6.93858572707181764372e-01,
+		-1.05586262253232909814e+01,
+		-6.23753324503260060396e+01,
+		-1.62396669462573470355e+02,
+		-1.84605092906711035994e+02,
+		-8.12874355063065934246e+01,
+		-9.81432934416914548592e+00
+		};
+	static const double q_coeffs_3[9] = {
+		 1.00000000000000000000e+00,
+		 1.96512716674392571292e+01,
+		 1.37657754143519042600e+02,
+		 4.34565877475229228821e+02,
+		 6.45387271733267880336e+02,
+		 4.29008140027567833386e+02,
+		 1.08635005541779435134e+02,
+		 6.57024977031928170135e+00,
+		-6.04244152148580987438e-02
+		};
+	/* 1/.35 ... 28 */
+	static const double p_coeffs_4[7] = {
+		-9.86494292470009928597e-03,
+		-7.99283237680523006574e-01,
+		-1.77579549177547519889e+01,
+		-1.60636384855821916062e+02,
+		-6.37566443368389627722e+02,
+		-1.02509513161107724954e+03,
+		-4.83519191608651397019e+02
+		};
+	static const double q_coeffs_4[8] = {
+		 1.00000000000000000000e+00,
+		 3.03380607434824582924e+01,
+		 3.25792512996573918826e+02,
+		 1.53672958608443695994e+03,
+		 3.19985821950859553908e+03,
+		 2.55305040643316442583e+03,
+		 4.74528541206955367215e+02,
+		-2.24409524465858183362e+01
+		};
+
+	double p, q;
+	if (n == 1) { /* x < 0.84375 */
+		p = p_coeffs_1[4];
+		for (int32_t i = 3; i >= 0; i--)
+			p = p * r + p_coeffs_1[i];
+
+		q = q_coeffs_1[5];
+		for (int32_t i = 4; i >= 0; i--)
+			q = q * r + q_coeffs_1[i];
+	} else if (n == 2) { /* x < 1.25 */
+		p = p_coeffs_2[6];
+		for (int32_t i = 5; i >= 0; i--)
+			p = p * r + p_coeffs_2[i];
+
+		q = q_coeffs_2[6];
+		for (int32_t i = 5; i >= 0; i--)
+			q = q * r + q_coeffs_2[i];
+	} else if (n == 3) { /* x < 1/.35 ... 2.85714 */
+		p = p_coeffs_3[7];
+		for (int32_t i = 6; i >= 0; i--)
+			p = p * r + p_coeffs_3[i];
+
+		q = q_coeffs_3[8];
+		for (int32_t i = 6; i >= 0; i--)
+			q = q * r + q_coeffs_3[i];
+	} else if (n == 3) { /* x > 1/.35 */
+		p = p_coeffs_4[6];
+		for (int32_t i = 5; i >= 0; i--)
+			p = p * r + p_coeffs_4[i];
+
+		q = q_coeffs_4[7];
+		for (int32_t i = 6; i >= 0; i--)
+			q = q * r + q_coeffs_4[i];
+	} else {
+		return NAN;
+	}
+
+	return p / q;
+}
+
+/* @func: conch_erf
+ * #desc:
+ *    error function.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] return the error function of x
+ */
+double conch_erf(double x)
+{
+	union {
+		double f;
+		uint64_t i;
+	} u = { x };
+
+	uint32_t ix = (u.i >> 32) & 0x7fffffff;
+	uint32_t sign = u.i >> 63;
+	double pq, y, r;
+
+	if (ix >= 0x7ff00000) /* nan=>nan, +-inf=>+-1 */
+		return (2 * sign) + (1.0 / x);
+
+	if (ix < 0x3e300000) {  /* |x| < 2^-28 */
+		if (ix < 0x00800000)
+			return (8 * x + 1.0270333367641007 * x) / 8;
+
+		return x + 0.1283791670955126 * x;
+	}
+
+	if (ix < 0x3ff40000) { /* x < 1.25 */
+		if (ix < 0x3feb0000) { /* x < 0.84375 */
+			r = x * x;
+			pq = _erf_horner(r, 1);
+			return x + x * pq;
+		}
+
+		r = conch_fabs(x) - 1.0;
+		pq = _erf_horner(r, 2);
+		y = 1.0 - 0.8450629115104675 - pq;
+		return 1.0 - y;
+	} else if (ix < 0x40180000) { /* x < 6 */
+		x = conch_fabs(x);
+		r = 1.0 / (x * x);
+
+		if (ix < 0x4006db6d) { /* x < 1/.35 ... 2.85714 */
+			pq = _erf_horner(r, 3);
+		} else { /* x > 1/.35 */
+			pq = _erf_horner(r, 4);
+		}
+
+		u.f = x;
+		u.i &= ~0xffffffff;
+		y = conch_exp(-u.f * u.f - 0.5625)
+			* conch_exp((u.f - x) * (u.f + x) + pq) / x;
+
+		return 1.0 - y;
+	}
+	x = 1.0 - 0x1p-1022;
+
+	return sign ? -x : x;
+}
+
+/* @func: conch_erfc
+ * #desc:
+ *    complementary error function.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] return the complementary error of x
+ */
+double conch_erfc(double x)
+{
+	union {
+		double f;
+		uint64_t i;
+	} u = { x };
+
+	uint32_t ix = (u.i >> 32) & 0x7fffffff;
+	uint32_t sign = u.i >> 63;
+	double pq, y, r;
+
+	if (ix >= 0x7ff00000) /* nan=>nan, +-inf=>+-0,2 */
+		return (2.0 * sign) + (1.0 / x);
+
+	if (ix < 0x3feb0000) { /* x < 0.84375 */
+		if (ix < 0x3c700000)  /* x < 2^-56 */
+			return 1.0 - x;
+
+		r = x * x;
+		pq = _erf_horner(r, 1);
+		if (sign || ix < 0x3fd00000) /* x < 0.25 */
+			return 1.0 - (x + x * pq);
+
+		return 0.5 - (x - 0.5 + x * pq);
+	}
+	if (ix < 0x403c0000) {  /* x < 28 */
+		if (ix < 0x3ff40000) { /* x < 1.25 */
+			r = conch_fabs(x) - 1.0;
+			pq = _erf_horner(r, 2);
+			y = 1.0 - 0.8450629115104675 - pq;
+		} else { /* x < 28 */
+			x = conch_fabs(x);
+			r = 1.0 / (x * x);
+
+			if (ix < 0x4006db6d) { /* x < 1/.35 ... 2.85714 */
+				pq = _erf_horner(r, 3);
+			} else { /* x > 1/.35 */
+				pq = _erf_horner(r, 4);
+			}
+
+			u.f = x;
+			u.i &= ~0xffffffff;
+			y = conch_exp(-u.f * u.f - 0.5625)
+				* conch_exp((u.f - x) * (u.f + x) + pq) / x;
+		}
+		y = 1.0 - y;
+
+		return sign ? (2 - y) : y;
+	}
+
+	return sign ? (2 - 0x1p-1022) : (0x1p-1022 * 0x1p-1022);
+}
