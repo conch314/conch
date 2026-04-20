@@ -56,6 +56,18 @@ void *conch_memcpy(void *t, const void *s, size_t len)
 
 	switch ((uintptr_t)_t & 3) {
 		case 0:
+			for (; ((uintptr_t)_s & 7) && len; len--)
+				*_t++ = *_s++;
+
+			for (; len > 31; len -= 32) {
+				((uint64_t *)_t)[0] = ((uint64_t *)_s)[0];
+				((uint64_t *)_t)[1] = ((uint64_t *)_s)[1];
+				((uint64_t *)_t)[2] = ((uint64_t *)_s)[2];
+				((uint64_t *)_t)[3] = ((uint64_t *)_s)[3];
+				_t += 32;
+				_s += 32;
+			}
+
 			for (; len > 15; len -= 16) {
 				((uint32_t *)_t)[0] = ((uint32_t *)_s)[0];
 				((uint32_t *)_t)[1] = ((uint32_t *)_s)[1];
@@ -168,10 +180,11 @@ void *conch_memcpy(void *t, const void *s, size_t len)
  */
 void *conch_memmove(void *t, const void *s, size_t len)
 {
-	if (t <= s)
+	if ((uintptr_t)t <= (uintptr_t)s)
 		return conch_memcpy(t, s, len);
 
-	volatile uint8_t *_t = (uint8_t *)t + len, *_s = (uint8_t *)s + len;
+	volatile uint8_t *_t = (uint8_t *)t + len;
+	volatile uint8_t *_s = (uint8_t *)s + len;
 	while (len--)
 		*--_t = *--_s;
 
@@ -189,28 +202,46 @@ void *conch_memmove(void *t, const void *s, size_t len)
  */
 void *conch_memset(void *t, int32_t c, size_t len)
 {
-	uint8_t cc[4];
-	volatile uint8_t *_t = t;
+	if (!len)
+		return t;
 
-	cc[0] = (uint8_t)c;
-	cc[1] = (uint8_t)c;
-	cc[2] = (uint8_t)c;
-	cc[3] = (uint8_t)c;
+	uint8_t cc[8];
+	volatile uint8_t *_t = t;
 
 	for (; ((uintptr_t)_t & 3) && len; len--)
 		*_t++ = (uint8_t)c;
 
-	for (; len > 15; len -= 16) {
-		((uint32_t *)_t)[0] = *((uint32_t *)cc);
-		((uint32_t *)_t)[1] = *((uint32_t *)cc);
-		((uint32_t *)_t)[2] = *((uint32_t *)cc);
-		((uint32_t *)_t)[3] = *((uint32_t *)cc);
-		_t += 16;
-	}
+	if (len > 15) {
+		cc[0] = (uint8_t)c;
+		cc[1] = (uint8_t)c;
+		cc[2] = (uint8_t)c;
+		cc[3] = (uint8_t)c;
 
-	for (; len > 3; len -= 4) {
-		*((uint32_t *)_t) = *((uint32_t *)cc);
-		_t += 4;
+		if (len > 128) {
+			for (; ((uintptr_t)_t & 7) && len; len--)
+				*_t++ = (uint8_t)c;
+
+			cc[4] = (uint8_t)c;
+			cc[5] = (uint8_t)c;
+			cc[6] = (uint8_t)c;
+			cc[7] = (uint8_t)c;
+
+			for (; len > 31; len -= 32) {
+				((uint64_t *)_t)[0] = *((uint64_t *)cc);
+				((uint64_t *)_t)[1] = *((uint64_t *)cc);
+				((uint64_t *)_t)[2] = *((uint64_t *)cc);
+				((uint64_t *)_t)[3] = *((uint64_t *)cc);
+				_t += 32;
+			}
+		}
+
+		for (; len > 15; len -= 16) {
+			((uint32_t *)_t)[0] = *((uint32_t *)cc);
+			((uint32_t *)_t)[1] = *((uint32_t *)cc);
+			((uint32_t *)_t)[2] = *((uint32_t *)cc);
+			((uint32_t *)_t)[3] = *((uint32_t *)cc);
+			_t += 16;
+		}
 	}
 
 	while (len--)

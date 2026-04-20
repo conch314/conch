@@ -76,7 +76,7 @@ static struct json_value *_json_value_add(struct json_stack *s)
  * #1: type [in]  json type
  * #2: str  [in]  input string
  * #3: len  [in]  input length
- * #3: arg  [in]  callback arg
+ * #4: arg  [in]  callback arg
  * #r:      [ret] 0: no error, -1: call error
  */
 static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)

@@ -445,7 +445,7 @@ e:
 
 /* @func: _scanf_f (static)
  * #desc:
- *    scanf floating format.
+ *    scanf floating-point format.
  *
  * #1: ctx [in]  scanf struct context
  * #2: ap  [out] variable parameter pointer
@@ -723,7 +723,7 @@ int32_t __conch_scanf(const char *fmt, va_list *ap, void *arg,
 				if (_scanf_expr(&ctx, ap, &fmt))
 					return -n;
 				break;
-			case 'e': /* floating */
+			case 'e': /* floating-point */
 			case 'E':
 			case 'f': case 'F': case 'g':
 			case 'G': case 'a': case 'A':

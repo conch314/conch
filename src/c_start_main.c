@@ -43,9 +43,9 @@ void _start_main(long *sp)
 {
 	int argc = (int)sp[0];
 	char **argv = (char **)&sp[1];
-	___envp = (char **)&sp[argc + 2];
+	__conch_envp = (char **)&sp[argc + 2];
 
-	int r = main(argc, argv, ___envp);
+	int r = main(argc, argv, __conch_envp);
 
 	conch_Exit(r);
 }

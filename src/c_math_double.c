@@ -27,7 +27,7 @@
 
 /* @func: conch_fpclassify
  * #desc:
- *    classify real floating-point type.  
+ *    classify real floating-point type.
  *
  * #1: x [in]  number
  * #r:   [ret] type
@@ -95,7 +95,7 @@ double conch_ceil(double x)
 
 	if (x > 0.0) /* correction */
 		u.i += m;
-	u.i &= ~(m - 1); /* mask decimal part */
+	u.i &= ~(m - 1); /* mask decimals part */
 
 	return u.f;
 }
@@ -127,7 +127,7 @@ double conch_floor(double x)
 
 	if (x < 0.0) /* correction */
 		u.i += m;
-	u.i &= ~(m - 1); /* mask decimal part */
+	u.i &= ~(m - 1); /* mask decimals part */
 
 	return u.f;
 }
@@ -238,7 +238,7 @@ double conch_frexp(double x, int32_t *e)
 		return x;
 	}
 
-	*e = ee - 1022;
+	*e = ee - 1022; /* [0.5, 1.0] */
 	u.i &= 0x800fffffffffffffULL;
 	u.i |= 0x3fe0000000000000ULL;
 
@@ -650,7 +650,7 @@ double conch_log(double x)
 		0.22222222222222222222,
 		0.18181818181818181818,
 		0.15384615384615384615,
-		0.13333333333333333333 
+		0.13333333333333333333
 		};
 
 	const double ln2_hi = 0.69314718055994528623;
@@ -721,7 +721,7 @@ double conch_log1p(double x)
  *
  * #1: x [in]  number
  * #2: e [in]  exponent
- * #r:   [ret] return the power of x 
+ * #r:   [ret] return the power of x
  */
 double conch_pow(double x, double e)
 {
@@ -750,7 +750,7 @@ double conch_pow(double x, double e)
  */
 static double _erf_horner(double r, int32_t n)
 {
-	/* 0 ... 0.84375 */
+	/* [0, 0.84375] */
 	static const double p_coeffs_1[5] = {
 		 1.28379167095512558561e-01,
 		-3.25042107247001499370e-01,
@@ -766,7 +766,7 @@ static double _erf_horner(double r, int32_t n)
 		 1.32494738004321644526e-04,
 		-3.96022827877536812320e-06,
 		};
-	/* 0.84375 ... 1.25 */
+	/* [0.84375, 1.25] */
 	static const double p_coeffs_2[7] = {
 		-2.36211856075265944077e-03,
 		 4.14856118683748331666e-01,
@@ -785,7 +785,7 @@ static double _erf_horner(double r, int32_t n)
 		1.36370839120290507362e-02,
 		1.19844998467991074170e-02
 		};
-	/* 1.25 ... 1/0.35 */
+	/* [1.25, 1/0.35] */
 	static const double p_coeffs_3[8] = {
 		-9.86494403484714822705e-03,
 		-6.93858572707181764372e-01,
@@ -807,7 +807,7 @@ static double _erf_horner(double r, int32_t n)
 		 6.57024977031928170135e+00,
 		-6.04244152148580987438e-02
 		};
-	/* 1/.35 ... 28 */
+	/* [1/.35, 28] */
 	static const double p_coeffs_4[7] = {
 		-9.86494292470009928597e-03,
 		-7.99283237680523006574e-01,
@@ -846,7 +846,7 @@ static double _erf_horner(double r, int32_t n)
 			for (int32_t i = 5; i >= 0; i--)
 				q = q * r + q_coeffs_2[i];
 			break;
-		case 3: /* x < 1/.35 ... 2.85714 */
+		case 3: /* x < 1/.35 ~ 2.85714 */
 			p = p_coeffs_3[7];
 			for (int32_t i = 6; i >= 0; i--)
 				p = p * r + p_coeffs_3[i];
@@ -910,7 +910,7 @@ double conch_erf(double x)
 		x = conch_fabs(x);
 		r = 1.0 / (x * x);
 
-		if (ix < 0x4006db6d) { /* x < 1/.35 ... 2.85714 */
+		if (ix < 0x4006db6d) { /* x < 1/.35 ~ 2.85714 */
 			pq = _erf_horner(r, 3);
 		} else { /* x > 1/.35 */
 			pq = _erf_horner(r, 4);
@@ -969,7 +969,7 @@ double conch_erfc(double x)
 			x = conch_fabs(x);
 			r = 1.0 / (x * x);
 
-			if (ix < 0x4006db6d) { /* x < 1/.35 ... 2.85714 */
+			if (ix < 0x4006db6d) { /* x < 1/.35 ~ 2.85714 */
 				pq = _erf_horner(r, 3);
 			} else { /* x > 1/.35 */
 				pq = _erf_horner(r, 4);

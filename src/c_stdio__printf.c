@@ -199,18 +199,20 @@ static int32_t _int2str_X(int32_t n, char *p, uint64_t v)
 
 /* @func: _dou2str_df (static)
  * #desc:
- *    floating number to string conversion.
+ *    floating-point number to string conversion.
  *
  * #1: n   [in]  buffer offset
  * #2: p   [out] buffer
- * #3: v   [in]  input floating
- * #4: pre [in]  floating precision
+ * #3: v   [in]  input floating-point
+ * #4: pre [in]  output precision
  * #r:     [ret] output length (+offset)
  */
 static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 {
 	uint32_t big[90], *a, *z, *r;
 	int32_t e = 0, intlen = 0, need = 0;
+
+	/* NOTE: floating-point conversion in musl-libc */
 
 	v = conch_frexp(conch_fabs(v), &e);
 
@@ -231,7 +233,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		e -= 28;
 	}
 
-	if (v < 0.0) {
+	if (e < 0) {
 		a = z = r = big;
 	} else {
 		a = z = r = big + (sizeof(big) / sizeof(uint32_t))
@@ -291,13 +293,13 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 			intlen++;
 	}
 
-	/* TODO: 1.3 => 1.299999 rounding */
+	/* TODO: 1.3 => 1.299999 error rounding => 1.3 */
 
 	if (intlen < 1) {
 		p[n++] = '0';
 		if (pre > 0) { /* prefix padding */
 			p[n++] = '.';
-			intlen = MIN(-intlen, pre); 
+			intlen = MIN(-intlen, pre);
 			n = _out_pad(n, p, '0', intlen);
 			pre -= intlen;
 			intlen = 0;
@@ -569,7 +571,7 @@ static int32_t _printf_s(struct printf_ctx *ctx)
 
 /* @func: _printf_f (static)
  * #desc:
- *    print in floating format.
+ *    print in floating-point format.
  *
  * #1: ctx [in]  printf struct context
  * #r:     [ret] 0: no error, -1: error
@@ -869,7 +871,7 @@ e:
 				if (_printf_s(&ctx))
 					return -2;
 				break;
-			case 'e': /* floating */
+			case 'e': /* floating-point */
 			case 'E':
 			case 'f': case 'F': case 'g':
 			case 'G': case 'a': case 'A':

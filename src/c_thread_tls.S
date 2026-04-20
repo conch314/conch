@@ -24,8 +24,8 @@
 
 
 	.text
-	.globl conch_thread_tls_get
-	.globl conch_thread_tls_set
+	.global conch_thread_tls_get
+	.global conch_thread_tls_set
 
 /* @func: conch_thread_tls_get
  * #desc:

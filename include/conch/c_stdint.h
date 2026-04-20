@@ -45,21 +45,21 @@
 #undef INT8_MIN
 #undef INT8_MAX
 #undef UINT8_MAX
-#define INT8_MIN (-0x80)
+#define INT8_MIN (-1 - 0x7f)
 #define INT8_MAX 0x7f
 #define UINT8_MAX 0xff
 
 #undef INT16_MIN
 #undef INT16_MAX
 #undef UINT16_MAX
-#define INT16_MIN (-0x8000)
+#define INT16_MIN (-1 - 0x7fff)
 #define INT16_MAX 0x7fff
 #define UINT16_MAX 0xffff
 
 #undef INT32_MIN
 #undef INT32_MAX
 #undef UINT32_MAX
-#define INT32_MIN (-0x80000000)
+#define INT32_MIN (-1 - 0x7fffffff)
 #define INT32_MAX 0x7fffffff
 #define UINT32_MAX 0xffffffffU
 
@@ -75,7 +75,7 @@
 #   define int64_t signed long long
 #   define uint64_t unsigned long long
 #  endif
-#  define INT64_MIN (-0x8000000000000000LL)
+#  define INT64_MIN (-1LL - 0x7fffffffffffffffLL)
 #  define INT64_MAX 0x7fffffffffffffffLL
 #  define UINT64_MAX 0xffffffffffffffffULL
 # elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
@@ -86,7 +86,7 @@
 #   define int64_t signed long
 #   define uint64_t unsigned long
 #  endif
-#  define INT64_MIN (-0x8000000000000000L)
+#  define INT64_MIN (-1L - 0x7fffffffffffffffL)
 #  define INT64_MAX 0x7fffffffffffffffL
 #  define UINT64_MAX 0xffffffffffffffffUL
 # else

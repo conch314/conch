@@ -94,9 +94,9 @@ static struct stdio_file __stderr = {
 	.lock = 0
 	};
 
-xFILE *x_stdin = (xFILE *)&__stdin;
-xFILE *x_stdout = (xFILE *)&__stdout;
-xFILE *x_stderr = (xFILE *)&__stderr;
+xFILE *__conch_stdin = (xFILE *)&__stdin;
+xFILE *__conch_stdout = (xFILE *)&__stdout;
+xFILE *__conch_stderr = (xFILE *)&__stderr;
 
 
 /* @func: _stdio_write (static)
@@ -602,7 +602,7 @@ static int32_t _stdio_feof(xFILE *fp)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
-	return (f->flags & FG_EOF) ? -1 : 0;
+	return (f->flags & FG_EOF) ? X_EOF : 0;
 }
 
 /* @func: _stdio_ferror (static)

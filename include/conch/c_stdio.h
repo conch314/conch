@@ -44,17 +44,21 @@ typedef struct {
 	char _; /* internal implemented */
 } xFILE;
 
+#define x_stdin __conch_stdin
+#define x_stdout __conch_stdout
+#define x_stderr __conch_stderr
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern
-xFILE *x_stdin;
+xFILE *__conch_stdin;
 extern
-xFILE *x_stdout;
+xFILE *__conch_stdout;
 extern
-xFILE *x_stderr;
+xFILE *__conch_stderr;
 
 /* c_stdio__printf.c */
 extern

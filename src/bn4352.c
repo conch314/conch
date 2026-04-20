@@ -897,7 +897,7 @@ void conch_bn4352_umul(bn4352_t *r,
 	if (!a_len || !b_len)
 		goto e;
 
-	a_len = a_len > b_len ? a_len : b_len;
+	a_len = (a_len > b_len) ? a_len : b_len;
 	if (a_len <= (BN4352_NB / 4)) {
 		_umul_karatsuba_2(_rr, _a, _b);
 		goto e;

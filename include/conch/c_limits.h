@@ -31,27 +31,32 @@
 
 #undef CHAR_MIN
 #undef CHAR_MAX
-#define CHAR_MIN (-0x80)
-#define CHAR_MAX 0x7f
+#if ('\xff' > 0)
+# define CHAR_MIN 0
+# define CHAR_MAX 0xff
+#else
+# define CHAR_MIN (-1 - 0x7f)
+# define CHAR_MAX 0x7f
+#endif
 
 #undef SCHAR_MIN
 #undef SCHAR_MAX
 #undef UCHAR_MAX
-#define SCHAR_MIN (-0x80)
+#define SCHAR_MIN (-1 - 0x7f)
 #define SCHAR_MAX 0x7f
 #define UCHAR_MAX 0xff
 
 #undef SHRT_MIN
 #undef SHRT_MAX
 #undef USHRT_MAX
-#define SHRT_MIN (-0x8000)
+#define SHRT_MIN (-1 - 0x7fff)
 #define SHRT_MAX 0x7fff
 #define USHRT_MAX 0xffff
 
 #undef INT_MIN
 #undef INT_MAX
 #undef UINT_MAX
-#define INT_MIN (-0x80000000)
+#define INT_MIN (-1 - 0x7fffffff)
 #define INT_MAX 0x7fffffff
 #define UINT_MAX 0xffffffffU
 
@@ -66,14 +71,14 @@
 #  define LONG_MIN INT_MIN
 #  define LONG_MAX INT_MAX
 #  define ULONG_MAX UINT_MAX
-#  define LLONG_MIN (-0x8000000000000000LL)
+#  define LLONG_MIN (-1LL - 0x7fffffffffffffffLL)
 #  define LLONG_MAX 0x7fffffffffffffffLL
 #  define ULLONG_MAX 0xffffffffffffffffULL
 # elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
-#  define LONG_MIN (-0x8000000000000000L)
+#  define LONG_MIN (-1L - 0x7fffffffffffffffL)
 #  define LONG_MAX 0x7fffffffffffffffL
 #  define ULONG_MAX 0xffffffffffffffffUL
-#  define LLONG_MIN (-0x8000000000000000LL)
+#  define LLONG_MIN (-1L - 0x7fffffffffffffffLL)
 #  define LLONG_MAX 0x7fffffffffffffffLL
 #  define ULLONG_MAX 0xffffffffffffffffULL
 # else

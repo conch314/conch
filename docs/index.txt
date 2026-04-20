@@ -187,3 +187,7 @@ Explicit Congestion Notification (ECN)
 The JSON Data Interchange Syntax
   ECMA-404_2nd_edition_december_2017.pdf
     https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf
+
+IEEE Standard for Floating-Point Arithmetic
+  IEEE754_2008.pdf
+    https://www.dsc.ufcg.edu.br/~cnum/modulos/Modulo2/IEEE754_2008.pdf

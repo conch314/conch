@@ -62,7 +62,7 @@ static int32_t _call_out(const char *s, int32_t len, void *arg)
  * #1: buf [out] output buffer
  * #2: len [in]  buffer length
  * #3: fmt [in]  format string
- * #3: ap  [in]  variable parameter
+ * #4: ap  [in]  variable parameter
  * #r:     [ret] >=0: output length, -1: errno
  */
 int32_t conch_vsnprintf(char *buf, size_t len, const char *fmt, va_list ap)
