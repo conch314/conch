@@ -13,7 +13,7 @@ static_library_liba_C_SRCS = aes_modes.c aes_sbox.c base16.c base32.c base64.c b
 static_library_liba_OBJS = $(static_library_liba_C_SRCS:.c=.o) $(static_library_liba_ASM_SRCS:.S=.o)
 static_library_liba = liba.a
 
-static_library_libb_C_SRCS = c_ctype.c c_getopt.c c_math_double.c c_stdio__printf.c c_stdio__scanf.c c_stdio_snprintf.c c_stdio_sscanf.c c_stdlib_abs.c c_stdlib_atof.c c_stdlib_atoi.c c_stdlib_qsort.c c_stdlib_rand.c c_string.c c_string_strdup.c
+static_library_libb_C_SRCS = c_ctype.c c_getopt.c c_math_double.c c_stdio__printf.c c_stdio__scanf.c c_stdio_snprintf.c c_stdio_sscanf.c c_stdlib_abs.c c_stdlib_atof.c c_stdlib_atoi.c c_stdlib_qsort.c c_stdlib_rand.c c_string.c c_string_strdup.c csoft.c
 static_library_libb_ASM_SRCS = c_atomic_cas.S c_setjmp.S c_thread_tls.S
 static_library_libb_OBJS = $(static_library_libb_C_SRCS:.c=.o) $(static_library_libb_ASM_SRCS:.S=.o)
 static_library_libb = libb.a
