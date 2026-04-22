@@ -105,6 +105,18 @@ extern
 uint64_t conch_csf_fdiv64(uint64_t a, uint64_t b)
 ;
 extern
+uint32_t conch_csf_fadd32(uint32_t a, uint32_t b)
+;
+extern
+uint32_t conch_csf_fsub32(uint32_t a, uint32_t b)
+;
+extern
+uint32_t conch_csf_fmul32(uint32_t a, uint32_t b)
+;
+extern
+uint32_t conch_csf_fdiv32(uint32_t a, uint32_t b)
+;
+extern
 int32_t conch_csf_f64_eq(uint64_t a, uint64_t b)
 ;
 extern
@@ -121,30 +133,6 @@ int32_t conch_csf_f64_lt(uint64_t a, uint64_t b)
 ;
 extern
 int32_t conch_csf_f64_le(uint64_t a, uint64_t b)
-;
-extern
-uint64_t conch_csf_i64_to_f64(int64_t a)
-;
-extern
-uint64_t conch_csf_u64_to_f64(uint64_t a)
-;
-extern
-int64_t conch_csf_f64_to_i64(uint64_t a, int32_t mode)
-;
-extern
-uint64_t conch_csf_f64_to_u64(uint64_t a, int32_t mode)
-;
-extern
-uint32_t conch_csf_fadd32(uint32_t a, uint32_t b)
-;
-extern
-uint32_t conch_csf_fsub32(uint32_t a, uint32_t b)
-;
-extern
-uint32_t conch_csf_fmul32(uint32_t a, uint32_t b)
-;
-extern
-uint32_t conch_csf_fdiv32(uint32_t a, uint32_t b)
 ;
 extern
 int32_t conch_csf_f32_eq(uint32_t a, uint32_t b)
@@ -165,16 +153,46 @@ extern
 int32_t conch_csf_f32_le(uint32_t a, uint32_t b)
 ;
 extern
+uint64_t conch_csf_i64_to_f64(int64_t a)
+;
+extern
+uint64_t conch_csf_u64_to_f64(uint64_t a)
+;
+extern
+int64_t conch_csf_f64_to_i64(uint64_t a, int32_t mode)
+;
+extern
+uint64_t conch_csf_f64_to_u64(uint64_t a, int32_t mode)
+;
+extern
 uint32_t conch_csf_i32_to_f32(int32_t a)
 ;
 extern
 uint32_t conch_csf_u32_to_f32(uint32_t a)
 ;
 extern
+uint32_t conch_csf_i64_to_f32(int64_t a)
+;
+extern
+uint32_t conch_csf_u64_to_f32(uint64_t a)
+;
+extern
 int32_t conch_csf_f32_to_i32(uint32_t a, int32_t mode)
 ;
 extern
 uint32_t conch_csf_f32_to_u32(uint32_t a, int32_t mode)
+;
+extern
+int64_t conch_csf_f32_to_i64(uint32_t a, int32_t mode)
+;
+extern
+uint64_t conch_csf_f32_to_u64(uint32_t a, int32_t mode)
+;
+extern
+uint32_t conch_csf_f64_to_f32(uint64_t a)
+;
+extern
+uint64_t conch_csf_f32_to_f64(uint32_t a)
 ;
 
 #ifdef __cplusplus

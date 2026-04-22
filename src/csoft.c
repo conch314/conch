@@ -551,6 +551,7 @@ void conch_csf_umul64_128(uint64_t *a, uint64_t *b)
 	*b = (uint64_t)r[2] | (uint64_t)r[3] << 32;
 }
 
+
 /*
  * Floating-point input processing:
  *    NaN op any     =>  NaN
@@ -641,6 +642,7 @@ void conch_csf_umul64_128(uint64_t *a, uint64_t *b)
  *
  *   binary: 1.01001*(2^3)
  */
+
 
 /* @func: _float_approx_recip32_1 (static)
  * #desc:
@@ -1190,272 +1192,6 @@ uint64_t conch_csf_fdiv64(uint64_t a, uint64_t b)
 	return _float_round_pack64(z_sign, z_exp, z_sig);
 }
 
-/* @func: conch_csf_f64_eq
- * #desc:
- *    floating-point compare is equal (64-bit).
- *
- * #1: a [in]  floating-point
- * #2: b [in]  floating-point
- * #r:   [ret] 1: true, 0: false
- */
-int32_t conch_csf_f64_eq(uint64_t a, uint64_t b)
-{
-	int32_t a_sign, b_sign, a_exp, b_exp;
-	uint64_t a_sig, b_sig;
-
-	a_sign = a >> 63;
-	a_exp = (a >> 52) & 0x7ff;
-	a_sig = a & 0xfffffffffffffULL;
-	b_sign = b >> 63;
-	b_exp = (b >> 52) & 0x7ff;
-	b_sig = b & 0xfffffffffffffULL;
-
-	if (a_sign != b_sign)
-		return 0;
-	if ((a_exp == 0x7ff && a_sig) || (b_exp == 0x7ff && b_sig))
-		return 0;
-
-	return a_exp == b_exp && a_sig == b_sig;
-}
-
-/* @func: conch_csf_f64_ne
- * #desc:
- *    floating-point compare is not equal (64-bit).
- *
- * #1: a [in]  floating-point
- * #2: b [in]  floating-point
- * #r:   [ret] 1: true, 0: false
- */
-int32_t conch_csf_f64_ne(uint64_t a, uint64_t b)
-{
-	return !conch_csf_f64_eq(a, b);
-}
-
-/* @func: conch_csf_f64_gt
- * #desc:
- *    floating-point compare is greater than (64-bit).
- *
- * #1: a [in]  floating-point
- * #2: b [in]  floating-point
- * #r:   [ret] 1: true, 0: false
- */
-int32_t conch_csf_f64_gt(uint64_t a, uint64_t b)
-{
-	int32_t a_sign, b_sign, a_exp, b_exp;
-	uint64_t a_sig, b_sig;
-
-	a_sign = a >> 63;
-	a_exp = (a >> 52) & 0x7ff;
-	a_sig = a & 0xfffffffffffffULL;
-	b_sign = b >> 63;
-	b_exp = (b >> 52) & 0x7ff;
-	b_sig = b & 0xfffffffffffffULL;
-
-	if ((a_exp == 0x7ff && a_sig) || (b_exp == 0x7ff && b_sig))
-		return 0;
-
-	if (a_sign != b_sign)
-		return b_sign > a_sign;
-	if ((a_exp - b_exp) > 0)
-		return 1;
-
-	return a_exp == b_exp && a_sig > b_sig;
-}
-
-/* @func: conch_csf_f64_ge
- * #desc:
- *    floating-point compare is greater than or equal (64-bit).
- *
- * #1: a [in]  floating-point
- * #2: b [in]  floating-point
- * #r:   [ret] 1: true, 0: false
- */
-int32_t conch_csf_f64_ge(uint64_t a, uint64_t b)
-{
-	return conch_csf_f64_gt(a, b) || conch_csf_f64_eq(a, b);
-}
-
-/* @func: conch_csf_f64_lt
- * #desc:
- *    floating-point compare is less than (64-bit).
- *
- * #1: a [in]  floating-point
- * #2: b [in]  floating-point
- * #r:   [ret] 1: true, 0: false
- */
-int32_t conch_csf_f64_lt(uint64_t a, uint64_t b)
-{
-	int32_t a_sign, b_sign, a_exp, b_exp;
-	uint64_t a_sig, b_sig;
-
-	a_sign = a >> 63;
-	a_exp = (a >> 52) & 0x7ff;
-	a_sig = a & 0xfffffffffffffULL;
-	b_sign = b >> 63;
-	b_exp = (b >> 52) & 0x7ff;
-	b_sig = b & 0xfffffffffffffULL;
-
-	if ((a_exp == 0x7ff && a_sig) || (b_exp == 0x7ff && b_sig))
-		return 0;
-	if (a_sign != b_sign)
-		return a_sign > b_sign;
-	if ((a_exp - b_exp) < 0)
-		return 1;
-
-	return a_exp == b_exp && a_sig < b_sig;
-}
-
-/* @func: conch_csf_f64_le
- * #desc:
- *    floating-point compare is less than or equal (64-bit).
- *
- * #1: a [in]  floating-point
- * #2: b [in]  floating-point
- * #r:   [ret] 1: true, 0: false
- */
-int32_t conch_csf_f64_le(uint64_t a, uint64_t b)
-{
-	return conch_csf_f64_lt(a, b) || conch_csf_f64_eq(a, b);
-}
-
-/* @func: conch_csf_i64_to_f64
- * #desc:
- *    signed integer to floating-point conversion (64-bit).
- *
- * #1: a [in]  number
- * #r:   [ret] floating-point
- */
-uint64_t conch_csf_i64_to_f64(int64_t a)
-{
-	int32_t sign = a < 0;
-
-	if ((uint64_t)a & 0x7fffffffffffffffULL) {
-		a = sign ? -a : a;
-		return _float_norm_round_pack64(sign, 1023 + 61, (uint64_t)a);
-	}
-
-	return _float_pack64(sign, sign ? (1023 + 63) : 0, 0);
-}
-
-/* @func: conch_csf_u64_to_f64
- * #desc:
- *    unsigned integer to floating-point conversion (64-bit).
- *
- * #1: a [in]  number
- * #r:   [ret] floating-point
- */
-uint64_t conch_csf_u64_to_f64(uint64_t a)
-{
-	if (!a)
-		return 0;
-
-	if (a & 0x8000000000000000ULL) {
-		a = _float_rshift_jam64(a, 1);
-		return _float_round_pack64(0, 1023 + 62, a);
-	}
-
-	return _float_norm_round_pack64(0, 1023 + 61, a);
-}
-
-/* @func: conch_csf_f64_to_i64
- * #desc:
- *    floating-point to signed integer conversion (64-bit).
- *
- * #1: a    [in]  floating-point
- * #2: mode [in]  rounding mode
- * #r:      [ret] number
- */
-int64_t conch_csf_f64_to_i64(uint64_t a, int32_t mode)
-{
-	int32_t sign, exp, sh, round_bits;
-	uint64_t sig;
-
-	sign = a >> 63;
-	exp = (a >> 52) & 0x7ff;
-	sig = a & 0xfffffffffffffULL;
-
-	if (exp == 0x7ff) /* inf, nan */
-		return 0;
-
-	sh = exp - 1023;
-	if (sh <= 0)
-		return 0;
-
-	sig |= 0x10000000000000ULL; /* hidden bit */
-	if (sh > 52) {
-		if (sh > 63)
-			goto e;
-		sig <<= sh - 52;
-	} else if (mode) { /* round */
-		sig <<= 10;
-		sig = _float_rshift_jam64(sig, 52 - sh);
-		round_bits = sig & 0x3ff;
-
-		sig = (sig + 0x200) >> 10;
-		if (round_bits == 0x200)
-			sig &= ~1ULL;
-	} else {
-		sig >>= 52 - sh;
-	}
-
-	sig = sign ? -sig : sig;
-	if (sig && ((int32_t)(sig >> 63) ^ sign))
-		goto e;
-
-	return (int64_t)sig;
-e:
-	return sign ? INT64_MIN : INT64_MAX;
-}
-
-/* @func: conch_csf_f64_to_u64
- * #desc:
- *    floating-point to unsigned integer conversion (64-bit).
- *
- * #1: a    [in]  floating-point
- * #2: mode [in]  rounding mode
- * #r:      [ret] number
- */
-uint64_t conch_csf_f64_to_u64(uint64_t a, int32_t mode)
-{
-	int32_t sign, exp, sh, round_bits;
-	uint64_t sig;
-
-	sign = a >> 63;
-	exp = (a >> 52) & 0x7ff;
-	sig = a & 0xfffffffffffffULL;
-
-	if (exp == 0x7ff) /* inf, nan */
-		return 0;
-
-	sh = exp - 1023;
-	if (sh <= 0)
-		return 0;
-
-	sig |= 0x10000000000000ULL; /* hidden bit */
-	if (sh > 52) {
-		if (sh > 63)
-			goto e;
-		sig <<= sh - 52;
-	} else if (mode) { /* round */
-		sig <<= 10;
-		sig = _float_rshift_jam64(sig, 52 - sh);
-		round_bits = sig & 0x3ff;
-
-		sig = (sig + 0x200) >> 10;
-		if (round_bits == 0x200)
-			sig &= ~1ULL;
-	} else {
-		sig >>= 52 - sh;
-	}
-
-	if (sign && sig)
-		goto e;
-
-	return sig;
-e:
-	return UINT64_MAX;
-}
-
 /* @func: _float_pack32 (static)
  * #desc:
  *    floating-point binary package (32-bit).
@@ -1952,6 +1688,134 @@ uint32_t conch_csf_fdiv32(uint32_t a, uint32_t b)
 	return _float_round_pack32(z_sign, z_exp, z_sig);
 }
 
+/* @func: conch_csf_f64_eq
+ * #desc:
+ *    floating-point compare is equal (64-bit).
+ *
+ * #1: a [in]  floating-point
+ * #2: b [in]  floating-point
+ * #r:   [ret] 1: true, 0: false
+ */
+int32_t conch_csf_f64_eq(uint64_t a, uint64_t b)
+{
+	int32_t a_sign, b_sign, a_exp, b_exp;
+	uint64_t a_sig, b_sig;
+
+	a_sign = a >> 63;
+	a_exp = (a >> 52) & 0x7ff;
+	a_sig = a & 0xfffffffffffffULL;
+	b_sign = b >> 63;
+	b_exp = (b >> 52) & 0x7ff;
+	b_sig = b & 0xfffffffffffffULL;
+
+	if (a_sign != b_sign)
+		return 0;
+	if ((a_exp == 0x7ff && a_sig) || (b_exp == 0x7ff && b_sig))
+		return 0;
+
+	return a_exp == b_exp && a_sig == b_sig;
+}
+
+/* @func: conch_csf_f64_ne
+ * #desc:
+ *    floating-point compare is not equal (64-bit).
+ *
+ * #1: a [in]  floating-point
+ * #2: b [in]  floating-point
+ * #r:   [ret] 1: true, 0: false
+ */
+int32_t conch_csf_f64_ne(uint64_t a, uint64_t b)
+{
+	return !conch_csf_f64_eq(a, b);
+}
+
+/* @func: conch_csf_f64_gt
+ * #desc:
+ *    floating-point compare is greater than (64-bit).
+ *
+ * #1: a [in]  floating-point
+ * #2: b [in]  floating-point
+ * #r:   [ret] 1: true, 0: false
+ */
+int32_t conch_csf_f64_gt(uint64_t a, uint64_t b)
+{
+	int32_t a_sign, b_sign, a_exp, b_exp;
+	uint64_t a_sig, b_sig;
+
+	a_sign = a >> 63;
+	a_exp = (a >> 52) & 0x7ff;
+	a_sig = a & 0xfffffffffffffULL;
+	b_sign = b >> 63;
+	b_exp = (b >> 52) & 0x7ff;
+	b_sig = b & 0xfffffffffffffULL;
+
+	if ((a_exp == 0x7ff && a_sig) || (b_exp == 0x7ff && b_sig))
+		return 0;
+
+	if (a_sign != b_sign)
+		return b_sign > a_sign;
+	if ((a_exp - b_exp) > 0)
+		return 1;
+
+	return a_exp == b_exp && a_sig > b_sig;
+}
+
+/* @func: conch_csf_f64_ge
+ * #desc:
+ *    floating-point compare is greater than or equal (64-bit).
+ *
+ * #1: a [in]  floating-point
+ * #2: b [in]  floating-point
+ * #r:   [ret] 1: true, 0: false
+ */
+int32_t conch_csf_f64_ge(uint64_t a, uint64_t b)
+{
+	return conch_csf_f64_gt(a, b) || conch_csf_f64_eq(a, b);
+}
+
+/* @func: conch_csf_f64_lt
+ * #desc:
+ *    floating-point compare is less than (64-bit).
+ *
+ * #1: a [in]  floating-point
+ * #2: b [in]  floating-point
+ * #r:   [ret] 1: true, 0: false
+ */
+int32_t conch_csf_f64_lt(uint64_t a, uint64_t b)
+{
+	int32_t a_sign, b_sign, a_exp, b_exp;
+	uint64_t a_sig, b_sig;
+
+	a_sign = a >> 63;
+	a_exp = (a >> 52) & 0x7ff;
+	a_sig = a & 0xfffffffffffffULL;
+	b_sign = b >> 63;
+	b_exp = (b >> 52) & 0x7ff;
+	b_sig = b & 0xfffffffffffffULL;
+
+	if ((a_exp == 0x7ff && a_sig) || (b_exp == 0x7ff && b_sig))
+		return 0;
+	if (a_sign != b_sign)
+		return a_sign > b_sign;
+	if ((a_exp - b_exp) < 0)
+		return 1;
+
+	return a_exp == b_exp && a_sig < b_sig;
+}
+
+/* @func: conch_csf_f64_le
+ * #desc:
+ *    floating-point compare is less than or equal (64-bit).
+ *
+ * #1: a [in]  floating-point
+ * #2: b [in]  floating-point
+ * #r:   [ret] 1: true, 0: false
+ */
+int32_t conch_csf_f64_le(uint64_t a, uint64_t b)
+{
+	return conch_csf_f64_lt(a, b) || conch_csf_f64_eq(a, b);
+}
+
 /* @func: conch_csf_f32_eq
  * #desc:
  *    floating-point compare is equal (32-bit).
@@ -2080,6 +1944,144 @@ int32_t conch_csf_f32_le(uint32_t a, uint32_t b)
 	return conch_csf_f32_lt(a, b) || conch_csf_f32_eq(a, b);
 }
 
+/* @func: conch_csf_i64_to_f64
+ * #desc:
+ *    signed integer to floating-point conversion (64-bit).
+ *
+ * #1: a [in]  number
+ * #r:   [ret] floating-point
+ */
+uint64_t conch_csf_i64_to_f64(int64_t a)
+{
+	int32_t sign = a < 0;
+
+	if ((uint64_t)a & 0x7fffffffffffffffULL) {
+		a = sign ? -a : a;
+		return _float_norm_round_pack64(sign, 1023 + 61, (uint64_t)a);
+	}
+
+	return _float_pack64(sign, sign ? (1023 + 63) : 0, 0);
+}
+
+/* @func: conch_csf_u64_to_f64
+ * #desc:
+ *    unsigned integer to floating-point conversion (64-bit).
+ *
+ * #1: a [in]  number
+ * #r:   [ret] floating-point
+ */
+uint64_t conch_csf_u64_to_f64(uint64_t a)
+{
+	if (!a)
+		return 0;
+
+	if (a & 0x8000000000000000ULL) {
+		a = _float_rshift_jam64(a, 1);
+		return _float_round_pack64(0, 1023 + 62, a);
+	}
+
+	return _float_norm_round_pack64(0, 1023 + 61, a);
+}
+
+/* @func: conch_csf_f64_to_i64
+ * #desc:
+ *    floating-point to signed integer conversion (64-bit).
+ *
+ * #1: a    [in]  floating-point
+ * #2: mode [in]  rounding mode
+ * #r:      [ret] number
+ */
+int64_t conch_csf_f64_to_i64(uint64_t a, int32_t mode)
+{
+	int32_t sign, exp, sh, round_bits;
+	uint64_t sig;
+
+	sign = a >> 63;
+	exp = (a >> 52) & 0x7ff;
+	sig = a & 0xfffffffffffffULL;
+
+	if (exp == 0x7ff) /* inf, nan */
+		return 0;
+
+	sh = exp - 1023;
+	if (sh <= 0)
+		return 0;
+
+	sig |= 0x10000000000000ULL; /* hidden bit */
+	if (sh > 52) {
+		if (sh > 63)
+			goto e;
+		sig <<= sh - 52;
+	} else if (mode) { /* round */
+		sig <<= 10;
+		sig = _float_rshift_jam64(sig, 52 - sh);
+		round_bits = sig & 0x3ff;
+
+		sig = (sig + 0x200) >> 10;
+		if (round_bits == 0x200)
+			sig &= ~1ULL;
+	} else {
+		sig >>= 52 - sh;
+	}
+
+	sig = sign ? -sig : sig;
+	if (sig && ((int32_t)(sig >> 63) ^ sign))
+		goto e;
+
+	return (int64_t)sig;
+e:
+	return sign ? INT64_MIN : INT64_MAX;
+}
+
+/* @func: conch_csf_f64_to_u64
+ * #desc:
+ *    floating-point to unsigned integer conversion (64-bit).
+ *
+ * #1: a    [in]  floating-point
+ * #2: mode [in]  rounding mode
+ * #r:      [ret] number
+ */
+uint64_t conch_csf_f64_to_u64(uint64_t a, int32_t mode)
+{
+	int32_t sign, exp, sh, round_bits;
+	uint64_t sig;
+
+	sign = a >> 63;
+	exp = (a >> 52) & 0x7ff;
+	sig = a & 0xfffffffffffffULL;
+
+	if (exp == 0x7ff) /* inf, nan */
+		return 0;
+
+	sh = exp - 1023;
+	if (sh <= 0)
+		return 0;
+
+	sig |= 0x10000000000000ULL; /* hidden bit */
+	if (sh > 52) {
+		if (sh > 63)
+			goto e;
+		sig <<= sh - 52;
+	} else if (mode) { /* round */
+		sig <<= 10;
+		sig = _float_rshift_jam64(sig, 52 - sh);
+		round_bits = sig & 0x3ff;
+
+		sig = (sig + 0x200) >> 10;
+		if (round_bits == 0x200)
+			sig &= ~1ULL;
+	} else {
+		sig >>= 52 - sh;
+	}
+
+	if (sign && sig)
+		goto e;
+
+	return sig;
+e:
+	return UINT64_MAX;
+}
+
 /* @func: conch_csf_i32_to_f32
  * #desc:
  *    signed integer to floating-point conversion (32-bit).
@@ -2117,6 +2119,63 @@ uint32_t conch_csf_u32_to_f32(uint32_t a)
 	}
 
 	return _float_norm_round_pack32(0, 127 + 29, a);
+}
+
+/* @func: conch_csf_i64_to_f32
+ * #desc:
+ *    unsigned integer to floating-point conversion (64-bit => 32-bit).
+ *
+ * #1: a [in]  number
+ * #r:   [ret] floating-point
+ */
+uint32_t conch_csf_i64_to_f32(int64_t a)
+{
+	if (!a)
+		return 0;
+
+	int32_t sign = a < 0;
+	uint64_t _a = sign ? -(uint64_t)a : (uint64_t)a;
+
+	int32_t sh = conch_csf_clz64(_a) - 40;
+	if (sh > 0) {
+		return _float_pack32(sign, 127 + 22, (uint32_t)_a << sh);
+	} else {
+		sh += 7;
+		if (sh < 0) {
+			_a = _float_rshift_jam64(_a, -sh);
+		} else {
+			_a <<= sh;
+		}
+	}
+
+	return _float_round_pack32(sign, (127 + 29) - sh, _a);
+}
+
+/* @func: conch_csf_u64_to_f32
+ * #desc:
+ *    unsigned integer to floating-point conversion (64-bit => 32-bit).
+ *
+ * #1: a [in]  number
+ * #r:   [ret] floating-point
+ */
+uint32_t conch_csf_u64_to_f32(uint64_t a)
+{
+	if (!a)
+		return 0;
+
+	int32_t sh = conch_csf_clz64(a) - 40;
+	if (sh > 0) {
+		return _float_pack32(0, 127 + 22, (uint32_t)a << sh);
+	} else {
+		sh += 7;
+		if (sh < 0) {
+			a = _float_rshift_jam64(a, -sh);
+		} else {
+			a <<= sh;
+		}
+	}
+
+	return _float_round_pack32(0, (127 + 29) - sh, a);
 }
 
 /* @func: conch_csf_f32_to_i32
@@ -2216,4 +2275,166 @@ uint32_t conch_csf_f32_to_u32(uint32_t a, int32_t mode)
 	return sig;
 e:
 	return UINT32_MAX;
+}
+
+/* @func: conch_csf_f32_to_i64
+ * #desc:
+ *    floating-point to signed integer conversion (32-bit => 64-bit).
+ *
+ * #1: a    [in]  floating-point
+ * #2: mode [in]  rounding mode
+ * #r:      [ret] number
+ */
+int64_t conch_csf_f32_to_i64(uint32_t a, int32_t mode)
+{
+	int32_t sign, exp, sh, round_bits;
+	uint64_t sig;
+
+	sign = a >> 31;
+	exp = (a >> 23) & 0xff;
+	sig = a & 0x7fffff;
+
+	if (exp == 0xff) /* inf, nan */
+		return 0;
+
+	sh = exp - 127;
+	if (sh <= 0)
+		return 0;
+
+	sig |= 0x800000; /* hidden bit */
+	if (sh > 23) {
+		if (sh > 63)
+			goto e;
+		sig <<= sh - 23;
+	} else if (mode) { /* round */
+		sig <<= 7;
+		sig = _float_rshift_jam64(sig, 23 - sh);
+		round_bits = sig & 0x7f;
+
+		sig = (sig + 0x40) >> 7;
+		if (round_bits == 0x40)
+			sig &= ~1U;
+	} else {
+		sig >>= 23 - sh;
+	}
+
+	sig = sign ? -sig : sig;
+	if (sig && ((int32_t)(sig >> 63) ^ sign))
+		goto e;
+
+	return (int64_t)sig;
+e:
+	return sign ? INT64_MIN : INT64_MAX;
+}
+
+/* @func: conch_csf_f32_to_u64
+ * #desc:
+ *    floating-point to unsigned integer conversion (32-bit => 64-bit).
+ *
+ * #1: a    [in]  floating-point
+ * #2: mode [in]  rounding mode
+ * #r:      [ret] number
+ */
+uint64_t conch_csf_f32_to_u64(uint32_t a, int32_t mode)
+{
+	int32_t sign, exp, sh, round_bits;
+	uint64_t sig;
+
+	sign = a >> 31;
+	exp = (a >> 23) & 0xff;
+	sig = a & 0x7fffff;
+
+	if (exp == 0xff) /* inf, nan */
+		return 0;
+
+	sh = exp - 127;
+	if (sh <= 0)
+		return 0;
+
+	sig |= 0x800000; /* hidden bit */
+	if (sh > 23) {
+		if (sh > 63)
+			goto e;
+		sig <<= sh - 23;
+	} else if (mode) { /* round */
+		sig <<= 7;
+		sig = _float_rshift_jam64(sig, 23 - sh);
+		round_bits = sig & 0x7f;
+
+		sig = (sig + 0x40) >> 7;
+		if (round_bits == 0x40)
+			sig &= ~1U;
+	} else {
+		sig >>= 23 - sh;
+	}
+
+	if (sign && sig)
+		goto e;
+
+	return sig;
+e:
+	return UINT64_MAX;
+}
+
+/* @func: conch_csf_f64_to_f32
+ * #desc:
+ *    floating-point 64-bit to 32-bit conversion (64-bit => 32-bit).
+ *
+ * #1: a [in]  floating-point 64-bit
+ * #r:   [ret] floating-point 32-bit
+ */
+uint32_t conch_csf_f64_to_f32(uint64_t a)
+{
+	int32_t sign, exp, sh;
+	uint64_t sig;
+
+	sign = a >> 63;
+	exp = (a >> 52) & 0x7ff;
+	sig = a & 0xfffffffffffffULL;
+
+	if (exp == 0x7ff)
+		return _float_pack32(sign, 0xff, sig ? 0x400000 : 0);
+
+	sig = _float_rshift_jam64(sig, 22);
+	if (!(exp || sig)) /* zero */
+		return _float_pack32(0, 0, 0);
+
+	sig |= 0x40000000;
+	sh = exp - 1023;
+
+	return _float_round_pack32(sign, sh + 126, sig);
+}
+
+/* @func: conch_csf_f32_to_f64
+ * #desc:
+ *    floating-point 32-bit to 64-bit conversion (32-bit => 64-bit).
+ *
+ * #1: a [in]  floating-point 32-bit
+ * #r:   [ret] floating-point 64-bit
+ */
+uint64_t conch_csf_f32_to_f64(uint32_t a)
+{
+	int32_t sign, exp, sh;
+	uint64_t sig;
+
+	sign = a >> 31;
+	exp = (a >> 23) & 0xff;
+	sig = a & 0x7fffff;
+
+	if (exp == 0xff) {
+		return _float_pack64(sign, 0x7ff,
+			sig ? 0x8000000000000ULL : 0);
+	}
+
+	if (!exp) { /* subnormal, zero */
+		if (!sig)
+			return _float_pack32(0, 0, 0);
+		sh = conch_csf_clz32(sig) - 8;
+		exp = (1 - sh) - 1;
+		sig = sig << sh;
+	}
+
+	sh = exp - 127;
+
+	return _float_pack64(sign, sh + 1023, sig << 29);
 }
