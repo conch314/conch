@@ -281,7 +281,8 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 					ctx->len += 8;
 					*type = JSON_NUMBER_INF_TYPE;
 					return ctx->len - len;
-				} else if (!conch_strncmp("NaN",
+				}
+				if (!conch_strncmp("NaN",
 						ctx->str, 3)) {
 					ctx->str += 3;
 					ctx->len += 3;
@@ -373,7 +374,9 @@ static int32_t _json_comment(struct json_ctx *ctx)
 			}
 		}
 		return ctx->len - len;
-	} else if (!conch_strncmp("/*", ctx->str, 2)) {
+	}
+
+	if (!conch_strncmp("/*", ctx->str, 2)) {
 		ctx->str += 2;
 		ctx->len += 2;
 		for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {

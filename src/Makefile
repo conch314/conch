@@ -18,7 +18,7 @@ static_library_libb_ASM_SRCS = c_atomic_cas.S c_setjmp.S c_thread_tls.S
 static_library_libb_OBJS = $(static_library_libb_C_SRCS:.c=.o) $(static_library_libb_ASM_SRCS:.S=.o)
 static_library_libb = libb.a
 
-static_library_libc_C_SRCS = c_errno.c c_fcntl.c c_signal.c c_stdio_io.c c_stdio_printf.c c_stdio_scanf.c c_stdlib_Exit.c c_stdlib_abort.c c_stdlib_exit.c c_stdlib_malloc.c c_sys_mman.c c_time_clock.c c_time_sleep.c c_umalloc.c c_unistd_fork.c c_unistd_fs.c c_unistd_pid.c c_unistd_sleep.c
+static_library_libc_C_SRCS = c_errno.c c_fcntl.c c_signal.c c_stdio_io.c c_stdio_printf.c c_stdio_scanf.c c_stdlib_Exit.c c_stdlib_abort.c c_stdlib_exit.c c_stdlib_malloc.c c_sys_mman.c c_time_clock.c c_time_sleep.c c_umalloc.c c_unistd_fork.c c_unistd_fs.c c_unistd_pid.c c_unistd_sleep.c c_sys_select.c c_poll.c c_sys_ioctl.c
 static_library_libc_ASM_SRCS = c_syscall_linux.S
 static_library_libc_OBJS = $(static_library_libc_C_SRCS:.c=.o) $(static_library_libc_ASM_SRCS:.S=.o)
 static_library_libc = libc.a
