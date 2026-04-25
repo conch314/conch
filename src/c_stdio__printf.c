@@ -246,11 +246,13 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		v = (v - *z++) * 1000000000;
 	} while (v);
 
+#undef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #undef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 	/* max precision */
-	pre = (pre > 0) ? pre : 0;
+	pre = MAX(pre, 0);
 	pre = MIN(pre, DOU2STR_DF_PREMAX);
 	need = ((pre + (X_FP_DBL_MANT_DIG / 3) + 8) / 9) + 1;
 

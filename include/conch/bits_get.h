@@ -57,8 +57,8 @@ struct bits_get_ctx {
 #define BITS_GET_CUR(x) ((x)->cur)
 
 #define BITS_GET_GETPOS(x) ((x)->pos + ((((x)->cur + 7) & ~7) >> 3))
-#define BITS_GET_REMBUF(x) (BITS_GET_BUF(x) + BITS_GET_GETPOS(x))
-#define BITS_GET_REMLEN(x) (BITS_GET_LEN(x) - BITS_GET_GETPOS(x))
+#define BITS_GET_REMBUF(x) ((x)->buf + BITS_GET_GETPOS(x))
+#define BITS_GET_REMLEN(x) ((x)->len - BITS_GET_GETPOS(x))
 
 
 #ifdef __cplusplus

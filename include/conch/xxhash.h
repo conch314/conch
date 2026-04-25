@@ -28,8 +28,8 @@
 #include <conch/c_stdint.h>
 
 
-/* xxhash32 */
 #define XXHASH32_BLOCKSIZE 16
+#define XXHASH64_BLOCKSIZE 32
 
 struct xxhash32_ctx {
 	uint32_t state[4];
@@ -38,12 +38,6 @@ struct xxhash32_ctx {
 	uint32_t seed;
 };
 
-#define XXHASH32_NEW(x) struct xxhash32_ctx x
-
-
-/* xxhash64 */
-#define XXHASH64_BLOCKSIZE 32
-
 struct xxhash64_ctx {
 	uint64_t state[4];
 	uint8_t buf[XXHASH64_BLOCKSIZE];
@@ -51,6 +45,7 @@ struct xxhash64_ctx {
 	uint64_t seed;
 };
 
+#define XXHASH32_NEW(x) struct xxhash32_ctx x
 #define XXHASH64_NEW(x) struct xxhash64_ctx x
 
 

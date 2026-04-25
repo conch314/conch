@@ -59,9 +59,7 @@ static spinlock_t _lock = 0;
 void *conch_malloc(size_t size)
 {
 	SPIN_LOCK(&_lock);
-
 	void *p = conch_umalloc(&__umalloc_ctx, size);
-
 	SPIN_UNLOCK(&_lock);
 
 	return p;
@@ -79,8 +77,6 @@ void conch_free(void *p)
 		return;
 
 	SPIN_LOCK(&_lock);
-
 	conch_umalloc_free(&__umalloc_ctx, p);
-
 	SPIN_UNLOCK(&_lock);
 }

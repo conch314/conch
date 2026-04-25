@@ -2380,8 +2380,8 @@ e:
  * #desc:
  *    floating-point 64-bit to 32-bit conversion (64-bit => 32-bit).
  *
- * #1: a [in]  floating-point 64-bit
- * #r:   [ret] floating-point 32-bit
+ * #1: a [in]  floating-point
+ * #r:   [ret] floating-point
  */
 uint32_t conch_csf_f64_to_f32(uint64_t a)
 {
@@ -2409,8 +2409,8 @@ uint32_t conch_csf_f64_to_f32(uint64_t a)
  * #desc:
  *    floating-point 32-bit to 64-bit conversion (32-bit => 64-bit).
  *
- * #1: a [in]  floating-point 32-bit
- * #r:   [ret] floating-point 64-bit
+ * #1: a [in]  floating-point
+ * #r:   [ret] floating-point
  */
 uint64_t conch_csf_f32_to_f64(uint32_t a)
 {

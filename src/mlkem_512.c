@@ -1,7 +1,6 @@
 /* @file: mlkem_512.c
  * #desc:
- *    The implementations of module-lattice-based key-encapsulation
- *    mechanism (512'128).
+ *    The implementations of module-lattice-based key-encapsulation mechanism.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software
@@ -31,7 +30,7 @@
 
 /*
  *  |     n   q    k eta1 eta2 du dv ek   dk   ct-size k-size|
- *  +========================================================+
+ *  |--------------------------------------------------------|
  *  | 512 256 3329 2 3    2    10 4   800 1632  768    32    |
  *  | 768 256 3329 3 2    2    10 4  1184 2400 1088    32    |
  *  |1024 256 3329 4 2    2    11 5  1568 3168 1568    32    |

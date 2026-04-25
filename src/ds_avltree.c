@@ -1,7 +1,6 @@
 /* @file: ds_avltree.c
  * #desc:
- *    The implementations of AVL (Adelson-Velsky and Landis) self-balancing
- *    binary tree.
+ *    The implementations of AVL self-balancing binary tree.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

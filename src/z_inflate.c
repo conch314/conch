@@ -191,8 +191,7 @@ static const uint16_t base_dist[INFLATE_DIST_CODES] = {
  */
 static int32_t _bits_fill(struct inflate_ctx *ctx)
 {
-	uint32_t n = conch_bits_getfill(&ctx->bits_ctx,
-		ctx->s, ctx->s_len);
+	uint32_t n = conch_bits_getfill(&ctx->bits_ctx, ctx->s, ctx->s_len);
 	ctx->s += n;
 	ctx->s_len -= n;
 

@@ -1,7 +1,6 @@
 /* @file: ds_avltree.h
  * #desc:
- *    The definitions of AVL (Adelson-Velsky and Landis) self-balancing
- *    binary tree.
+ *    The definitions of AVL self-balancing binary tree.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

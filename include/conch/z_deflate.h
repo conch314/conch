@@ -199,7 +199,7 @@ struct deflate_ctdata {
 
 struct deflate_tree_desc {
 	const struct deflate_ctdata *stree; /* static tree */
-	struct deflate_ctdata *tree; /* dynamic tree */
+	struct deflate_ctdata *tree;        /* dynamic tree */
 	int32_t elems;    /* codes number (static) */
 	int32_t bits_max; /* max codes bits (static) */
 	int32_t code_max; /* codes of max */
@@ -211,7 +211,7 @@ struct deflate_ctx {
 	uint8_t window[DEFLATE_TSIZE]; /* sliding window */
 	uint16_t prev[DEFLATE_HSIZE];  /* prev hash-chain */
 	uint16_t head[DEFLATE_HSIZE];  /* head hash-table */
-	uint32_t hash; /* current hash */
+	uint32_t hash;                 /* current hash */
 
 	uint32_t start;       /* sliding position of the window */
 	uint32_t lsize;       /* lookahead buffer length in the window */

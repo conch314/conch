@@ -30,7 +30,6 @@
 
 #define POLY1305_KEY_LEN 32
 #define POLY1305_TAG_LEN 16
-
 #define POLY1305_BLOCKSIZE 16
 
 struct poly1305_ctx {
@@ -45,7 +44,6 @@ struct poly1305_ctx {
 };
 
 #define POLY1305_NEW(x) struct poly1305_ctx x
-
 #define POLY1305_TAG(x, n) ((x)->u.tag[n])
 
 
