@@ -27,7 +27,7 @@
 
 
 /*
- * in: banana
+ * str: banana
  *  1: b'anana$
  *  2: a'nana$b
  *  3: n'ana$ba
@@ -40,30 +40,31 @@
  *  6: a$bana'n
  *  4: ana$ba'n
  *  2: anana$'b
- *  1: banana'$
+ *  1: banana'$ => index 5
  *  5: na$ban'a
  *  3: nana$b'a
+ *  ^ suffix array - 1 => bwt
  * bwt: annb$aa
  * inv:
- *     1      2        3          4
- *  1: '$  2: '$'b  7: '$'b'a  6: '$'b'a'n
- *  3: 'a  1: 'a'$  5: 'a'n'a  7: 'a'$'b'a
- *  5: 'a  4: 'a'n  3: 'a'n'a  4: 'a'n'a'n
- *  7: 'a  6: 'a'n  2: 'a'$'b  1: 'a'n'a'$
- *  2: 'b  7: 'b'a  6: 'b'a'n  2: 'b'a'$'b
- *  6: 'n  3: 'n'a  1: 'n'a'$  5: 'n'a'n'a
- *  4: 'n  5: 'n'a  4: 'n'a'n  3: 'n'a'n'a
- *     5              6                7
- *  2: '$'b'a'$'b  1: '$'b'a'n'a'$  3: '$'b'a'n'a'n'a -
- *  6: 'a'$'b'a'n  7: 'a'n'a'$'b'a  6: 'a'n'a'$'b'a'n
- *  5: 'a'n'a'n'a  4: 'a'n'a'n'a'n  5: 'a'n'a'n'a'n'a
- *  3: 'a'n'a'n'a  2: 'a'$'b'a'$'b  1: 'a'$'b'a'n'a'$
- *  1: 'b'a'n'a'$  3: 'b'a'n'a'n'a  2: 'b'a'$'b'a'$'b
- *  7: 'n'a'$'b'a  6: 'n'a'$'b'a'n  7: 'n'a'n'a'$'b'a
- *  4: 'n'a'n'a'n  5: 'n'a'n'a'n'a  4: 'n'a'n'a'n'a'n
- * out: banana
+ *  sort     1     2      3       4        5         6
+ *  1: a  5: $  4: $b  7: $ba  3: $ban  6: $bana  2: $banan
+ *  2: n  1: a  5: a$  4: a$b  7: a$ba  3: a$ban  6: a$bana
+ *  3: n  6: a  2: an  1: ana  5: ana$  4: ana$b  7: ana$ba
+ *  4: b  7: a  3: an  6: ana  2: anan  1: anana  5: anana$
+ *  5: $  4: b  7: ba  3: ban  6: bana  2: banan  1: banana
+ *  6: a  2: n  1: na  5: na$  4: na$b  7: na$ba  3: na$ban
+ *  7: a  3: n  6: na  2: nan  1: nana  5: nana$  4: nana$b
+ *     7
+ *  1: $banana
+ *  2: a$banan
+ *  3: ana$ban
+ *  4: anana$b
+ *  5: banana$ <=
+ *  6: na$bana
+ *  7: nana$ba
+ * res: banana$
  *
- * in: banana
+ * str: banana
  *  1: banana
  *  2: ananab
  *  3: nanaba
@@ -75,18 +76,18 @@
  *  6: abanan n
  *  4: anaban n
  *  2: ananab b
- *  1: banana $
+ *  1: banana $ => index 4
  *  5: nabana a
  *  3: nanaba a
  * bwt: nnbaaa
  * inv:
- *  1: banana -
+ *  1: abanan
+ *  2: anaban
+ *  3: ananab
+ *  4: banana <=
  *  5: nabana
- *  3: nanaba
- *  2: ananab
- *  6: abanan
- *  4: anaban
- * out: banana
+ *  6: nanaba
+ * res: banana
  */
 
 const uint8_t *unsafe_in;

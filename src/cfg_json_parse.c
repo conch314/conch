@@ -58,6 +58,21 @@
 //   [],
 // ]
 
+/*
+ * escape character:
+ *  \"      quotation mark character
+ *  \'      apostrophe character
+ *  \\      reverse solidus characte
+ *  \/      solidus character
+ *  \b      backspace character
+ *  \f      form feed character
+ *  \n      line feed character
+ *  \r      carriage return character
+ *  \t      character tabulation character
+ *  \<any>  return the any-self character
+ *  \uXXXX  4 hexadecimal digits unicode
+ */
+
 enum {
 	TOKEN_ARRAY = 1,
 	TOKEN_ARRAY_END,

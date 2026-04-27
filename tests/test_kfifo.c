@@ -1,4 +1,4 @@
-/* @file: test_ringbuf.c
+/* @file: test_kfifo.c
  * #desc:
  *
  * #copy:
@@ -21,42 +21,48 @@
 
 #include <stdio.h>
 #include <conch/c_stdint.h>
-#include <conch/ringbuf.h>
+#include <conch/kfifo.h>
 
 
-void test_ringbuf(void)
+void test_kfifo(void)
 {
 	uint8_t buf[4096], out[4096];
 	uint32_t r;
-	RINGBUF_NEW(head, buf, 4096);
+	KFIFO_NEW(head, buf, 4096);
 
-	r = conch_ringbuf_write(&head, (uint8_t *)"Hello, world!", 13);
-	printf("write: %d:%u\n", 13, r);
+	r = conch_kfifo_in(&head, (uint8_t *)"Hello, world!", 13);
+	printf("in: %d:%u\n", 13, r);
 
-	r = conch_ringbuf_peek(&head, out, 4096, 2);
+	r = conch_kfifo_peek(&head, out, 4096, 2);
 	printf("peek: %d-%d:%u\n", 4096, 2, r);
 	out[r] = '\0';
 	printf(": %s\n", out);
 
-	r = conch_ringbuf_peek(&head, out, 10, 4096);
+	r = conch_kfifo_peek(&head, out, 10, 4096);
 	printf("peek: %d-%d:%u\n", 10, 4096, r);
 	out[r] = '\0';
 	printf(": %s\n", out);
 
-	r = conch_ringbuf_read(&head, out, 13 - 2);
-	printf("read: %d:%u\n", 13 - 2, r);
+	r = conch_kfifo_out(&head, out, 13 - 2);
+	printf("out: %d:%u\n", 13 - 2, r);
 	out[r] = '\0';
 	printf(": %s\n", out);
 
-	r = conch_ringbuf_read(&head, out, 4096);
-	printf("read: %d:%u\n", 4096, r);
+	head.in += ((0xfffffff - 20) + 4095) & ~4095;
+	head.out += ((0xfffffff - 20) + 4095) & ~4095;
+
+	r = conch_kfifo_in(&head, (uint8_t *)"Hello, world!", 14);
+	printf("in: %d:%u\n", 14, r);
+
+	r = conch_kfifo_out(&head, out, 4096);
+	printf("out: %d:%u\n", 4096, r);
 	out[r] = '\0';
 	printf(": %s\n", out);
 }
 
 int main(void)
 {
-	test_ringbuf();
+	test_kfifo();
 
 	return 0;
 }

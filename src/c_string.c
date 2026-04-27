@@ -180,7 +180,7 @@ void *conch_memcpy(void *t, const void *s, size_t len)
  */
 void *conch_memmove(void *t, const void *s, size_t len)
 {
-	if ((uintptr_t)t <= (uintptr_t)s)
+	if (((uintptr_t)t - (uintptr_t)s - len) <= (-2 * len))
 		return conch_memcpy(t, s, len);
 
 	volatile uint8_t *_t = (uint8_t *)t + len;
