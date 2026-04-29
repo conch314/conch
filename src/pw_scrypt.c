@@ -162,8 +162,8 @@ void conch_scrypt(const uint8_t *pass, uint32_t pass_len,
 {
 	uint32_t b_len = SCRYPT_TMP_B(r, p);
 	uint8_t *b = tmp;
-	uint8_t *v = b + b_len;
-	uint8_t *y = v + SCRYPT_TMP_V(r, n);
+	uint8_t *v = tmp += b_len;
+	uint8_t *y = tmp += SCRYPT_TMP_V(r, n);
 
 	conch_pbkdf2_sha256(pass, pass_len, salt, salt_len, b, b_len, 1);
 

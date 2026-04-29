@@ -26,7 +26,6 @@
 #define _CONCH_CSOFT_H
 
 #include <conch/config.h>
-#include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 
 
@@ -92,6 +91,8 @@ int64_t conch_csf_smul64(int64_t a, int64_t b)
 extern
 void conch_csf_umul64_128(uint64_t *a, uint64_t *b)
 ;
+
+/* csoft_float.c */
 extern
 uint64_t conch_csf_fadd64(uint64_t a, uint64_t b)
 ;
