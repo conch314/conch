@@ -89,7 +89,7 @@
  *  6: nanaba
  * res: banana
  *
- * NOTE: bwt is dependentation on strict circular rotation order (SA(-1) != BWT)
+ * NOTE: bwt depends on strict cyclic rotation order (SA-1 != BWT)
  *
  * unsafe (qsort): IBWT success
  *  aaaaaaabanan 5
@@ -160,6 +160,7 @@ void bwt_transform_unsafe(uint8_t *out, const uint8_t *in, uint32_t len,
 	}
 }
 
+/* linear suffix array */
 void bwt_drsort_sa(const uint8_t *in, uint32_t len, uint32_t *sa,
 		uint32_t *tmp)
 {
@@ -241,7 +242,86 @@ void bwt_transform_drsort(uint8_t *out, const uint8_t *in, uint32_t len,
 
 	for (uint32_t i = 0; i < len; i++) {
 		if (!sa[i])
-			*index = i;
+			*index = i; /* primary index */
+		out[i] = in[(sa[i] + len - 1) % len];
+	}
+}
+
+/* cyclic rotation suffix array */
+void bwt_drsort_csa(const uint8_t *in, uint32_t len, uint32_t *sa,
+		uint32_t *tmp)
+{
+	uint32_t *count = tmp;
+	uint32_t *rk = tmp += len + 256;
+	uint32_t *id = tmp += len;
+	uint32_t *ork = tmp += len;
+	uint32_t c, m = 256;
+
+	/* single character sorting */
+	conch_memset(count, 0, sizeof(uint32_t) * m);
+	for (uint32_t i = 0; i < len; i++) { /* statistical the freq */
+		c = rk[i] = in[i];
+		count[c]++;
+	}
+	for (uint32_t i = 1; i < m; i++) /* prefix sum */
+		count[i] += count[i - 1];
+	for (uint32_t i = len; i > 0; ) { /* counting sort initial sa */
+		c = --count[rk[--i]];
+		sa[c] = i;
+	}
+
+	/* doubling method and radix sort */
+
+	for (uint32_t k = 1; ; k <<= 1) {
+		/* second key 'rk[sa[i] + k]' sorting */
+		for (uint32_t i = 0; i < len; i++)
+			id[i] = (sa[i] + len - k) % len;
+
+		/* first key 'rk[sa[i]]' sorting */
+		conch_memset(count, 0, sizeof(uint32_t) * m);
+		for (uint32_t i = 0; i < len; i++)
+			count[rk[id[i]]]++;
+		for (uint32_t i = 1; i < m; i++) /* prefix sum */
+			count[i] += count[i - 1];
+		for (uint32_t i = len; i > 0; ) { /* counting sort */
+			c = --count[rk[id[--i]]];
+			sa[c] = id[i];
+		}
+
+		conch_memcpy(ork, rk, sizeof(uint32_t) * len);
+
+		c = 0; /* update rank */
+		rk[sa[0]] = 0;
+		for (uint32_t i = 1; i < len; i++) {
+			uint32_t a = sa[i]; /* suffix */
+			uint32_t b = sa[i - 1];
+			uint32_t rka = ork[(a + k) % len];
+			uint32_t rkb = ork[(b + k) % len];
+
+			/* rk[a] == rk[b] && rk[a + k] == rk[b + k] */
+			if (ork[a] == ork[b] && rka == rkb) {
+				rk[a] = c;
+			} else {
+				rk[a] = ++c;
+			}
+		}
+		c++;
+
+		if (c == len)
+			break;
+		m = c;
+	}
+}
+
+void bwt_transform_drsort_csa(uint8_t *out, const uint8_t *in, uint32_t len,
+		uint32_t *index, uint32_t *sa, uint32_t *tmp)
+{
+	/* build suffix-array */
+	bwt_drsort_csa(in, len, sa, tmp);
+
+	for (uint32_t i = 0; i < len; i++) {
+		if (!sa[i])
+			*index = i; /* primary index */
 		out[i] = in[(sa[i] + len - 1) % len];
 	}
 }
@@ -318,12 +398,27 @@ int main(void)
 	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
 	printf("res: %.*s\n\n", n, res);
 
+	bwt_transform_drsort_csa(bwt, (uint8_t *)s, n, &index, suffix, tmp);
+	printf("bwt: %.*s (drsort csa)\n", n, bwt);
+	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
+	printf("res: %.*s\n\n", n, res);
+
 	s = "bananannytt";
 	n = (uint32_t)conch_strlen(s);
 
 	printf("str: %.*s\n", n, s);
 	bwt_transform_unsafe(bwt, (uint8_t *)s, n, &index, suffix);
 	printf("bwt: %.*s\n", n, bwt);
+	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
+	printf("res: %.*s\n\n", n, res);
+
+	bwt_transform_drsort(bwt, (uint8_t *)s, n, &index, suffix, tmp);
+	printf("bwt: %.*s (drsort)\n", n, bwt);
+	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
+	printf("res: %.*s\n\n", n, res);
+
+	bwt_transform_drsort_csa(bwt, (uint8_t *)s, n, &index, suffix, tmp);
+	printf("bwt: %.*s (drsort csa)\n", n, bwt);
 	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
 	printf("res: %.*s\n\n", n, res);
 
