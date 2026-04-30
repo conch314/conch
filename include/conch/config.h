@@ -1,6 +1,6 @@
 /* @file: config.h
  * #desc:
- *    The definitions of lazylib configuration.
+ *    The definitions of conch configuration.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software

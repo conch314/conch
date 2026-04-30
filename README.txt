@@ -17,7 +17,7 @@ INCLUDES:
   RB-Tree
   Linked-list
   Swiss-Table
-  Ring-Buffer (k-fifo)
+  Ring-Buffer
   AES
   DES
   RC4

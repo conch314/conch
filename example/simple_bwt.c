@@ -88,6 +88,36 @@
  *  5: nabana
  *  6: nanaba
  * res: banana
+ *
+ * NOTE: bwt is dependentation on strict circular rotation order (SA(-1) != BWT)
+ *
+ * unsafe (qsort): IBWT success
+ *  aaaaaaabanan 5
+ *  aaaaaabanana 6
+ *  aaaaabananaa 7
+ *  aaaabananaaa 8
+ *  aaabananaaaa 9
+ *  aabananaaaaa 10
+ *  abananaaaaaa 11
+ *  anaaaaaaaban 3
+ *  ananaaaaaaab 1
+ *  bananaaaaaaa 0
+ *  naaaaaaabana 4
+ *  nanaaaaaaaba 2
+ *
+ * drsort (doubling method and radix sort): IBWT fail
+ *  abananaaaaaa 11
+ *  aabananaaaaa 10
+ *  aaabananaaaa 9
+ *  aaaabananaaa 8
+ *  aaaaabananaa 7
+ *  aaaaaabanana 6
+ *  aaaaaaabanan 5
+ *  anaaaaaaaban 3
+ *  ananaaaaaaab 1
+ *  bananaaaaaaa 0
+ *  naaaaaaabana 4
+ *  nanaaaaaaaba 2
  */
 
 #define BWT_DRSORT_TMPSIZE(n) (4 * (n) + 256)
@@ -280,6 +310,11 @@ int main(void)
 	printf("str: %.*s\n", n, s);
 	bwt_transform_unsafe(bwt, (uint8_t *)s, n, &index, suffix);
 	printf("bwt: %.*s\n", n, bwt);
+	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
+	printf("res: %.*s\n\n", n, res);
+
+	bwt_transform_drsort(bwt, (uint8_t *)s, n, &index, suffix, tmp);
+	printf("bwt: %.*s (drsort)\n", n, bwt);
 	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
 	printf("res: %.*s\n\n", n, res);
 
