@@ -53,7 +53,7 @@ for f in "$@"; do
 				continue
 			fi
 
-			ss=$(out_s |sed '/^\/\* @func:/,/^ \*\//d')
+			ss=$(out_s |sed '/^\/\* @func:/,/\*\/$/d')
 			g=$(echo $n |sed 's/^/\\b/;s/$/\\b/;s/ /\\b\\|\\b/g')
 			n=$(out_n |sort && out_ss |grep -o "$g" |sort)
 			a=$(out_n |sort |uniq -u)

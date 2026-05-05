@@ -40,9 +40,11 @@ struct bits_get_ctx {
 #define BITS_GET_NEW(name) \
 	struct bits_get_ctx name = BITS_GET_CTX_SET0
 #define BITS_GET_INIT(x) \
-	(x)->len = 0; \
-	(x)->pos = 0; \
-	(x)->cur = 0
+	do { \
+		(x)->len = 0; \
+		(x)->pos = 0; \
+		(x)->cur = 0; \
+	} while (0)
 
 /* skip the remaining bits in the byte */
 #define BITS_GET_SKIP(x) \

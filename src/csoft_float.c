@@ -28,7 +28,7 @@
 
 
 /*
- * Floating-point input processing:
+ * Floating-Point input processing:
  *    NaN op any     =>  NaN
  *    any op NaN     =>  NaN
  *
@@ -180,7 +180,7 @@ static uint64_t _float_pack64(int32_t sign, int32_t exp, uint64_t sig)
  * #desc:
  *    right shift and add sticky to the low bit (64-bit).
  *
- * #1: a [in]  number
+ * #1: a [in]  input value
  * #2: b [in]  shift distance
  * #r:   [ret] value after right shift
  */
@@ -688,7 +688,7 @@ static uint32_t _float_pack32(int32_t sign, int32_t exp, uint32_t sig)
  * #desc:
  *    right shift and add sticky to the low bit (32-bit).
  *
- * #1: a [in]  number
+ * #1: a [in]  input value
  * #2: b [in]  shift distance
  * #r:   [ret] value after right shift
  */
@@ -1598,7 +1598,7 @@ uint32_t conch_csf_u32_to_f32(uint32_t a)
 
 /* @func: conch_csf_i64_to_f32
  * #desc:
- *    unsigned integer to floating-point conversion (64-bit => 32-bit).
+ *    unsigned integer to floating-point conversion (32-bit).
  *
  * #1: a [in]  number
  * #r:   [ret] floating-point
@@ -1628,7 +1628,7 @@ uint32_t conch_csf_i64_to_f32(int64_t a)
 
 /* @func: conch_csf_u64_to_f32
  * #desc:
- *    unsigned integer to floating-point conversion (64-bit => 32-bit).
+ *    unsigned integer to floating-point conversion (32-bit).
  *
  * #1: a [in]  number
  * #r:   [ret] floating-point
@@ -1754,7 +1754,7 @@ e:
 
 /* @func: conch_csf_f32_to_i64
  * #desc:
- *    floating-point to signed integer conversion (32-bit => 64-bit).
+ *    floating-point to signed integer conversion (32-bit).
  *
  * #1: a    [in]  floating-point
  * #2: mode [in]  rounding mode
@@ -1804,7 +1804,7 @@ e:
 
 /* @func: conch_csf_f32_to_u64
  * #desc:
- *    floating-point to unsigned integer conversion (32-bit => 64-bit).
+ *    floating-point to unsigned integer conversion (32-bit).
  *
  * #1: a    [in]  floating-point
  * #2: mode [in]  rounding mode
@@ -1853,7 +1853,7 @@ e:
 
 /* @func: conch_csf_f64_to_f32
  * #desc:
- *    floating-point 64-bit to 32-bit conversion (64-bit => 32-bit).
+ *    floating-point 64-bit to 32-bit conversion.
  *
  * #1: a [in]  floating-point
  * #r:   [ret] floating-point
@@ -1882,7 +1882,7 @@ uint32_t conch_csf_f64_to_f32(uint64_t a)
 
 /* @func: conch_csf_f32_to_f64
  * #desc:
- *    floating-point 32-bit to 64-bit conversion (32-bit => 64-bit).
+ *    floating-point 32-bit to 64-bit conversion.
  *
  * #1: a [in]  floating-point
  * #r:   [ret] floating-point

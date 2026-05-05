@@ -53,13 +53,6 @@ typedef struct {
 extern "C" {
 #endif
 
-extern
-xFILE *__conch_stdin;
-extern
-xFILE *__conch_stdout;
-extern
-xFILE *__conch_stderr;
-
 /* c_stdio__printf.c */
 extern
 int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,
@@ -73,6 +66,15 @@ int32_t __conch_scanf(const char *fmt, va_list *ap, void *arg,
 ;
 
 /* c_stdio_io.c */
+extern
+xFILE *__conch_stdin
+;
+extern
+xFILE *__conch_stdout
+;
+extern
+xFILE *__conch_stderr
+;
 extern
 int32_t conch_fflush(xFILE *fp)
 ;

@@ -26,11 +26,12 @@
 #include <conch/c_stdlib.h>
 
 
+/* @fvar: __conch_envp
+ */
 char **__conch_envp = NULL;
 
 extern
-int main(int argc, char *const *argv, char *const *envp)
-;
+int main(int argc, char *const *argv, char *const *envp);
 
 
 /* @func: _start_main

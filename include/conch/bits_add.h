@@ -40,9 +40,11 @@ struct bits_add_ctx {
 #define BITS_ADD_NEW(name) \
 	struct bits_add_ctx name = BITS_ADD_CTX_SET0
 #define BITS_ADD_INIT(x) \
-	(x)->size = 0; \
-	(x)->cur = 0; \
-	(x)->rem = 0
+	do { \
+		(x)->size = 0; \
+		(x)->cur = 0; \
+		(x)->rem = 0; \
+	} while (0)
 
 #define BITS_ADD_FLUSH(x) \
 	do { \

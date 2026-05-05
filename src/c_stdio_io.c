@@ -94,8 +94,14 @@ static struct stdio_file __stderr = {
 	.lock = 0
 	};
 
+/* @fvar: __conch_stdin
+ */
 xFILE *__conch_stdin = (xFILE *)&__stdin;
+/* @fvar: __conch_stdout
+ */
 xFILE *__conch_stdout = (xFILE *)&__stdout;
+/* @fvar: __conch_stderr
+ */
 xFILE *__conch_stderr = (xFILE *)&__stderr;
 
 

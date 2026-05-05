@@ -75,9 +75,11 @@ struct json_ctx {
 #define JSON_NEW(name, _call, _call_end, _arg) \
 	struct json_ctx name = JSON_CTX_SET(_call, _call_end, _arg)
 #define JSON_INIT(x, _call, _call_end, _arg) \
-	(x)->call = _call; \
-	(x)->call_end = _call_end; \
-	(x)->arg = _arg
+	do { \
+		(x)->call = _call; \
+		(x)->call_end = _call_end; \
+		(x)->arg = _arg; \
+	} while (0)
 
 #define JSON_STR(x) ((x)->str)
 #define JSON_ERR(x) ((x)->err)
@@ -130,9 +132,11 @@ struct json_tree {
 #define JSON_TREE_SET0 { 0, .u = { NULL }, NULL }
 #define JSON_TREE_NEW(x) struct json_tree x = JSON_TREE_SET0
 #define JSON_TREE_INIT(x) \
-	(x)->type = 0; \
-	(x)->u.array = NULL; \
-	(x)->stack = NULL
+	do { \
+		(x)->type = 0; \
+		(x)->u.array = NULL; \
+		(x)->stack = NULL; \
+	} while (0)
 
 
 #ifdef __cplusplus

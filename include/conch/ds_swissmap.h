@@ -63,13 +63,15 @@ struct swissmap_head {
 			_wsize, _total_size, _hash, _cmp)
 #define SWISSMAP_HEAD_INIT(x, _ctrl, _array, _wsize, \
 		_total_size, _hash, _cmp) \
-	(x)->group = _ctrl; \
-	(x)->array = _array; \
-	(x)->wsize = _wsize; \
-	(x)->size = 0; \
-	(x)->total_size = _total_size; \
-	(x)->call_hash = _hash; \
-	(x)->call_cmp = _cmp
+	do { \
+		(x)->group = _ctrl; \
+		(x)->array = _array; \
+		(x)->wsize = _wsize; \
+		(x)->size = 0; \
+		(x)->total_size = _total_size; \
+		(x)->call_hash = _hash; \
+		(x)->call_cmp = _cmp; \
+	} while (0)
 
 /* 0b1'0000000 */
 #define SWISSMAP_EMPTY 0x80

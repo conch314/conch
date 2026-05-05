@@ -39,11 +39,13 @@ struct kfifo_head {
 #define KFIFO_NEW(x, _buf, _size) \
 	struct kfifo_head x = KFIFO_HEAD_SET(_buf, _size);
 #define KFIFO_INIT(x, _buf, _size) \
-	(x)->in = 0; \
-	(x)->out = 0; \
-	(x)->mask = (_size) - 1; \
-	(x)->size = _size; \
-	(x)->buf = buf
+	do { \
+		(x)->in = 0; \
+		(x)->out = 0; \
+		(x)->mask = (_size) - 1; \
+		(x)->size = _size; \
+		(x)->buf = buf; \
+	} while (0)
 
 #define KFIFO_RESET(x) \
 	do { \

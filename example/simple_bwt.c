@@ -122,6 +122,45 @@
 
 #define BWT_DRSORT_TMPSIZE(n) (4 * (n) + 256)
 
+#define QS_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define QS_SWAP(a, b) \
+	do { \
+		uint32_t ___tmp = a; \
+		a = b; \
+		b = ___tmp; \
+	} while (0)
+#define QS_VSWAP(x, a, b, n) \
+	do { \
+		int32_t ___tmp1 = a; \
+		int32_t ___tmp2 = b; \
+		int32_t ___tmp3 = n; \
+		for (; ___tmp3 > 0; ___tmp3--) { \
+			QS_SWAP((x)[___tmp1], (x)[___tmp2]); \
+			___tmp1++; \
+			___tmp2++; \
+		} \
+	} while (0)
+#define QS_PUSH(stack, lo, hi) \
+	do { \
+		stack[sp] = lo; \
+		stack[sp + 1] = hi; \
+		sp += 2; \
+	} while (0)
+#define QS_POP(stack, lo, hi) \
+	do { \
+		sp -= 2; \
+		lo = stack[sp]; \
+		hi = stack[sp + 1]; \
+	} while (0)
+
+#define BH_SET(x, n) (x)[(n) >> 5] |= 1U << ((n) & 31)
+#define BH_CLEAR(x, n) (x)[(n) >> 5] &= ~(1U << ((n) & 31))
+#define BH_ISSET(x, n) ((x)[(n) >> 5] & (1U << ((n) & 31)))
+#define BH_WORD(x, n) ((x)[(n) >> 5])
+#define BH_UNALIGNED(n) ((n) & 0x1f)
+
+#define FALLBACK_SORT_TMPSIZE(n) (4 * ((n) + ((n) / 32 + 3)))
+
 
 const uint8_t *unsafe_in;
 uint32_t unsafe_len;
@@ -154,9 +193,12 @@ void bwt_transform_unsafe(uint8_t *out, const uint8_t *in, uint32_t len,
 	conch_qsort(suffix, len, sizeof(uint32_t), unsafe_cmp);
 
 	for (uint32_t i = 0; i < len; i++) {
-		if (!suffix[i])
-			*index = i;
-		out[i] = in[(suffix[i] + len - 1) % len];
+		if (!suffix[i]) {
+			*index = i; /* primary index */
+			out[i] = in[len - 1];
+		} else {
+			out[i] = in[suffix[i] - 1];
+		}
 	}
 }
 
@@ -241,9 +283,12 @@ void bwt_transform_drsort(uint8_t *out, const uint8_t *in, uint32_t len,
 	bwt_drsort_sa(in, len, sa, tmp);
 
 	for (uint32_t i = 0; i < len; i++) {
-		if (!sa[i])
+		if (!sa[i]) {
 			*index = i; /* primary index */
-		out[i] = in[(sa[i] + len - 1) % len];
+			out[i] = in[len - 1];
+		} else {
+			out[i] = in[sa[i] - 1];
+		}
 	}
 }
 
@@ -255,7 +300,7 @@ void bwt_drsort_csa(const uint8_t *in, uint32_t len, uint32_t *sa,
 	uint32_t *rk = tmp += len + 256;
 	uint32_t *id = tmp += len;
 	uint32_t *ork = tmp += len;
-	uint32_t c, m = 256;
+	uint32_t t, c, m = 256;
 
 	/* single character sorting */
 	conch_memset(count, 0, sizeof(uint32_t) * m);
@@ -274,8 +319,10 @@ void bwt_drsort_csa(const uint8_t *in, uint32_t len, uint32_t *sa,
 
 	for (uint32_t k = 1; ; k <<= 1) {
 		/* second key 'rk[sa[i] + k]' sorting */
-		for (uint32_t i = 0; i < len; i++)
-			id[i] = (sa[i] + len - k) % len;
+		for (uint32_t i = 0; i < len; i++) {
+			t = sa[i] + len - k;
+			id[i] = (t >= len) ? (t - len) : t;
+		}
 
 		/* first key 'rk[sa[i]]' sorting */
 		conch_memset(count, 0, sizeof(uint32_t) * m);
@@ -295,8 +342,11 @@ void bwt_drsort_csa(const uint8_t *in, uint32_t len, uint32_t *sa,
 		for (uint32_t i = 1; i < len; i++) {
 			uint32_t a = sa[i]; /* suffix */
 			uint32_t b = sa[i - 1];
-			uint32_t rka = ork[(a + k) % len];
-			uint32_t rkb = ork[(b + k) % len];
+
+			t = a + k;
+			uint32_t rka = ork[(t >= len) ? (t - len) : t];
+			t = b + k;
+			uint32_t rkb = ork[(t >= len) ? (t - len) : t];
 
 			/* rk[a] == rk[b] && rk[a + k] == rk[b + k] */
 			if (ork[a] == ork[b] && rka == rkb) {
@@ -320,9 +370,12 @@ void bwt_transform_drsort_csa(uint8_t *out, const uint8_t *in, uint32_t len,
 	bwt_drsort_csa(in, len, sa, tmp);
 
 	for (uint32_t i = 0; i < len; i++) {
-		if (!sa[i])
+		if (!sa[i]) {
 			*index = i; /* primary index */
-		out[i] = in[(sa[i] + len - 1) % len];
+			out[i] = in[len - 1];
+		} else {
+			out[i] = in[sa[i] - 1];
+		}
 	}
 }
 
@@ -340,7 +393,7 @@ void bwt_inverse_lf_mapping(uint8_t *out, const uint8_t *in, uint32_t len,
 		count[in[i]]++;
 
 	/* offset */
-	for (int32_t i = 0; i < 256; i++) {
+	for (uint32_t i = 0; i < 256; i++) {
 		c = count[i];
 		count[i] = n;
 		n += c;
@@ -348,8 +401,9 @@ void bwt_inverse_lf_mapping(uint8_t *out, const uint8_t *in, uint32_t len,
 
 	/* build rank (last -> first) */
 	for (uint32_t i = 0; i < len; i++) {
-		rank[i] = count[in[i]] + occ[in[i]];
-		occ[in[i]]++;
+		c = in[i];
+		rank[i] = count[c] + occ[c];
+		occ[c]++;
 	}
 
 	/* reverse */
@@ -359,9 +413,247 @@ void bwt_inverse_lf_mapping(uint8_t *out, const uint8_t *in, uint32_t len,
 	}
 }
 
+static void _fallback_qsort3(uint32_t *sa, uint32_t *rk, int32_t l,
+		int32_t r)
+{
+	int32_t stack[100 * 2];
+	int32_t lo, hi, sp = 0;
+	int32_t un_lo, un_hi, lt_lo, gt_hi, n, m;
+	uint32_t t, tt, q = 0;
+
+	QS_PUSH(stack, l, r);
+
+	while (sp) {
+		QS_POP(stack, lo, hi);
+		if (lo == hi)
+			continue;
+
+		if ((hi - lo) < 10) { /* insertion sort */
+			if ((hi - lo) > 3) {
+				for (int32_t i = hi - 4; i >= lo; i--) {
+					t = sa[i];
+					tt = rk[t];
+					int32_t j = i + 4;
+					for (; j <= hi && tt > rk[sa[j]];
+							j += 4)
+						sa[j - 4] = sa[j];
+					sa[j - 4] = t;
+				}
+			}
+
+			for (int32_t i = hi - 1; i >= lo; i--) {
+				t = sa[i];
+				tt = rk[t];
+				int32_t j = i + 1;
+				for (; j <= hi && tt > rk[sa[j]]; j++)
+					sa[j - 1] = sa[j];
+				sa[j - 1] = t;
+			}
+
+			continue;
+		}
+
+		/* random partitioning */
+		q = ((q * 7621) + 1) % 32768;
+		t = q % 3;
+		if (t == 0) {
+			tt = rk[sa[lo]];
+		} else if (t == 1) {
+			tt = rk[sa[(lo + hi) >> 1]];
+		} else {
+			tt = rk[sa[hi]];
+		}
+
+		un_lo = lt_lo = lo;
+		un_hi = gt_hi = hi;
+
+		/*
+		 *    lo == pivot
+		 * --------------
+		 * lt_lo  < pivot
+		 * --------------
+		 *    unprocessed
+		 * --------------
+		 * gt_hi  > pivot
+		 * --------------
+		 *    hi == pivot
+		 */
+
+		while (1) {
+			/* left side scan */
+			while (un_lo <= un_hi) {
+				t = rk[sa[un_lo]];
+				if (t > tt) { /* > pivot */
+					break;
+				} else if (t < tt) { /* < pivot */
+					un_lo++;
+					continue;
+				}
+
+				/* == pivot, collection */
+				QS_SWAP(sa[un_lo], sa[lt_lo]);
+				lt_lo++;
+				un_lo++;
+			}
+
+			/* right side scan */
+			while (un_lo <= un_hi) {
+				t = rk[sa[un_hi]];
+				if (t < tt) { /* < pivot */
+					break;
+				} else if (t > tt) { /* > pivot */
+            				un_hi--;
+					continue;
+				}
+
+				/* == pivot, collection */
+				QS_SWAP(sa[un_hi], sa[gt_hi]);
+				gt_hi--;
+				un_hi--;
+			}
+
+			if (un_lo > un_hi)
+				break;
+
+			/* swap unprocessed */
+			QS_SWAP(sa[un_lo], sa[un_hi]);
+			un_lo++;
+			un_hi--;
+		}
+		if (gt_hi < lt_lo)
+			continue;
+
+		/* < pivot | == pivot | > pivot */
+
+		n = QS_MIN(lt_lo - lo, un_lo - lt_lo);
+		QS_VSWAP(sa, lo, un_lo - n, n);
+
+		m = QS_MIN(hi - gt_hi, gt_hi - un_hi);
+		QS_VSWAP(sa, un_lo, hi - m + 1, m);
+
+		/* divide */
+		n = lo + (un_lo - lt_lo) - 1;
+		m = hi - (gt_hi - un_hi) + 1;
+
+		if ((n - lo) > (hi - m)) {
+			QS_PUSH(stack, lo, n);
+			QS_PUSH(stack, m, hi);
+		} else {
+			QS_PUSH(stack, m, hi);
+			QS_PUSH(stack, lo, n);
+		}
+	}
+}
+
+static void _fallback_sort(const uint8_t *in, uint32_t len, uint32_t *sa,
+		uint32_t *tmp)
+{
+	uint32_t count[256];
+	uint32_t *rk = tmp;
+	uint32_t *bh = tmp += len;
+	uint32_t l, r, t, c, cc, n;
+
+	/* single character sorting */
+	memset(count, 0, sizeof(count));
+	for (uint32_t i = 0; i < len; i++)
+		count[in[i]]++;
+	for (uint32_t i = 1; i < 256; i++)
+		count[i] += count[i - 1];
+	for (uint32_t i = 0; i < len; i++) { /* counting sort initial sa */
+		c = --count[in[i]];
+		sa[c] = i;
+	}
+
+	/* build bucket boundary */
+	memset(bh, 0, sizeof(uint32_t) * (len / 32 + 3));
+	for (uint32_t i = 0; i < 256; i++)
+		BH_SET(bh, count[i]);
+	for (uint32_t i = 0; i < 32; i++) {
+		BH_SET(bh, len + 2 * i);
+		BH_CLEAR(bh, len + 2 * i + 1);
+	}
+
+	/* doubling method, bucket partitioning, and three-way quicksort */
+
+	for (uint32_t k = 1; k <= len; k <<= 1) {
+		c = 0; /* update rank */
+		for (uint32_t i = 0; i < len; i++) {
+			if (BH_ISSET(bh, i))
+				c = i;
+			t = sa[i] + len - k;
+			rk[(t >= len) ? (t - len) : t] = c;
+		}
+
+		n = 0;
+		t = 0;
+
+		while (1) {
+			/* left boundary */
+			while (BH_ISSET(bh, t) && BH_UNALIGNED(t))
+				t++;
+			if (BH_ISSET(bh, t)) {
+				while (BH_WORD(bh, t) == 0xffffffff)
+					t += 32;
+				while (BH_ISSET(bh, t))
+					t++;
+			}
+			l = t - 1;
+			if (l >= len)
+				break;
+
+			/* right boundary */
+			while (!BH_ISSET(bh, t) && BH_UNALIGNED(t))
+				t++;
+			if (!BH_ISSET(bh, t)) {
+				while (BH_WORD(bh, t) == 0x00000000)
+					t += 32;
+				while (!BH_ISSET(bh, t))
+					t++;
+			}
+			r = t - 1;
+			if (r >= len)
+				break;
+
+			/* bucket sort */
+			if (r > l) {
+				n += r - l + 1;
+				_fallback_qsort3(sa, rk, l, r);
+
+				c = (uint32_t)-1; /* divide */
+				for (uint32_t i = l; i <= r; i++) {
+					cc = rk[sa[i]];
+					if (c != cc) {
+						BH_SET(bh, i);
+						c = cc;
+					}
+				}
+			}
+		}
+
+		if (!n)
+			break;
+	}
+}
+
+void bwt_transform_fsort_csa(uint8_t *out, const uint8_t *in, uint32_t len,
+		uint32_t *index, uint32_t *sa, uint32_t *tmp)
+{
+	/* build suffix-array */
+	_fallback_sort(in, len, sa, tmp);
+
+	for (uint32_t i = 0; i < len; i++) {
+		if (!sa[i]) {
+			*index = i; /* primary index */
+			out[i] = in[len - 1];
+		} else {
+			out[i] = in[sa[i] - 1];
+		}
+	}
+}
+
 int main(void)
 {
-	uint32_t tmp[BWT_DRSORT_TMPSIZE(20)];
+	uint32_t tmp[BWT_DRSORT_TMPSIZE(100)];
 	uint32_t rank[100], suffix[100], index, n;
 	uint8_t res[100], bwt[100];
 	char *s;
@@ -403,6 +695,11 @@ int main(void)
 	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
 	printf("res: %.*s\n\n", n, res);
 
+	bwt_transform_fsort_csa(bwt, (uint8_t *)s, n, &index, suffix, tmp);
+	printf("bwt: %.*s (fsort csa)\n", n, bwt);
+	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
+	printf("res: %.*s\n\n", n, res);
+
 	s = "bananannytt";
 	n = (uint32_t)conch_strlen(s);
 
@@ -419,6 +716,11 @@ int main(void)
 
 	bwt_transform_drsort_csa(bwt, (uint8_t *)s, n, &index, suffix, tmp);
 	printf("bwt: %.*s (drsort csa)\n", n, bwt);
+	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
+	printf("res: %.*s\n\n", n, res);
+
+	bwt_transform_fsort_csa(bwt, (uint8_t *)s, n, &index, suffix, tmp);
+	printf("bwt: %.*s (fsort csa)\n", n, bwt);
 	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
 	printf("res: %.*s\n\n", n, res);
 

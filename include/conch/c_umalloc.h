@@ -58,18 +58,22 @@ struct umalloc_ctx {
 	int32_t (*call_free)(void *, size_t, void *);
 };
 
-#define UMALLOC_NEW(name, alloc, free, _arg) \
-	struct umalloc_ctx name = { \
+#define UMALLOC_CTX_SET(alloc, free, _arg) \
+	{ \
 		.chunk = LIST_HEAD_SET0, \
 		.call_alloc = alloc, \
 		.call_free = free, \
 		.arg = _arg \
-		}
+	}
+#define UMALLOC_NEW(name, alloc, free, _arg) \
+	struct umalloc_ctx name = UMALLOC_CTX_SET(alloc, free, _arg);
 #define UMALLOC_INIT(x, alloc, free, _arg) \
-	LIST_HEAD_INIT(&(x)->chunk); \
-	(x)->call_alloc = alloc; \
-	(x)->call_free = free; \
-	(x)->arg = _arg
+	do { \
+		LIST_HEAD_INIT(&(x)->chunk); \
+		(x)->call_alloc = alloc; \
+		(x)->call_free = free; \
+		(x)->arg = _arg; \
+	} while (0)
 
 
 #ifdef __cplusplus

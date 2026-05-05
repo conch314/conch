@@ -15,6 +15,12 @@ for i in "$@"; do
 	echo
 	echo "/* $i */"
 
+	sed -n '/^\/\* @fvar:/,/ = \|;$/p' "$i" \
+	|sed 's/ = .*$/;/' \
+	|sed '/\*\/$/aextern' \
+	|sed '/^\/\*/,/\*\/$/d' \
+	|sed 's/;/\n;/'
+
 	sed '/^\/\* @func:.*(.*static.*)/,/\*\/$/d' "$i" \
 	|sed -n '/^\/\* @func:/,/^{$\| {$/p' \
 	|sed '/^\/\*/,/\*\/$/aextern' \

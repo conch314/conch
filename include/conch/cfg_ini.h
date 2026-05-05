@@ -60,9 +60,11 @@ struct ini_ctx {
 #define INI_NEW(name, _call, _call_end, _arg) \
 	struct ini_ctx name = INI_CTX_SET(_call, _call_end, _arg)
 #define INI_INIT(x, _call, _call_end, _arg) \
-	(x)->call = _call; \
-	(x)->call_end = _call_end; \
-	(x)->arg = _arg
+	do { \
+		(x)->call = _call; \
+		(x)->call_end = _call_end; \
+		(x)->arg = _arg; \
+	} while (0)
 
 #define INI_ERR(x) ((x)->err)
 #define INI_LEN(x) ((x)->len)

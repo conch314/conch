@@ -411,7 +411,7 @@ static void _send_bits_skip(struct deflate_ctx *ctx)
  * #desc:
  *    bit reverse conversion.
  *
- * #1: c   [in]  input
+ * #1: c   [in]  value
  * #2: len [in]  length
  * #r:     [ret] reverse
  */
@@ -841,45 +841,6 @@ static void _send_block(struct deflate_ctx *ctx,
 	SEND_CODE(ctx, ltree, DEFLATE_END_BLOCK);
 }
 
-/* @func: _bits_overflow (static)
- * #desc:
- *    check bits overflow.
- *
- * #1: ctx  [in/out] deflate struct context
- * #2: tree [in]     input tree
- * #3: n    [in]     codes number
- * #r:      [ret]    0: no error, <0: overflow
- */
-static int32_t _bits_overflow(struct deflate_ctx *ctx,
-		const struct deflate_ctdata *tree, int32_t n)
-{
-	for (int32_t i = 0; i <= DEFLATE_BITS_MAX; i++)
-		ctx->bl_count[i] = 0;
-	for (int32_t i = 0; i < n; i++)
-		ctx->bl_count[tree[i].dl.len]++;
-
-	int32_t m, g, w;
-	for (m = 1; m <= DEFLATE_BITS_MAX; m++) {
-		if (ctx->bl_count[m])
-			break;
-	}
-	for (g = DEFLATE_BITS_MAX; g > 0; g--) {
-		if (ctx->bl_count[g])
-			break;
-	}
-
-	for (w = 1 << m; m < g; w <<= 1, m++) {
-		w -= ctx->bl_count[m];
-		if (w < 0)
-			return w;
-	}
-	w -= ctx->bl_count[g];
-	if (w < 0)
-		return w;
-
-	return 0;
-}
-
 /* @func: _init_block (static)
  * #desc:
  *    initialization block.
@@ -937,10 +898,6 @@ static void _flush_block(struct deflate_ctx *ctx, int32_t flush)
 		+ 3;
 	opt_dlen = ctx->desc_ltree.opt_dlen + ctx->desc_dtree.opt_dlen
 		+ (3 + 5 + 5 + 4 + (3 * 19)) + 15;
-
-	if (_bits_overflow(ctx, ctx->dyn_bltree,
-			ctx->desc_bltree.code_max + 1))
-		opt_slen = 0;
 
 	/* dynamic */
 	if (opt_slen > opt_dlen) {
