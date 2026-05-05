@@ -3,7 +3,7 @@
  *    The definitions of chacha20 stream encryption.
  *
  * #copy:
- *    Copyright (C) 1970 Public Free Software
+ *    Copyright (C) 1970 Public Free Software.
  *
  *    This library is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
