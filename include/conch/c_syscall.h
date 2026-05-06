@@ -24,21 +24,10 @@
 #define _CONCH_C_SYSCALL_H
 
 #include <conch/config.h>
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
-#  include <linux/unistd.h>
-/*#  include <linux/mman.h>
-#  include <linux/signal.h>
-#  include <linux/time.h>
-#  include <linux/fcntl.h>
-#  include <linux/fs.h>
-#  include <linux/stat.h>
-#  include <linux/errno.h>*/
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
+#if defined(CONCH_PLATFORM_LINUX)
+# include <linux/unistd.h>
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 
 

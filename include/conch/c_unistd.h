@@ -29,8 +29,7 @@
 #include <conch/c_sys_types.h>
 
 
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 #undef X_SEEK_SET
 #undef X_SEEK_CUR
@@ -39,11 +38,8 @@
 #define X_SEEK_CUR 1 /* relative */
 #define X_SEEK_END 2 /* tail start */
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 
 

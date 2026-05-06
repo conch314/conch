@@ -30,20 +30,19 @@
 #include <conch/c_signal.h>
 
 
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
-#define POLLIN     0x01 /* data other than high-priority data may be read without blocking */
-#define POLLPRI    0x02 /* high priority data may be read without blocking */
-#define POLLOUT    0x04 /* normal data may be written without blocking */
-#define POLLERR    0x08 /* an error has occurred (revents only) */
-#define POLLHUP    0x10 /* device has been disconnected (revents only) */
-#define POLLNVAL   0x20 /* invalid fd member (revents only) */
+#define X_POLLIN     0x01 /* data other than high-priority data may be read without blocking */
+#define X_POLLPRI    0x02 /* high priority data may be read without blocking */
+#define X_POLLOUT    0x04 /* normal data may be written without blocking */
+#define X_POLLERR    0x08 /* an error has occurred (revents only) */
+#define X_POLLHUP    0x10 /* device has been disconnected (revents only) */
+#define X_POLLNVAL   0x20 /* invalid fd member (revents only) */
 
-#define POLLRDNORM 0x40  /* normal data may be read without blocking */
-#define POLLRDBAND 0x80  /* priority data may be read without blocking */
-#define POLLWRNORM 0x100 /* equivalent to POLLOUT */
-#define POLLWRBAND 0x200 /* priority data may be written */
+#define X_POLLRDNORM 0x40  /* normal data may be read without blocking */
+#define X_POLLRDBAND 0x80  /* priority data may be read without blocking */
+#define X_POLLWRNORM 0x100 /* equivalent to POLLOUT */
+#define X_POLLWRBAND 0x200 /* priority data may be written */
 
 struct xpollfd {
 	int32_t fd;
@@ -51,11 +50,8 @@ struct xpollfd {
 	int16_t revents;
 };
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 
 

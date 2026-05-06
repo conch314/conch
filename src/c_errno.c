@@ -48,6 +48,8 @@ int32_t *__conch_errno(void)
  */
 const char *conch_strerror(int32_t err)
 {
+#if defined(CONCH_PLATFORM_LINUX)
+
 	switch (err) {
 		case X_EPERM:
 			return X_EPERM_STR;
@@ -320,6 +322,10 @@ const char *conch_strerror(int32_t err)
 		default:
 			break;
 	}
+
+#else
+# error "!!!unknown platform!!!"
+#endif
 
 	return X_EUNKNOWN_STR;
 }

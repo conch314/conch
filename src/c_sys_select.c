@@ -47,8 +47,7 @@ int32_t conch_pselect(int32_t nfds, xfd_set *rfds, xfd_set *wfds,
 		xfd_set *efds, const struct xtimespec *ts,
 		const xsigset_t *mask)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -68,11 +67,8 @@ int32_t conch_pselect(int32_t nfds, xfd_set *rfds, xfd_set *wfds,
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 

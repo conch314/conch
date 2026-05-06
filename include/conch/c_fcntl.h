@@ -29,8 +29,7 @@
 #include <conch/c_sys_types.h>
 
 
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 /* duplicate file descriptor */
 #define X_F_DUPFD 0
@@ -85,18 +84,11 @@ struct xflock {
 /* mask of read and write */
 #define X_O_ACCMODE  0x03
 
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
-
-#define X_O_SEARCH    0x4000
-#define X_O_NOFOLLOW  0x8000
-#define X_O_DIRECT    0x10000
-#define X_O_LARGEFILE 0x20000
-
-# endif
-#else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+#if (defined(CONCH_MARCH_ARM_32) || defined(CONCH_MARCH_ARM_64))
+# define X_O_SEARCH    0x4000
+# define X_O_NOFOLLOW  0x8000
+# define X_O_DIRECT    0x10000
+# define X_O_LARGEFILE 0x20000
 #endif
 
 /* create file if it does not exist */
@@ -142,11 +134,8 @@ struct xflock {
 
 #define X_AT_FDCWD -100
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 
 

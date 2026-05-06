@@ -40,8 +40,7 @@
  */
 ssize_t conch_read(int32_t fd, void *buf, size_t len)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	ssize_t ret;
 
@@ -58,11 +57,8 @@ ssize_t conch_read(int32_t fd, void *buf, size_t len)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -77,8 +73,7 @@ ssize_t conch_read(int32_t fd, void *buf, size_t len)
  */
 ssize_t conch_write(int32_t fd, const void *buf, size_t len)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	ssize_t ret;
 
@@ -95,11 +90,8 @@ ssize_t conch_write(int32_t fd, const void *buf, size_t len)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -114,13 +106,11 @@ ssize_t conch_write(int32_t fd, const void *buf, size_t len)
  */
 xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xoff_t ret, _off;
 
-#ifdef CONCH_MARCH_BITS
-# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
+#if defined(CONCH_MARCH_BITS_32)
 
 	ret = (xoff_t)conch_syscall_linux(__NR__llseek,
 		fd,
@@ -129,18 +119,15 @@ xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
 		&_off,
 		whence);
 
-# elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
+#elif defined(CONCH_MARCH_BITS_64)
 
 	ret = _off = (xoff_t)conch_syscall_linux(__NR_lseek,
 		fd,
 		off,
 		whence);
 
-# else
-#  error "!!!unknown CONCH_MARCH_BITS!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!unknown machine bits!!!"
 #endif
 
 	if (ret < 0) {
@@ -151,11 +138,8 @@ xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
 
 	return _off;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -168,8 +152,7 @@ xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
  */
 int32_t conch_close(int32_t fd)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -184,10 +167,7 @@ int32_t conch_close(int32_t fd)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }

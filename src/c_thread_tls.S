@@ -34,38 +34,33 @@
  * #r: (void*) [ret] thread pointer
  */
 conch_thread_tls_get:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
+#if defined(CONCH_MARCH_X86_32)
 
 	movl %gs:0, %eax
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	movq %fs:0, %rax
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#elif defined(CONCH_MARCH_ARM_32)
 
 	mrc p15, 0, r0, c13, c0, 3
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	mrs x0, tpidr_el0
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif (defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
 	mv a0, tp
 	ret
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif
 
 /* @func: conch_thread_tls_set
@@ -75,40 +70,35 @@ conch_thread_tls_get:
  * #1: (void*) [in] thread pointer
  */
 conch_thread_tls_set:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
-#  warning "!!!please use clone() to set up tls!!!"
+#if defined(CONCH_MARCH_X86_32)
+# warning "!!!please use clone() to set up tls!!!"
 
 	xorl %eax, %eax
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
-#  warning "!!!please use clone() to set up tls!!!"
+#elif defined(CONCH_MARCH_X86_64)
+# warning "!!!please use clone() to set up tls!!!"
 
 	xorq %rax, %rax
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
-#  warning "!!!please use clone() to set up tls!!!"
+#elif defined(CONCH_MARCH_ARM_32)
+# warning "!!!please use clone() to set up tls!!!"
 
 	// mcr p15, 0, r0, c13, c0, 3
 	mov r0, #0
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	msr tpidr_el0, x0
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif (defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
 	mv tp, a0
 	ret
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif

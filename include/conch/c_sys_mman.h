@@ -29,8 +29,7 @@
 #include <conch/c_sys_types.h>
 
 
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 #define X_PROT_NONE  0x00 /* page cannot be accessed */
 #define X_PROT_READ  0x01 /* page can be read */
@@ -55,11 +54,8 @@
 #define X_MCL_FUTURE  0x02 /* lock pages that become mapped */
 #define X_MCL_ONFAULT 0x04 /* lock pages that are faulted in*/
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 
 

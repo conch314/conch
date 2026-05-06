@@ -73,7 +73,13 @@ int32_t conch_cfsetspeed(struct xtermios *tio, xspeed_t speed)
 
 int32_t conch_tcflow(int32_t fd, int32_t act)
 {
+#if defined(CONCH_PLATFORM_LINUX)
+
 	return conch_ioctl(fd, X_TCXONC, act);
+
+#else
+# error "!!!unknown platform!!!"
+#endif
 }
 
 /* @func: conch_tcflush
@@ -86,7 +92,13 @@ int32_t conch_tcflow(int32_t fd, int32_t act)
  */
 int32_t conch_tcflush(int32_t fd, int32_t qu)
 {
+#if defined(CONCH_PLATFORM_LINUX)
+
 	return conch_ioctl(fd, X_TCFLSH, qu);
+
+#else
+# error "!!!unknown platform!!!"
+#endif
 }
 
 /* @func: conch_tcdrain
@@ -98,7 +110,13 @@ int32_t conch_tcflush(int32_t fd, int32_t qu)
  */
 int32_t conch_tcdrain(int32_t fd)
 {
+#if defined(CONCH_PLATFORM_LINUX)
+
 	return conch_ioctl(fd, X_TCSBRK, 1);
+
+#else
+# error "!!!unknown platform!!!"
+#endif
 }
 
 /* @func: conch_tcsendbreak
@@ -111,7 +129,13 @@ int32_t conch_tcdrain(int32_t fd)
  */
 int32_t conch_tcsendbreak(int32_t fd, int32_t dur)
 {
+#if defined(CONCH_PLATFORM_LINUX)
+
 	return conch_ioctl(fd, X_TCSBRK, dur);
+
+#else
+# error "!!!unknown platform!!!"
+#endif
 }
 
 /* @func: conch_tcgetattr
@@ -124,16 +148,12 @@ int32_t conch_tcsendbreak(int32_t fd, int32_t dur)
  */
 int32_t conch_tcgetattr(int32_t fd, struct xtermios *tio)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	return conch_ioctl(fd, X_TCGETS, tio);
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -148,8 +168,7 @@ int32_t conch_tcgetattr(int32_t fd, struct xtermios *tio)
  */
 int32_t conch_tcsetattr(int32_t fd, int32_t act, const struct xtermios *tio)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	if (act < 0 || act > 2) {
 		x_errno = X_EINVAL;
@@ -158,11 +177,8 @@ int32_t conch_tcsetattr(int32_t fd, int32_t act, const struct xtermios *tio)
 
 	return conch_ioctl(fd, X_TCSETS + act, tio);
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -176,16 +192,12 @@ int32_t conch_tcsetattr(int32_t fd, int32_t act, const struct xtermios *tio)
  */
 int32_t conch_tcgetwinsize(int32_t fd, struct xwinsize *wsz)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	return conch_ioctl(fd, X_TIOCGWINSZ, wsz);
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -199,15 +211,11 @@ int32_t conch_tcgetwinsize(int32_t fd, struct xwinsize *wsz)
  */
 int32_t conch_tcsetwinsize(int32_t fd, const struct xwinsize *wsz)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	return conch_ioctl(fd, X_TIOCSWINSZ, wsz);
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }

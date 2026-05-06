@@ -44,8 +44,7 @@
 int32_t conch_ppoll(struct xpollfd *fds, int32_t nfds,
 		const struct xtimespec *ts, const xsigset_t *mask)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -64,11 +63,8 @@ int32_t conch_ppoll(struct xpollfd *fds, int32_t nfds,
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 

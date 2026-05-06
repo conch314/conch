@@ -28,8 +28,7 @@
 #include <conch/c_sys_types.h>
 
 
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 #define X_NSIG 64
 #define X_SI_MAX_SIZE 128
@@ -264,32 +263,26 @@ struct xsigaction {
 		void (*_sa_handler)(int32_t);
 		void (*_sa_sigaction)(int32_t, xsiginfo_t *, void *);
 	} u;
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#if (defined(CONCH_MARCH_X86_32) || defined(CONCH_MARCH_ARM_32))
 
 	xsigset_t sa_mask;
 	int32_t sa_flags;
 	void (*sa_restorer)(void);
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	int32_t sa_flags;
 	void (*sa_restorer)(void);
 	xsigset_t sa_mask;
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif (defined(CONCH_MARCH_ARM_64) \
+	|| defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
 	int32_t sa_flags;
 	xsigset_t sa_mask;
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif
 };
 
@@ -300,11 +293,8 @@ struct xsigaction {
 #define X_SIG_IGN ((void (*)(int32_t))1)  /* ignore signal */
 #define X_SIG_ERR ((void (*)(int32_t))-1) /* error return */
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 
 

@@ -66,34 +66,31 @@
 #undef INT64_MIN
 #undef INT64_MAX
 #undef UINT64_MAX
-#ifdef CONCH_MARCH_BITS
-# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
-#  ifdef CONCH_STDINT_TYPEDEF
+
+#if defined(CONCH_MARCH_BITS_32)
+# ifdef CONCH_STDINT_TYPEDEF
  typedef signed long long int64_t;
  typedef unsigned long long uint64_t;
-#  else
-#   define int64_t signed long long
-#   define uint64_t unsigned long long
-#  endif
-#  define INT64_MIN (-1LL - 0x7fffffffffffffffLL)
-#  define INT64_MAX 0x7fffffffffffffffLL
-#  define UINT64_MAX 0xffffffffffffffffULL
-# elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
-#  ifdef CONCH_STDINT_TYPEDEF
+# else
+#  define int64_t signed long long
+#  define uint64_t unsigned long long
+# endif
+# define INT64_MIN (-1LL - 0x7fffffffffffffffLL)
+# define INT64_MAX 0x7fffffffffffffffLL
+# define UINT64_MAX 0xffffffffffffffffULL
+#elif defined(CONCH_MARCH_BITS_64)
+# ifdef CONCH_STDINT_TYPEDEF
  typedef signed long int64_t;
  typedef unsigned long uint64_t;
-#  else
-#   define int64_t signed long
-#   define uint64_t unsigned long
-#  endif
-#  define INT64_MIN (-1L - 0x7fffffffffffffffL)
-#  define INT64_MAX 0x7fffffffffffffffL
-#  define UINT64_MAX 0xffffffffffffffffUL
 # else
-#  error "!!!unknown CONCH_MARCH_BITS!!!"
+#  define int64_t signed long
+#  define uint64_t unsigned long
 # endif
+# define INT64_MIN (-1L - 0x7fffffffffffffffL)
+# define INT64_MAX 0x7fffffffffffffffL
+# define UINT64_MAX 0xffffffffffffffffUL
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!unknown machine bits!!!"
 #endif
 
 #ifdef CONCH_STDINT_TYPEDEF
@@ -112,30 +109,26 @@
 #undef SIZE_MAX
 #undef SSIZE_MIN
 #undef SSIZE_MAX
-#ifdef CONCH_MARCH_BITS
-# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
-#  define INTPTR_MIN INT32_MIN
-#  define INTPTR_MAX INT32_MAX
-#  define UINTPTR_MAX UINT32_MAX
-#  define PTRDIFF_MIN INT32_MIN
-#  define PTRDIFF_MAX INT32_MAX
-#  define SIZE_MAX UINT32_MAX
-#  define SSIZE_MIN INT32_MIN
-#  define SSIZE_MAX INT32_MAX
-# elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
-#  define INTPTR_MIN INT64_MIN
-#  define INTPTR_MAX INT64_MAX
-#  define UINTPTR_MAX UINT64_MAX
-#  define PTRDIFF_MIN INT64_MIN
-#  define PTRDIFF_MAX INT64_MAX
-#  define SIZE_MAX UINT64_MAX
-#  define SSIZE_MIN INT64_MIN
-#  define SSIZE_MAX INT64_MAX
-# else
-#  error "!!!unknown CONCH_MARCH_BITS!!!"
-# endif
+#if defined(CONCH_MARCH_BITS_32)
+# define INTPTR_MIN INT32_MIN
+# define INTPTR_MAX INT32_MAX
+# define UINTPTR_MAX UINT32_MAX
+# define PTRDIFF_MIN INT32_MIN
+# define PTRDIFF_MAX INT32_MAX
+# define SIZE_MAX UINT32_MAX
+# define SSIZE_MIN INT32_MIN
+# define SSIZE_MAX INT32_MAX
+#elif defined(CONCH_MARCH_BITS_64)
+# define INTPTR_MIN INT64_MIN
+# define INTPTR_MAX INT64_MAX
+# define UINTPTR_MAX UINT64_MAX
+# define PTRDIFF_MIN INT64_MIN
+# define PTRDIFF_MAX INT64_MAX
+# define SIZE_MAX UINT64_MAX
+# define SSIZE_MIN INT64_MIN
+# define SSIZE_MAX INT64_MAX
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!unknown machine bits!!!"
 #endif
 
 

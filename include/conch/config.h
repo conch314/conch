@@ -24,17 +24,12 @@
 #define _CONCH_CONFIG_H
 
 
-/* byte order default to little-endian */
-
-#define CONCH_MARCH_32 1
-#define CONCH_MARCH_64 2
-
 #ifndef CONCH_MARCH_BITS
 # ifdef __SIZEOF_POINTER__
 #  if (__SIZEOF_POINTER__ == 4)
-#   define CONCH_MARCH_BITS CONCH_MARCH_32
+#   define CONCH_MARCH_BITS_32
 #  elif (__SIZEOF_POINTER__ == 8)
-#   define CONCH_MARCH_BITS CONCH_MARCH_64
+#   define CONCH_MARCH_BITS_64
 #  else
 #   error "!!!unknown __SIZEOF_POINTER__!!!"
 #  endif
@@ -43,44 +38,33 @@
 # endif
 #endif
 
-#define CONCH_MARCH_X86_32 1
-#define CONCH_MARCH_X86_64 2
-#define CONCH_MARCH_ARM_32 3
-#define CONCH_MARCH_ARM_64 4
-#define CONCH_MARCH_RISCV_32 5
-#define CONCH_MARCH_RISCV_64 6
-
 #ifndef CONCH_MARCH_TYPE
 # if defined(__i386__)
-#  define CONCH_MARCH_TYPE CONCH_MARCH_X86_32
+#  define CONCH_MARCH_X86_32
 # elif defined(__x86_64__)
-#  define CONCH_MARCH_TYPE CONCH_MARCH_X86_64
+#  define CONCH_MARCH_X86_64
 # elif (defined(__arm__) || defined(__thumb__) || defined(__ARM_EABI__))
 #  if (defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7R__) || __ARM_ARCH >= 7)
-#   define CONCH_MARCH_TYPE CONCH_MARCH_ARM_32
+#   define CONCH_MARCH_ARM_32
 #  else
 #   error "!!!only support arm-v7a!!!"
 #  endif
 # elif defined(__aarch64__)
-#  define CONCH_MARCH_TYPE CONCH_MARCH_ARM_64
+#  define CONCH_MARCH_ARM_64
 # elif (defined(__riscv) || defined(__riscv_xlen))
 #  if (__riscv_xlen == 32)
-#   define CONCH_MARCH_TYPE CONCH_MARCH_RISCV_32
+#   define CONCH_MARCH_RISCV_32
 #  else
-#   define CONCH_MARCH_TYPE CONCH_MARCH_RISCV_64
+#   define CONCH_MARCH_RISCV_64
 #  endif
 # else
-#  error "!!!undefined CONCH_MARCH_TYPE!!!"
+#  error "!!!unknown architecture!!!"
 # endif
 #endif
 
 /* default linux platform */
-
-#define CONCH_PLATFORM_NOSYS 1
-#define CONCH_PLATFORM_LINUX 2
-
-#ifndef CONCH_PLATFORM
-# define CONCH_PLATFORM CONCH_PLATFORM_LINUX
+#ifndef CONCH_PLATFORM_TYPE
+# define CONCH_PLATFORM_LINUX
 #endif
 
 /* using the platform's libc runtime */

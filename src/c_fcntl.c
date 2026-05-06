@@ -40,8 +40,7 @@
  */
 int32_t conch_fcntl(int32_t fd, int32_t cmd, ...)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 	va_list ap;
@@ -62,11 +61,8 @@ int32_t conch_fcntl(int32_t fd, int32_t cmd, ...)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -83,8 +79,7 @@ int32_t conch_fcntl(int32_t fd, int32_t cmd, ...)
 static int32_t _openat(int32_t fd, const char *path, int32_t flags,
 		xmode_t mode)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -105,11 +100,8 @@ static int32_t _openat(int32_t fd, const char *path, int32_t flags,
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 

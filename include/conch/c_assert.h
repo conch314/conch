@@ -26,11 +26,11 @@
 #include <conch/config.h>
 
 
-#undef xassert
+#undef x_assert
 #ifdef NDEBUG
-# define xassert(x) ((void)0)
+# define x_assert(x) ((void)0)
 #else
-# define xassert(x) ((void)((x) \
+# define x_assert(x) ((void)((x) \
 	|| (___assert_crash(#x, __FILE__, __LINE__, __func__), 0)))
 #endif
 

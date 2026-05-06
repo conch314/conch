@@ -36,8 +36,7 @@
  * #r: (int)  [ret]    old: success, *var: fail
  */
 conch_atomic_cas:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
+#if defined(CONCH_MARCH_X86_32)
 
 	pushl %ebx
 	movl 8(%esp), %ebx		// $ebx = var;
@@ -47,13 +46,13 @@ conch_atomic_cas:
 	popl %ebx
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	movq %rsi, %rax			// $rax = old;
 	lock cmpxchg %rdx, (%rdi)	// cmpxchg(new, var);
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#elif defined(CONCH_MARCH_ARM_32)
 
 	dmb ish			// # memory access order
 .L1:				// do {
@@ -69,7 +68,7 @@ conch_atomic_cas:
 	dmb ish			// # memory access order
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	dmb ish			// # memory access order
 .L1:				// do {
@@ -84,8 +83,7 @@ conch_atomic_cas:
 	dmb ish			// # memory access order
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif (defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
 	fence rw, rw		// # memory access order
 .L1:				// do {
@@ -99,9 +97,6 @@ conch_atomic_cas:
 	fence rw, rw		// # memory access order
 	ret
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif

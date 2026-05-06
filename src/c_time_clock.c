@@ -39,8 +39,7 @@
  */
 int32_t conch_clock_gettime(int32_t cid, struct xtimespec *ts)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -56,11 +55,8 @@ int32_t conch_clock_gettime(int32_t cid, struct xtimespec *ts)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -74,8 +70,7 @@ int32_t conch_clock_gettime(int32_t cid, struct xtimespec *ts)
  */
 int32_t conch_clock_settime(int32_t cid, const struct xtimespec *ts)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -91,11 +86,8 @@ int32_t conch_clock_settime(int32_t cid, const struct xtimespec *ts)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 

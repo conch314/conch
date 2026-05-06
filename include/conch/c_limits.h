@@ -66,26 +66,22 @@
 #undef LLONG_MIN
 #undef LLONG_MAX
 #undef ULLONG_MAX
-#ifdef CONCH_MARCH_BITS
-# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
-#  define LONG_MIN INT_MIN
-#  define LONG_MAX INT_MAX
-#  define ULONG_MAX UINT_MAX
-#  define LLONG_MIN (-1LL - 0x7fffffffffffffffLL)
-#  define LLONG_MAX 0x7fffffffffffffffLL
-#  define ULLONG_MAX 0xffffffffffffffffULL
-# elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
-#  define LONG_MIN (-1L - 0x7fffffffffffffffL)
-#  define LONG_MAX 0x7fffffffffffffffL
-#  define ULONG_MAX 0xffffffffffffffffUL
-#  define LLONG_MIN (-1L - 0x7fffffffffffffffLL)
-#  define LLONG_MAX 0x7fffffffffffffffLL
-#  define ULLONG_MAX 0xffffffffffffffffULL
-# else
-#  error "!!!unknown CONCH_MARCH_BITS!!!"
-# endif
+#if defined(CONCH_MARCH_BITS_32)
+# define LONG_MIN INT_MIN
+# define LONG_MAX INT_MAX
+# define ULONG_MAX UINT_MAX
+# define LLONG_MIN (-1LL - 0x7fffffffffffffffLL)
+# define LLONG_MAX 0x7fffffffffffffffLL
+# define ULLONG_MAX 0xffffffffffffffffULL
+#elif defined(CONCH_MARCH_BITS_64)
+# define LONG_MIN (-1L - 0x7fffffffffffffffL)
+# define LONG_MAX 0x7fffffffffffffffL
+# define ULONG_MAX 0xffffffffffffffffUL
+# define LLONG_MIN (-1L - 0x7fffffffffffffffLL)
+# define LLONG_MAX 0x7fffffffffffffffLL
+# define ULLONG_MAX 0xffffffffffffffffULL
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!unknown machine bits!!!"
 #endif
 
 

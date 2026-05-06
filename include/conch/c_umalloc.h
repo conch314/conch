@@ -38,12 +38,8 @@ struct umalloc_chunk {
 struct umalloc_chunk_node {
 	struct list_node list;
 	size_t size;
-#ifdef CONCH_MARCH_BITS
-# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
+#ifdef CONCH_MARCH_BITS_32
 	uint32_t _allgend[3]; /* 8+4+(4+4+4)+8 */
-# endif
-#else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
 #endif
 	struct umalloc_chunk chunk;
 };
@@ -66,7 +62,7 @@ struct umalloc_ctx {
 		.arg = _arg \
 	}
 #define UMALLOC_NEW(name, alloc, free, _arg) \
-	struct umalloc_ctx name = UMALLOC_CTX_SET(alloc, free, _arg);
+	struct umalloc_ctx name = UMALLOC_CTX_SET(alloc, free, _arg)
 #define UMALLOC_INIT(x, alloc, free, _arg) \
 	do { \
 		LIST_HEAD_INIT(&(x)->chunk); \

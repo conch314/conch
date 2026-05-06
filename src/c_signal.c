@@ -40,8 +40,7 @@
  */
 int32_t conch_kill(xpid_t pid, int32_t sig)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -57,11 +56,8 @@ int32_t conch_kill(xpid_t pid, int32_t sig)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -90,8 +86,7 @@ int32_t conch_killpg(xpid_t pg, int32_t sig)
 int32_t conch_sigaction(int32_t sig, const struct xsigaction *act,
 		struct xsigaction *old)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -109,11 +104,8 @@ int32_t conch_sigaction(int32_t sig, const struct xsigaction *act,
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -129,8 +121,7 @@ int32_t conch_sigaction(int32_t sig, const struct xsigaction *act,
 int32_t conch_sigprocmask(int32_t how, const xsigset_t *set,
 		xsigset_t *old)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -148,11 +139,8 @@ int32_t conch_sigprocmask(int32_t how, const xsigset_t *set,
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -165,8 +153,7 @@ int32_t conch_sigprocmask(int32_t how, const xsigset_t *set,
  */
 int32_t conch_sigpending(xsigset_t *set)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -182,11 +169,8 @@ int32_t conch_sigpending(xsigset_t *set)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -199,8 +183,7 @@ int32_t conch_sigpending(xsigset_t *set)
  */
 int32_t conch_sigsuspend(const xsigset_t *set)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -216,11 +199,8 @@ int32_t conch_sigsuspend(const xsigset_t *set)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 

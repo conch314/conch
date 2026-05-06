@@ -38,8 +38,7 @@
  */
 int32_t conch_nanosleep(const struct xtimespec *req, struct xtimespec *rem)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -55,10 +54,7 @@ int32_t conch_nanosleep(const struct xtimespec *req, struct xtimespec *rem)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }

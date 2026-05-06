@@ -32,22 +32,21 @@
  *    userspace program entry.
  */
 _start:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
+#if defined(CONCH_MARCH_X86_32)
 
 	xorl %ebp, %ebp
 	movl %esp, %edi
 	jmp _start_main
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	xorq %rbp, %rbp
 	movq %rsp, %rdi
 	jmp _start_main
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#elif defined(CONCH_MARCH_ARM_32)
 
 	mov r0, sp
 	mov fp, #0
@@ -55,7 +54,7 @@ _start:
 	b _start_main
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	mov x0, sp
 	mov x29, #0
@@ -63,16 +62,12 @@ _start:
 	b _start_main
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif (defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
 	mv a0, sp
 	mv s0, zero
 	tail _start_main
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif

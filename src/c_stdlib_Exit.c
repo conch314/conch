@@ -33,8 +33,7 @@
  */
 void conch_Exit(int32_t status)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	conch_syscall_linux(__NR_exit_group,
 		status);
@@ -44,10 +43,7 @@ void conch_Exit(int32_t status)
 			status);
 	}
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }

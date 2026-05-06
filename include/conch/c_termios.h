@@ -28,8 +28,7 @@
 #include <conch/c_stdint.h>
 
 
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 #define X_NCCS 19
 
@@ -237,13 +236,9 @@ struct xwinsize {
 	uint16_t ws_ypixel;
 };
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
-
 
 
 #endif

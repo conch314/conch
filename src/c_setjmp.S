@@ -35,8 +35,7 @@
  * #r: (int)   [ret] returns the longjmp value
  */
 conch_setjmp:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
+#if defined(CONCH_MARCH_X86_32)
 
 	movl 4(%esp), %eax
 	movl %ebx, (%eax)
@@ -50,7 +49,7 @@ conch_setjmp:
 	xorl %eax, %eax
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	movq %rbx, (%rdi)
 	movq %rbp, 8(%rdi)
@@ -65,7 +64,7 @@ conch_setjmp:
 	xorl %eax, %eax
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#elif defined(CONCH_MARCH_ARM_32)
 
 	stmia r0!, { r4-r11 }
 	mov r2, sp
@@ -74,7 +73,7 @@ conch_setjmp:
 	mov r0, #0
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	stp x19, x20, [x0, #0]
 	stp x21, x22, [x0, #16]
@@ -91,7 +90,7 @@ conch_setjmp:
 	mov x0, #0
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32)
+#elif defined(CONCH_MARCH_RISCV_32)
 
 	sw s0, 0(a0)
 	sw s1, 4(a0)
@@ -110,7 +109,7 @@ conch_setjmp:
 	li a0, 0
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif defined(CONCH_MARCH_RISCV_64)
 
 	sd s0, 0(a0)
 	sd s1, 8(a0)
@@ -129,11 +128,8 @@ conch_setjmp:
 	li a0, 0
 	ret
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif
 
 /* @func: conch_longjmp
@@ -144,8 +140,7 @@ conch_setjmp:
  * #2: (int)   [in] returns the value of setjmp
  */
 conch_longjmp:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
+#if defined(CONCH_MARCH_X86_32)
 
 	movl 4(%esp), %edx
 	movl 8(%esp), %eax
@@ -158,7 +153,7 @@ conch_longjmp:
 	movl 16(%edx), %esp
 	jmp *20(%edx)
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	xorq %rax, %rax
 	cmpl $1, %esi
@@ -172,7 +167,7 @@ conch_longjmp:
 	movq 48(%rdi), %rsp
 	jmp *56(%rdi)
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#elif defined(CONCH_MARCH_ARM_32)
 
 	ldmia r0!, { r4-r11 }
 	ldmia r0!, { r2, r3 }
@@ -183,7 +178,7 @@ conch_longjmp:
 	moveq r0, #1
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	ldp x19, x20, [x0, #0]
 	ldp x21, x22, [x0, #16]
@@ -201,7 +196,7 @@ conch_longjmp:
 	csinc w0, w1, wzr, ne
 	br x30
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32)
+#elif defined(CONCH_MARCH_RISCV_32)
 
 	lw s0, 0(a0)
 	lw s1, 4(a0)
@@ -221,7 +216,7 @@ conch_longjmp:
 	add a0, a0, a1
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif defined(CONCH_MARCH_RISCV_64)
 
 	ld s0, 0(a0)
 	ld s1, 8(a0)
@@ -241,9 +236,6 @@ conch_longjmp:
 	add a0, a0, a1
 	ret
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif

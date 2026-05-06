@@ -40,8 +40,7 @@
  * #r: (long) [ret]    syscall return
  */
 conch_syscall_linux:
-#ifdef CONCH_MARCH_TYPE
-# if (CONCH_MARCH_TYPE == CONCH_MARCH_X86_32)
+#if defined(CONCH_MARCH_X86_32)
 
 	pushl %ebp
 	pushl %edi
@@ -61,7 +60,7 @@ conch_syscall_linux:
 	popl %ebp
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_X86_64)
+#elif defined(CONCH_MARCH_X86_64)
 
 	movq %rdi, %rax /* syscall number */
 	movq %rsi, %rdi
@@ -73,7 +72,7 @@ conch_syscall_linux:
 	syscall
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_32)
+#elif defined(CONCH_MARCH_ARM_32)
 
 	mov ip, sp
 	push { r4, r5, r6, r7 } /* callee */
@@ -86,7 +85,7 @@ conch_syscall_linux:
 	pop { r4, r5, r6, r7 }
 	bx lr
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_ARM_64)
+#elif defined(CONCH_MARCH_ARM_64)
 
 	mov x8, x0 /* syscall number */
 	mov x0, x1
@@ -99,8 +98,7 @@ conch_syscall_linux:
 	svc #0
 	ret
 
-# elif (CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_32 \
-	|| CONCH_MARCH_TYPE == CONCH_MARCH_RISCV_64)
+#elif (defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
 	mv a7, a0 /* syscall number */
 	mv a0, a1
@@ -112,9 +110,6 @@ conch_syscall_linux:
 	ecall
 	ret
 
-# else
-#  error "!!!unknown CONCH_MARCH_TYPE!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_TYPE!!!"
+# error "!!!unknown architecture!!!"
 #endif

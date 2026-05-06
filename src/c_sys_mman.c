@@ -43,8 +43,7 @@
 void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 		int32_t fd, xoff_t off)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	void *ret;
 
@@ -53,8 +52,7 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 		return X_MAP_FAILED;
 	}
 
-#ifdef CONCH_MARCH_BITS
-# if (CONCH_MARCH_BITS == CONCH_MARCH_32)
+#if defined(CONCH_MARCH_BITS_32)
 
 	ret = (void *)conch_syscall_linux(__NR_mmap2,
 		addr,
@@ -64,7 +62,7 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 		fd,
 		off / 4096);
 
-# elif (CONCH_MARCH_BITS == CONCH_MARCH_64)
+#elif defined(CONCH_MARCH_BITS_64)
 
 	ret = (void *)conch_syscall_linux(__NR_mmap,
 		addr,
@@ -74,11 +72,8 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 		fd,
 		off);
 
-# else
-#  error "!!!unknown CONCH_MARCH_BITS!!!"
-# endif
 #else
-# error "!!!undefined CONCH_MARCH_BITS!!!"
+# error "!!!unknown machine bits!!!"
 #endif
 
 	if ((ssize_t)ret < 0) {
@@ -88,11 +83,8 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -106,8 +98,7 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
  */
 int32_t conch_munmap(void *addr, size_t len)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -127,11 +118,8 @@ int32_t conch_munmap(void *addr, size_t len)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -146,8 +134,7 @@ int32_t conch_munmap(void *addr, size_t len)
  */
 int32_t conch_mprotect(void *addr, size_t len, int32_t prot)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -167,11 +154,8 @@ int32_t conch_mprotect(void *addr, size_t len, int32_t prot)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -186,8 +170,7 @@ int32_t conch_mprotect(void *addr, size_t len, int32_t prot)
  */
 int32_t conch_msync(void *addr, size_t len, int32_t flags)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -208,11 +191,8 @@ int32_t conch_msync(void *addr, size_t len, int32_t flags)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -226,8 +206,7 @@ int32_t conch_msync(void *addr, size_t len, int32_t flags)
  */
 int32_t conch_mlock(const void *addr, size_t len)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -247,11 +226,8 @@ int32_t conch_mlock(const void *addr, size_t len)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -265,8 +241,7 @@ int32_t conch_mlock(const void *addr, size_t len)
  */
 int32_t conch_munlock(const void *addr, size_t len)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -286,11 +261,8 @@ int32_t conch_munlock(const void *addr, size_t len)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -303,8 +275,7 @@ int32_t conch_munlock(const void *addr, size_t len)
  */
 int32_t conch_mlockall(int32_t flags)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -318,11 +289,8 @@ int32_t conch_mlockall(int32_t flags)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -335,8 +303,7 @@ int32_t conch_mlockall(int32_t flags)
  */
 int32_t conch_munlockall(int32_t flags)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -350,10 +317,7 @@ int32_t conch_munlockall(int32_t flags)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }

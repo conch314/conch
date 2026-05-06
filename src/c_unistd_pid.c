@@ -36,8 +36,7 @@
  */
 xpid_t conch_getpid(void)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xpid_t ret;
 
@@ -45,11 +44,8 @@ xpid_t conch_getpid(void)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -61,8 +57,7 @@ xpid_t conch_getpid(void)
  */
 xpid_t conch_getppid(void)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xpid_t ret;
 
@@ -70,11 +65,8 @@ xpid_t conch_getppid(void)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -87,8 +79,7 @@ xpid_t conch_getppid(void)
  */
 xpid_t conch_getpgid(xpid_t pid)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xpid_t ret;
 
@@ -103,11 +94,8 @@ xpid_t conch_getpgid(xpid_t pid)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -121,8 +109,7 @@ xpid_t conch_getpgid(xpid_t pid)
  */
 int32_t conch_setpgid(xpid_t pid, xpid_t pg)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -138,11 +125,8 @@ int32_t conch_setpgid(xpid_t pid, xpid_t pg)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -154,8 +138,7 @@ int32_t conch_setpgid(xpid_t pid, xpid_t pg)
  */
 xuid_t conch_getuid(void)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xuid_t ret;
 
@@ -163,11 +146,8 @@ xuid_t conch_getuid(void)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -179,8 +159,7 @@ xuid_t conch_getuid(void)
  */
 xuid_t conch_geteuid(void)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xuid_t ret;
 
@@ -188,11 +167,8 @@ xuid_t conch_geteuid(void)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -205,8 +181,7 @@ xuid_t conch_geteuid(void)
  */
 int32_t conch_setuid(xuid_t uid)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -221,11 +196,8 @@ int32_t conch_setuid(xuid_t uid)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -238,8 +210,7 @@ int32_t conch_setuid(xuid_t uid)
  */
 int32_t conch_seteuid(xuid_t euid)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -256,11 +227,8 @@ int32_t conch_seteuid(xuid_t euid)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -272,8 +240,7 @@ int32_t conch_seteuid(xuid_t euid)
  */
 xgid_t conch_getgid(void)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xgid_t ret;
 
@@ -281,11 +248,8 @@ xgid_t conch_getgid(void)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -297,8 +261,7 @@ xgid_t conch_getgid(void)
  */
 xgid_t conch_getegid(void)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	xgid_t ret;
 
@@ -306,11 +269,8 @@ xgid_t conch_getegid(void)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -323,8 +283,7 @@ xgid_t conch_getegid(void)
  */
 int32_t conch_setgid(xgid_t gid)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -339,11 +298,8 @@ int32_t conch_setgid(xgid_t gid)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -356,8 +312,7 @@ int32_t conch_setgid(xgid_t gid)
  */
 int32_t conch_setegid(xgid_t egid)
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -374,11 +329,8 @@ int32_t conch_setegid(xgid_t egid)
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -392,8 +344,7 @@ int32_t conch_setegid(xgid_t egid)
  */
 int32_t conch_getgroups(int32_t size, xgid_t gids[])
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -409,11 +360,8 @@ int32_t conch_getgroups(int32_t size, xgid_t gids[])
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
 
@@ -427,8 +375,7 @@ int32_t conch_getgroups(int32_t size, xgid_t gids[])
  */
 int32_t conch_setgroups(int32_t size, xgid_t gids[])
 {
-#ifdef CONCH_PLATFORM
-# if (CONCH_PLATFORM == CONCH_PLATFORM_LINUX)
+#if defined(CONCH_PLATFORM_LINUX)
 
 	int32_t ret;
 
@@ -444,10 +391,7 @@ int32_t conch_setgroups(int32_t size, xgid_t gids[])
 
 	return ret;
 
-# else
-#  error "!!!unknown CONCH_PLATFORM!!!"
-# endif
 #else
-# error "!!!undefined CONCH_PLATFORM!!!"
+# error "!!!unknown platform!!!"
 #endif
 }
