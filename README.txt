@@ -1,7 +1,7 @@
 This a Simple and Easy-to-Read C language implementation Library that
 includes data structure and algorithm, etc.
 
-INCLUDES:
+Includes
 
  example/
   util_gzip
@@ -12,7 +12,7 @@ INCLUDES:
 
  src/
   C
-  Csoft
+  Csoft (with SoftFloat)
   AVL-Tree
   RB-Tree
   Linked-list
@@ -60,3 +60,8 @@ INCLUDES:
 
  third-part/
   linux-6.2-uapi/
+
+Licenses
+
+ LGPL-2.1
+ GPL-3.0

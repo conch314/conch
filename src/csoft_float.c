@@ -209,7 +209,7 @@ static uint64_t _float_round_pack64(int32_t sign, int32_t exp, uint64_t sig)
 	int32_t round_bits = sig & 0x3ff; /* guard + round + sticky */
 	/*
 	 * |G R S              carry|
-	 * +========================+
+	 * +------------------------+
 	 * |0 x x | < 0.5     | no  |
 	 * |1 0 0 | = 0.5 tie | lsb |
 	 * |1 0 1 | > 0.5     | yes |
@@ -717,7 +717,7 @@ static uint32_t _float_round_pack32(int32_t sign, int32_t exp, uint32_t sig)
 	int32_t round_bits = sig & 0x7f; /* guard + round + sticky */
 	/*
 	 * |G R S              carry|
-	 * +========================+
+	 * +------------------------+
 	 * |0 x x | < 0.5     | no  |
 	 * |1 0 0 | = 0.5 tie | lsb |
 	 * |1 0 1 | > 0.5     | yes |

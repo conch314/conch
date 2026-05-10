@@ -1,6 +1,6 @@
-/* @file: c_start_main.c
+/* @file: c_start.h
  * #desc:
- *    The implementations of c runtime entry.
+ *    The definitions of c runtime entry.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.
@@ -20,40 +20,37 @@
  *    see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef _CONCH_C_START_H
+#define _CONCH_C_START_H
+
 #include <conch/config.h>
 #include <conch/c_stddef.h>
-#include <conch/c_stdlib.h>
+#include <conch/c_stdint.h>
 
 
-/* @fvar: __conch_envp
- */
-char **__conch_envp = NULL;
-/* @fvar: __conch_auxp
- */
-char **__conch_auxp = NULL;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/* c_start_main.c */
 extern
-int main(int argc, char *const *argv, char *const *envp)
+char **__conch_envp
+;
+extern
+char **__conch_auxp
+;
+extern
+void _start_main(long *sp)
 ;
 
+/* c_start_vdso.c */
+extern
+void *conch_vdso_sym(const char *sym)
+;
 
-/* @func: _start_main
- * #desc:
- *    c runtime entry.
- *
- * #1: sp [in/out] stack pointer
- */
-void _start_main(long *sp)
-{
-	int argc = (int)sp[0];
-	char **argv = (char **)&sp[1];
-	__conch_envp = (char **)&sp[argc + 2];
-
-	__conch_auxp = __conch_envp;
-	for (; __conch_auxp[0]; __conch_auxp++);
-	__conch_auxp++;
-
-	int r = main(argc, argv, __conch_envp);
-
-	conch_Exit(r);
+#ifdef __cplusplus
 }
+#endif
+
+
+#endif

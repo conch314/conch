@@ -28,8 +28,6 @@
 #include <conch/c_stdlib.h>
 #include <conch/c_unistd.h>
 #include <conch/c_fcntl.h>
-#include <conch/c_float.h>
-#include <conch/c_math.h>
 #include <conch/c_atomic.h>
 
 

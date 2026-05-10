@@ -28,6 +28,7 @@
 
 
 typedef volatile int32_t spinlock_t;
+typedef volatile int32_t atomic_t;
 
 #define SPIN_SINGLE(x) conch_atomic_cas(x, 0, 1)
 #define SPIN_LOCK(x) \
@@ -37,6 +38,72 @@ typedef volatile int32_t spinlock_t;
 #define SPIN_UNLOCK(x) \
 	do { \
 		while (!conch_atomic_cas(x, 1, 0)); \
+	} while (0)
+
+#define ATOMIC_ADD(x, v) \
+	do { \
+		int32_t ___atomic_add_c = *((int32_t *)(x)); \
+		int32_t ___atomic_add_o; \
+		do { \
+			___atomic_add_o = conch_atomic_cas(x, \
+				___atomic_add_c, \
+				___atomic_add_c + (v)); \
+			if (___atomic_add_o == ___atomic_add_c) \
+				break; \
+			___atomic_add_c = ___atomic_add_o; \
+		} while (1); \
+	} while (0)
+#define ATOMIC_SUB(x, v) \
+	do { \
+		int32_t ___atomic_sub_c = *((int32_t *)(x)); \
+		int32_t ___atomic_sub_o; \
+		do { \
+			___atomic_sub_o = conch_atomic_cas(x, \
+				___atomic_sub_c, \
+				___atomic_sub_c - (v)); \
+			if (___atomic_sub_o == ___atomic_sub_c) \
+				break; \
+			___atomic_sub_c = ___atomic_sub_o; \
+		} while (1); \
+	} while (0)
+#define ATOMIC_AND(x, v) \
+	do { \
+		int32_t ___atomic_and_c = *((int32_t *)(x)); \
+		int32_t ___atomic_and_o; \
+		do { \
+			___atomic_and_o = conch_atomic_cas(x, \
+				___atomic_and_c, \
+				___atomic_and_c & (v)); \
+			if (___atomic_and_o == ___atomic_and_c) \
+				break; \
+			___atomic_and_c = ___atomic_and_o; \
+		} while (1); \
+	} while (0)
+#define ATOMIC_OR(x, v) \
+	do { \
+		int32_t ___atomic_or_c = *((int32_t *)(x)); \
+		int32_t ___atomic_or_o; \
+		do { \
+			___atomic_or_o = conch_atomic_cas(x, \
+				___atomic_or_c, \
+				___atomic_or_c | (v)); \
+			if (___atomic_or_o == ___atomic_or_c) \
+				break; \
+			___atomic_or_c = ___atomic_or_o; \
+		} while (1); \
+	} while (0)
+#define ATOMIC_XOR(x, v) \
+	do { \
+		int32_t ___atomic_xor_c = *((int32_t *)(x)); \
+		int32_t ___atomic_xor_o; \
+		do { \
+			___atomic_xor_o = conch_atomic_cas(x, \
+				___atomic_xor_c, \
+				___atomic_xor_c ^ (v)); \
+			if (___atomic_xor_o == ___atomic_xor_c) \
+				break; \
+			___atomic_xor_c = ___atomic_xor_o; \
+		} while (1); \
 	} while (0)
 
 

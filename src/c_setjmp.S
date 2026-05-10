@@ -42,6 +42,7 @@ conch_setjmp:
 	movl %esi, 4(%eax)
 	movl %edi, 8(%eax)
 	movl %ebp, 12(%eax)
+	// xmm floating-point no callee
 	leal 4(%esp), %ecx
 	movl %ecx, 16(%eax)
 	movl (%esp), %ecx
@@ -57,6 +58,7 @@ conch_setjmp:
 	movq %r13, 24(%rdi)
 	movq %r14, 32(%rdi)
 	movq %r15, 40(%rdi)
+	// xmm floating-point no callee
 	leaq 8(%rsp), %rdx
 	movq %rdx, 48(%rdi)
 	movq (%rsp), %rdx
