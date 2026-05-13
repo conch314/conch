@@ -37,7 +37,7 @@ struct kfifo_head {
 
 #define KFIFO_HEAD_SET(_buf, _size) { 0, 0, (_size) - 1, _size, _buf }
 #define KFIFO_NEW(x, _buf, _size) \
-	struct kfifo_head x = KFIFO_HEAD_SET(_buf, _size);
+	struct kfifo_head x = KFIFO_HEAD_SET(_buf, _size)
 #define KFIFO_INIT(x, _buf, _size) \
 	do { \
 		(x)->in = 0; \

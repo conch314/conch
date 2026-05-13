@@ -495,7 +495,7 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 
 				/* decoding */
 				sym = _decode_sym(&ctx->desc_lsym, v, &t);
-				if (sym < 0)
+				if (sym < 0 || sym >= INFLATE_L_CODES)
 					return INFLATE_ERR_LCODES;
 
 				BITS_DUMP(ctx, &v, t);
@@ -546,7 +546,7 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 
 				/* decoding */
 				sym = _decode_sym(&ctx->desc_dsym, v, &t);
-				if (sym < 0)
+				if (sym < 0 || sym >= INFLATE_D_CODES)
 					return INFLATE_ERR_DCODES;
 
 				BITS_DUMP(ctx, &v, t);
@@ -609,7 +609,7 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 					/* decoding */
 					sym = _decode_sym(&ctx->desc_blsym,
 						v, &t);
-					if (sym < 0)
+					if (sym < 0 || sym >= INFLATE_BL_CODES)
 						return INFLATE_ERR_DYN_HEAD;
 
 					BITS_DUMP(ctx, &v, t);

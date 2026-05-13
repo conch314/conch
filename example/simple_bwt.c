@@ -573,7 +573,7 @@ static void _fallback_sort(const uint8_t *in, uint32_t len, uint32_t *sa,
 		BH_CLEAR(bh, len + 2 * i + 1);
 	}
 
-	/* doubling method, bucket partitioning, and three-way quicksort */
+	/* doubling method, bucket partitioning, and 3-way quicksort */
 
 	for (uint32_t k = 1; k <= len; k <<= 1) {
 		c = 0; /* update rank */

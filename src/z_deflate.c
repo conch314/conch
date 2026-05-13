@@ -577,7 +577,7 @@ static void _build_tree(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
 	/* non-zero freq add to the heap */
 	for (int32_t i = 0; i < elems; i++) {
 		if (tree[i].fc.freq) {
-			ctx->heap[++(ctx->heap_size)] = code_max = i;
+			ctx->heap[++ctx->heap_size] = code_max = i;
 			ctx->depth[i] = 0;
 		} else {
 			tree[i].dl.len = 0;

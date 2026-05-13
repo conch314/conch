@@ -371,6 +371,82 @@ double conch_sqrt(double x)
 #endif
 }
 
+/* @func: _sin_horner (static)
+ * #desc:
+ *    sine function of remez + horner's method.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] sine of x
+ */
+static double _sin_horner(double x)
+{
+	double r = x * x;
+
+	/* minimax coefficients */
+	static const double coeffs[6] = {
+		-1.66666666666666324348e-01,
+		 8.33333333332248946124e-03,
+		-1.98412698298579493134e-04,
+		 2.75573137070700676789e-06,
+		-2.50507602534068634195e-08,
+		 1.58969099521155010221e-10
+		};
+
+	/* remez + horner's method */
+	double p = coeffs[5];
+	for (int32_t i = 4; i >= 0; i--)
+		p = p * r + coeffs[i];
+
+	return x + (x * r * p);
+}
+
+/* @func: _cos_horner (static)
+ * #desc:
+ *    cosine function of remez + horner's method.
+ *
+ * #1: x [in]  number
+ * #r:   [ret] cosine of x
+ */
+static double _cos_horner(double x)
+{
+	double r = x * x;
+
+	/* minimax coefficients */
+	static const double coeffs[7] = {
+		-0.50000000000000000000e+00,
+		 4.16666666666666019037e-02,
+		-1.38888888888741095749e-03,
+		 2.48015872894767294178e-05,
+		-2.75573143513906633035e-07,
+		 2.08757232129817482790e-09,
+		-1.13596475577881948265e-11
+		};
+
+	/* remez + horner's method */
+	double p = coeffs[6];
+	for (int32_t i = 5; i >= 0; i--)
+		p = p * r + coeffs[i];
+
+	return 1.0 + (r * p);
+}
+
+/* @func: _rem_pio2 (static)
+ * #desc:
+ *    range of x is reduction to pi/2 (approximate modulus).
+ *
+ * #1: x [in]  number
+ * #2: r [out] remainder
+ * #r:   [ret] quadrant
+ */
+static int32_t _rem_pio2(double x, double *r)
+{
+	double f = conch_round(x * M_2_PI);
+	double t = x - f * M_PI_2;
+	*r = t - f * 6.123233995736766e-17; /* cos(pi/2) */
+
+	return (int32_t)f;
+}
+
 /* @func: conch_sin
  * #desc:
  *    sine function.
@@ -380,23 +456,23 @@ double conch_sqrt(double x)
  */
 double conch_sin(double x)
 {
-	int32_t neg = 1;
-	x = conch_fmod(x, M_PI * 2);
-	if (x > M_PI) {
-		x -= M_PI;
-		neg = -1;
+	double r;
+	int32_t k = _rem_pio2(x, &r);
+
+	switch (k & 3) {
+		case 0:
+			return _sin_horner(r);
+		case 1:
+			return _cos_horner(r);
+		case 2:
+			return -_sin_horner(r);
+		case 3:
+			return -_cos_horner(r);
+		default:
+			break;
 	}
 
-	/* taylor series running product */
-	int32_t sign = -1;
-	double m = x, q = x, x2 = x * x;
-	for (int32_t i = 1; i <= 12; i++) {
-		q *= x2 / ((2 * i) * (2 * i + 1));
-		m += sign * q;
-		sign *= -1;
-	}
-
-	return m * neg;
+	return 0.0;
 }
 
 /* @func: conch_cos
@@ -408,25 +484,23 @@ double conch_sin(double x)
  */
 double conch_cos(double x)
 {
-	int32_t neg = 1;
-	x = conch_fmod(x, M_PI * 2);
-	if (x > M_PI) {
-		x -= M_PI;
-		neg = -1;
+	double r;
+	int32_t k = _rem_pio2(x, &r);
+
+	switch (k & 3) {
+		case 0:
+			return _cos_horner(r);
+		case 1:
+			return -_sin_horner(r);
+		case 2:
+			return -_cos_horner(r);
+		case 3:
+			return _sin_horner(r);
+		default:
+			break;
 	}
 
-	/* NOTE: https://austinhenley.com/blog/cosine.html */
-
-	/* taylor series running product */
-	int32_t sign = -1;
-	double m = 1.0, q = 1.0, x2 = x * x;
-	for (int32_t i = 1; i <= 12; i++) {
-		q *= x2 / ((2 * i) * (2 * i - 1.0));
-		m += sign * q;
-		sign *= -1;
-	}
-
-	return m * neg;
+	return 0.0;
 }
 
 /* @func: conch_tan
@@ -742,7 +816,7 @@ double conch_pow(double x, double e)
 
 /* @func: _erf_horner (static)
  * #desc:
- *   remez + horner's method of error function polynomial.
+ *    error function polynomial of remez + horner's method.
  *
  * #1: r [in]  number
  * #2: n [in]  choose polynomial constant
