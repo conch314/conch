@@ -27,6 +27,8 @@
 
 
 /*
+ * BWT (Burrows–Wheeler Transform)
+ *
  * str: banana
  *  1: b'anana$
  *  2: a'nana$b
@@ -91,7 +93,7 @@
  *
  * NOTE: bwt depends on strict cyclic rotation order (SA-1 != BWT)
  *
- * unsafe (qsort): IBWT success
+ * unsafe (qsort cyclic suffix array): IBWT success
  *  aaaaaaabanan 5
  *  aaaaaabanana 6
  *  aaaaabananaa 7
@@ -105,7 +107,7 @@
  *  naaaaaaabana 4
  *  nanaaaaaaaba 2
  *
- * drsort (doubling method and radix sort): IBWT fail
+ * drsort (doubling method and radix sort are linear): IBWT fail
  *  abananaaaaaa 11
  *  aabananaaaaa 10
  *  aaabananaaaa 9
@@ -118,6 +120,21 @@
  *  bananaaaaaaa 0
  *  naaaaaaabana 4
  *  nanaaaaaaaba 2
+ */
+
+/*
+ * MTF (Move-To-Front)
+ *
+ * in:  bananaaa
+ * tab: abn
+ *  a'bn => 'ban => 1
+ *  b'an => 'abn => 1
+ *  ab'n => 'nab => 2
+ *  n'ab => 'anb => 1
+ *  a'nb => 'nab => 1
+ *  n'ab => 'anb => 1
+ *  'anb => 'anb => 0
+ *  'anb => 'anb => 0
  */
 
 #define BWT_DRSORT_TMPSIZE(n) (4 * (n) + 256)
@@ -170,6 +187,7 @@ int32_t unsafe_cmp(const void *a, const void *b)
 	uint32_t i = *(uint32_t *)a;
 	uint32_t j = *(uint32_t *)b;
 
+	/* cyclic suffix array */
 	for (uint32_t k = 0; k < unsafe_len; k++) {
 		int32_t c1 = unsafe_in[(i + k) % unsafe_len];
 		int32_t c2 = unsafe_in[(j + k) % unsafe_len];
@@ -651,11 +669,119 @@ void bwt_transform_fsort_csa(uint8_t *out, const uint8_t *in, uint32_t len,
 	}
 }
 
+/* mtf encoding */
+uint32_t mtfe(uint16_t *out, uint8_t *in, uint32_t len, uint8_t *inuse)
+{
+	uint8_t tab[256], seq[256], c;
+	uint32_t pos, n = 0;
+	uint16_t *p = out;
+
+	for (uint32_t i = 0; i < len; i++)
+		inuse[in[i]] = 1;
+	for (uint32_t i = 0; i < 256; i++) {
+		if (inuse[i]) {
+			seq[i] = (uint8_t)n;
+			n++;
+		}
+	}
+	for (uint32_t i = 0; i < n; i++)
+		tab[i] = (uint8_t)i;
+
+	n = 0;
+	for (uint32_t i = 0; i < len; i++) {
+		c = seq[in[i]];
+		if (tab[0] == c) {
+			n++;
+		} else {
+			if (n > 0) { /* zero rle */
+				n--;
+				while (1) {
+					*out++ = n & 1;
+					if (n < 2)
+						break;
+					n = (n - 2) >> 1;
+				}
+				n = 0;
+			}
+
+			for (pos = 0; tab[pos] != c; pos++);
+			*out++ = pos + 1;
+
+			for (; pos > 0; pos--)
+				tab[pos] = tab[pos - 1];
+			tab[0] = c;
+		}
+	}
+
+	if (n > 0) { /* zero rle */
+		n--;
+		while (1) {
+			*out++ = n & 1;
+			if (n < 2)
+				break;
+			n = (n - 2) >> 1;
+		}
+		n = 0;
+	}
+
+	return (uint32_t)(out - p);
+}
+
+/* mtf decoding */
+uint32_t mtfd(uint8_t *out, uint16_t *in, uint32_t len, uint8_t *inuse)
+{
+	uint8_t tab[256], seq[256], c;
+	uint32_t pos, e, n = 0;
+	uint8_t *p = out;
+
+	for (uint32_t i = 0; i < 256; i++) {
+		if (inuse[i]) {
+			seq[n] = (uint8_t)i;
+			n++;
+		}
+	}
+	for (uint32_t i = 0; i < n; i++)
+		tab[i] = (uint8_t)i;
+
+	for (uint32_t i = 0; i < len; i++) {
+		pos = in[i];
+		if (pos < 2) {
+			n = 0;
+			e = 1;
+			while (1) {
+				n += e << (in[i++] & 1);
+				e <<= 1;
+				if (i >= len)
+					break;
+				if (in[i] > 1)
+					break;
+			}
+
+			c = seq[tab[0]];
+			while (n--)
+				*out++ = c;
+
+			i--;
+		} else {
+			c = tab[--pos];
+			*out++ = seq[c];
+
+			for (; pos > 0; pos--)
+				tab[pos] = tab[pos - 1];
+			tab[0] = c;
+		}
+	}
+
+	return (uint32_t)(out - p);
+}
+
 int main(void)
 {
 	uint32_t tmp[BWT_DRSORT_TMPSIZE(100)];
-	uint32_t rank[100], suffix[100], index, n;
+	uint32_t rank[100], suffix[100], index, n, nn;
 	uint8_t res[100], bwt[100];
+	uint16_t mtf_out[100];
+	uint8_t mtf_res[100], mtf_inuse[256];
 	char *s;
 
 	s = "banana$";
@@ -699,6 +825,14 @@ int main(void)
 	printf("bwt: %.*s (fsort csa)\n", n, bwt);
 	bwt_inverse_lf_mapping(res, bwt, n, index, rank);
 	printf("res: %.*s\n\n", n, res);
+
+	nn = mtfe(mtf_out, res, n, mtf_inuse);
+	printf("mtf_out:");
+	for (uint32_t i = 0; i < nn; i++)
+		printf(" %u", mtf_out[i]);
+	printf("\n");
+	nn = mtfd(mtf_res, mtf_out, nn, mtf_inuse);
+	printf("mtf_res: %.*s\n\n", nn, mtf_res);
 
 	s = "bananannytt";
 	n = (uint32_t)conch_strlen(s);

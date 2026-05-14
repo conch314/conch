@@ -50,8 +50,6 @@ static struct json_value *_json_value_add(struct json_stack *s)
 
 	if (s->type == JSON_OBJECT_TYPE) {
 		o = conch_malloc(sizeof(struct json_object));
-		if (!o)
-			return NULL;
 		o->name = s->name;
 		s->name = NULL;
 		v = &o->value;
@@ -59,8 +57,6 @@ static struct json_value *_json_value_add(struct json_stack *s)
 		*s->u.object = o;
 	} else {
 		a = conch_malloc(sizeof(struct json_array));
-		if (!a)
-			return NULL;
 		v = &a->value;
 		a->next = *s->u.array;
 		*s->u.array = a;
@@ -89,8 +85,6 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 	switch (type) {
 		case JSON_ARRAY_TYPE:
 			ss = conch_malloc(sizeof(struct json_stack));
-			if (!ss)
-				return -1;
 			ss->type = JSON_ARRAY_TYPE;
 
 			if (!t->type) {
@@ -99,8 +93,6 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 				ss->u.array = &t->u.array;
 			} else {
 				v = _json_value_add(s);
-				if (!v)
-					return -1;
 				v->type = JSON_ARRAY_TYPE;
 				v->u.array = NULL;
 				ss->u.array = &v->u.array;
@@ -111,8 +103,6 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 			break;
 		case JSON_OBJECT_TYPE:
 			ss = conch_malloc(sizeof(struct json_stack));
-			if (!ss)
-				return -1;
 			ss->type = JSON_OBJECT_TYPE;
 
 			if (!t->type) {
@@ -121,8 +111,6 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 				ss->u.object = &t->u.object;
 			} else {
 				v = _json_value_add(s);
-				if (!v)
-					return -1;
 				v->type = JSON_OBJECT_TYPE;
 				v->u.object = NULL;
 				ss->u.object = &v->u.object;
@@ -133,87 +121,53 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 			break;
 		case JSON_OBJKEY_TYPE:
 			p = conch_strndup(str, (size_t)len);
-			if (!p)
-				return -1;
 			s->name = p;
 			break;
 		case JSON_STRING_TYPE:
 			p = conch_strndup(str, (size_t)len);
-			if (!p)
-				return -1;
 			v = _json_value_add(s);
-			if (!v)
-				return -1;
 			v->type = JSON_STRING_TYPE;
 			v->u.str = p;
 			break;
 		case JSON_NUMBER_DEC_TYPE:
 			p = conch_strndup(str, (size_t)len);
-			if (!p)
-				return -1;
 			v = _json_value_add(s);
-			if (!v) {
-				conch_free(p);
-				return -1;
-			}
 			v->type = JSON_NUMBER_DEC_TYPE;
 			v->u.i = conch_strtoll(p, NULL, 10);
 			conch_free(p);
 			break;
 		case JSON_NUMBER_HEX_TYPE:
 			p = conch_strndup(str, (size_t)len);
-			if (!p)
-				return -1;
 			v = _json_value_add(s);
-			if (!v) {
-				conch_free(p);
-				return -1;
-			}
 			v->type = JSON_NUMBER_HEX_TYPE;
 			v->u.i = conch_strtoll(p, NULL, 16);
 			conch_free(p);
 			break;
 		case JSON_NUMBER_FLT_TYPE:
 			p = conch_strndup(str, (size_t)len);
-			if (!p)
-				return -1;
 			v = _json_value_add(s);
-			if (!v) {
-				conch_free(p);
-				return -1;
-			}
 			v->type = JSON_NUMBER_FLT_TYPE;
 			v->u.f = conch_strtod(p, NULL);
 			conch_free(p);
 			break;
 		case JSON_NUMBER_INF_TYPE:
 			v = _json_value_add(s);
-			if (!v)
-				return -1;
 			v->type = JSON_NUMBER_INF_TYPE;
 			break;
 		case JSON_NUMBER_NAN_TYPE:
 			v = _json_value_add(s);
-			if (!v)
-				return -1;
 			v->type = JSON_NUMBER_NAN_TYPE;
 			break;
 		case JSON_NULL_TYPE:
 			v = _json_value_add(s);
-			if (!v)
-				return -1;
 			v->type = JSON_NULL_TYPE;
 			break;
 		case JSON_TRUE_TYPE:
 			v = _json_value_add(s);
-			if (!v)
-				return -1;
 			v->type = JSON_TRUE_TYPE;
 			break;
 		case JSON_FALSE_TYPE:
 			v = _json_value_add(s);
-			if (!v)
-				return -1;
 			v->type = JSON_FALSE_TYPE;
 			break;
 		default:
