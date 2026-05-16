@@ -1623,7 +1623,7 @@ uint32_t conch_csf_i64_to_f32(int64_t a)
 		}
 	}
 
-	return _float_round_pack32(sign, (127 + 29) - sh, _a);
+	return _float_round_pack32(sign, (127 + 29) - sh, (uint32_t)_a);
 }
 
 /* @func: conch_csf_u64_to_f32
@@ -1650,7 +1650,7 @@ uint32_t conch_csf_u64_to_f32(uint64_t a)
 		}
 	}
 
-	return _float_round_pack32(0, (127 + 29) - sh, a);
+	return _float_round_pack32(0, (127 + 29) - sh, (uint32_t)a);
 }
 
 /* @func: conch_csf_f32_to_i32
@@ -1877,7 +1877,7 @@ uint32_t conch_csf_f64_to_f32(uint64_t a)
 	sig |= 0x40000000;
 	sh = exp - 1023;
 
-	return _float_round_pack32(sign, sh + 126, sig);
+	return _float_round_pack32(sign, sh + 126, (uint32_t)sig);
 }
 
 /* @func: conch_csf_f32_to_f64
@@ -1904,7 +1904,7 @@ uint64_t conch_csf_f32_to_f64(uint32_t a)
 	if (!exp) { /* subnormal, zero */
 		if (!sig)
 			return _float_pack32(0, 0, 0);
-		sh = conch_csf_clz32(sig) - 8;
+		sh = conch_csf_clz32((uint32_t)sig) - 8;
 		exp = (1 - sh) - 1;
 		sig = sig << sh;
 	}

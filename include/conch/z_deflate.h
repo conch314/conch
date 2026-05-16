@@ -256,7 +256,7 @@ struct deflate_ctx {
 	int32_t lev;
 	int32_t flush;
 
-	uint8_t buf[DEFLATE_WSIZE + 16];
+	uint8_t buf[DEFLATE_WSIZE + 16]; /* output buffer */
 	uint32_t len;
 };
 

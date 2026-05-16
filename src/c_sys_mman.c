@@ -23,6 +23,7 @@
 #include <conch/config.h>
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
+#include <conch/c_errno.h>
 #include <conch/c_sys_types.h>
 #include <conch/c_sys_mman.h>
 #include <conch/c_syscall.h>
@@ -45,16 +46,17 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 {
 #if defined(CONCH_PLATFORM_LINUX)
 
-	void *ret;
+	long ret;
 
 	if ((addr && (uintptr_t)addr & 4095) || len & 4095 || off & 4095) {
 		/* errno */
+		x_errno = -X_EINVAL;
 		return X_MAP_FAILED;
 	}
 
 #if defined(CONCH_MARCH_BITS_32)
 
-	ret = (void *)conch_syscall_linux(__NR_mmap2,
+	ret = (long)conch_syscall_linux(__NR_mmap2,
 		addr,
 		len,
 		prot,
@@ -64,7 +66,7 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 
 #elif defined(CONCH_MARCH_BITS_64)
 
-	ret = (void *)conch_syscall_linux(__NR_mmap,
+	ret = (long)conch_syscall_linux(__NR_mmap,
 		addr,
 		len,
 		prot,
@@ -76,12 +78,13 @@ void *conch_mmap(void *addr, size_t len, int32_t prot, int32_t flags,
 # error "!!!unknown machine bits!!!"
 #endif
 
-	if ((ssize_t)ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
+		x_errno = -(int32_t)ret;
 		/* errno */
-		ret = X_MAP_FAILED;
+		ret = (long)X_MAP_FAILED;
 	}
 
-	return ret;
+	return (void *)ret;
 
 #else
 # error "!!!unknown platform!!!"
@@ -104,6 +107,7 @@ int32_t conch_munmap(void *addr, size_t len)
 
 	if ((addr && (uintptr_t)addr & 4095) || len & 4095) {
 		/* errno */
+		x_errno = -X_EINVAL;
 		return -1;
 	}
 
@@ -111,8 +115,9 @@ int32_t conch_munmap(void *addr, size_t len)
 		addr,
 		len);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 
@@ -140,6 +145,7 @@ int32_t conch_mprotect(void *addr, size_t len, int32_t prot)
 
 	if ((addr && (uintptr_t)addr & 4095) || len & 4095) {
 		/* errno */
+		x_errno = -X_EINVAL;
 		return -1;
 	}
 
@@ -147,8 +153,9 @@ int32_t conch_mprotect(void *addr, size_t len, int32_t prot)
 		addr,
 		prot);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 
@@ -176,6 +183,7 @@ int32_t conch_msync(void *addr, size_t len, int32_t flags)
 
 	if ((addr && (uintptr_t)addr & 4095) || len & 4095) {
 		/* errno */
+		x_errno = -X_EINVAL;
 		return -1;
 	}
 
@@ -184,8 +192,9 @@ int32_t conch_msync(void *addr, size_t len, int32_t flags)
 		len,
 		flags);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 
@@ -212,6 +221,7 @@ int32_t conch_mlock(const void *addr, size_t len)
 
 	if ((addr && (uintptr_t)addr & 4095) || len & 4095) {
 		/* errno */
+		x_errno = -X_EINVAL;
 		return -1;
 	}
 
@@ -219,8 +229,9 @@ int32_t conch_mlock(const void *addr, size_t len)
 		addr,
 		len);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 
@@ -247,6 +258,7 @@ int32_t conch_munlock(const void *addr, size_t len)
 
 	if ((addr && (uintptr_t)addr & 4095) || len & 4095) {
 		/* errno */
+		x_errno = -X_EINVAL;
 		return -1;
 	}
 
@@ -254,8 +266,9 @@ int32_t conch_munlock(const void *addr, size_t len)
 		addr,
 		len);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 
@@ -282,8 +295,9 @@ int32_t conch_mlockall(int32_t flags)
 	ret = (int32_t)conch_syscall_linux(__NR_mlockall,
 		flags);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 
@@ -310,8 +324,9 @@ int32_t conch_munlockall(int32_t flags)
 	ret = (int32_t)conch_syscall_linux(__NR_munlockall,
 		flags);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
+		x_errno = -ret;
 		ret = -1;
 	}
 

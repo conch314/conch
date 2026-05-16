@@ -26,6 +26,7 @@
 #include <conch/config.h>
 #if defined(CONCH_PLATFORM_LINUX)
 # include <linux/unistd.h>
+# define SYSCALL_LINUX_ISERR(x) ((unsigned long)(x) > -4096UL)
 #else
 # error "!!!unknown platform!!!"
 #endif

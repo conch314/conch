@@ -31,54 +31,101 @@
 static void _usage(void)
 {
 	printf(
-		"Usage: ungz [OPTION...] [<stdin>]\n"
-		" gzip (INFLATE) uncompression utility.\n"
+		"Usage: ungz [OPTION...]\n"
+		" gzip (INFLATE) decompression utility.\n"
 		"\n"
 		" -v    show compress radio\n"
 		" -h    display help\n"
+		"\n"
+		"  Use stdin as the input stream.\n"
 		);
 }
 
 static INFLATE_NEW(ctx);
 
-static int32_t _ungz(FILE *rfp, FILE *wfp, int32_t is_v)
+static char *_inflate_strerr(int32_t n)
+{
+	switch (n) {
+		case INFLATE_ERR_INCOMP:
+			return "data incomplete";
+		case INFLATE_ERR_LCODES:
+			return "literal/length codes";
+		case INFLATE_ERR_DCODES:
+			return "distance codes";
+		case INFLATE_ERR_STORED_HEAD:
+			return "stored block header";
+		case INFLATE_ERR_DYN_HEAD:
+			return "dynamic block header";
+		case INFLATE_ERR_DYN_BLCODES:
+			return "dynamic bit-length tree";
+		case INFLATE_ERR_DYN_LCODES:
+			return "dynamic literal/length tree";
+		case INFLATE_ERR_DYN_DCODES:
+			return "dynamic distance tree";
+		default:
+			return "Unknown";
+	}
+
+	return NULL;
+}
+
+static int32_t _decompress(FILE *rfp, FILE *wfp, int32_t is_v)
 {
 	uint8_t buf[8192];
+	size_t total_len = 0, send_len = 0, len;
 	const uint32_t *crc_t;
 	uint32_t crc = 0xffffffff, in_crc;
-	size_t total_len = 0, send_len = 0, len = 0;
 	int32_t r;
 
 	conch_inflate_init(&ctx);
 	crc_t = conch_crc32_table(CRC32_DEFAULT_LSB_TYPE);
 
-	total_len = 10;
-	fread(buf, 1, 10, rfp);
+	total_len += 10;
+	if (fread(buf, 1, 10, rfp) != 10) {
+		fprintf(stderr, "gzip header error!\n");
+		return -1;
+	}
 
 	if (buf[3] & 0x04) {
-		fread(buf + 4, 1, 2, rfp);
-		fread(buf + 4, 1, (uint16_t)buf[4]
-			| (uint16_t)buf[4] << 8, rfp);
+		if (fread(buf + 4, 1, 2, rfp) != 2) {
+			fprintf(stderr, "gzip header error!\n");
+			return -1;
+		}
+
+		len = (uint16_t)buf[4] | (uint16_t)buf[5] << 8;
+		while (len--) {
+			if (!fread(buf + 4, 1, 1, rfp)) {
+				fprintf(stderr, "gzip header error!\n");
+				return -1;
+			}
+		}
 	}
 	if (buf[3] & 0x08) {
 		do {
-			fread(buf + 4, 1, 1, rfp);
+			if (!fread(buf + 4, 1, 1, rfp))
+				break;
 		} while (buf[4]);
 	}
 	if (buf[3] & 0x10) {
 		do {
-			fread(buf + 4, 1, 1, rfp);
+			if (!fread(buf + 4, 1, 1, rfp))
+				break;
 		} while (buf[4]);
 	}
-	if (buf[3] & 0x02)
-		fread(buf + 4, 1, 2, rfp);
+	if (buf[3] & 0x02) {
+		if (fread(buf + 4, 1, 2, rfp) != 2) {
+			fprintf(stderr, "gzip header error!\n");
+			return -1;
+		}
+	}
 
 	while ((len = fread(buf, 1, sizeof(buf), rfp))) {
 		total_len += len;
 		do {
 			r = conch_inflate(&ctx, buf, len, 0);
 			if (r < 0) {
-				fprintf(stderr, "inflate() error!\n");
+				fprintf(stderr, "inflate() %s error!\n",
+					_inflate_strerr(r));
 				return -1;
 			}
 			if (r) {
@@ -86,8 +133,7 @@ static int32_t _ungz(FILE *rfp, FILE *wfp, int32_t is_v)
 				fwrite(INFLATE_BUF(&ctx),
 					1, INFLATE_LEN(&ctx), wfp);
 				crc = conch_crc32_lsb(crc_t, crc,
-					INFLATE_BUF(&ctx),
-					INFLATE_LEN(&ctx));
+					INFLATE_BUF(&ctx), INFLATE_LEN(&ctx));
 				if (r == INFLATE_IS_END)
 					goto e;
 			}
@@ -97,7 +143,8 @@ static int32_t _ungz(FILE *rfp, FILE *wfp, int32_t is_v)
 	do {
 		r = conch_inflate(&ctx, NULL, 0, 1);
 		if (r < 0) {
-			fprintf(stderr, "inflate() error!\n");
+			fprintf(stderr, "inflate() %s error!\n",
+				_inflate_strerr(r));
 			return -1;
 		}
 		if (r) {
@@ -105,8 +152,7 @@ static int32_t _ungz(FILE *rfp, FILE *wfp, int32_t is_v)
 			fwrite(INFLATE_BUF(&ctx),
 				1, INFLATE_LEN(&ctx), wfp);
 			crc = conch_crc32_lsb(crc_t, crc,
-				INFLATE_BUF(&ctx),
-				INFLATE_LEN(&ctx));
+				INFLATE_BUF(&ctx), INFLATE_LEN(&ctx));
 			if (r == INFLATE_IS_END)
 				goto e;
 		}
@@ -119,7 +165,7 @@ e:
 		conch_memcpy(buf,
 			buf + INFLATE_OFFSET(&ctx, len),
 			len - INFLATE_OFFSET(&ctx, len));
-		len = len - INFLATE_OFFSET(&ctx, len);
+		len -= INFLATE_OFFSET(&ctx, len);
 		if (len < 8) {
 			total_len += 8 - len;
 			fread(buf + len, 1, 8 - len, rfp);
@@ -133,12 +179,15 @@ e:
 		| (uint32_t)buf[3] << 24;
 
 	if (is_v) {
-		fprintf(stderr, "%zu (%zuK) / %zu (%zuK) = %.2f%% (%08x %08x)\n",
+		fprintf(stderr, "%zu (%zuK) / %zu (%zuK) = %.2f%%"
+				" (%08x %08x)\n",
 			total_len, (total_len / 1024),
 			send_len, (send_len / 1024),
 			(((double)send_len - total_len) / send_len) * 100,
 			crc, in_crc);
 	}
+
+	fflush(wfp);
 
 	return 0;
 }
@@ -158,12 +207,13 @@ int main(int argc, char *argv[])
 				_usage();
 				return 0;
 			default:
-				printf("unknown '%c' option!\n", OPT_ARGC(arg, r));
+				printf("unknown '%c' option!\n",
+					OPT_ARGC(arg, r));
 				return 1;
 		}
 	}
 
-	if (_ungz(stdin, stdout, is_v))
+	if (_decompress(stdin, stdout, is_v))
 		return 1;
 
 	return 0;

@@ -137,7 +137,7 @@ int32_t conch_blake2s_init(struct blake2s_ctx *ctx, uint32_t dsize)
 
 	/* default parameters */
 	conch_memset(&ctx->u, 0, sizeof(ctx->u));
-	ctx->u.param.digest_length = dsize;
+	ctx->u.param.digest_length = (uint8_t)dsize;
 	ctx->u.param.fanout = 1;
 	ctx->u.param.depth = 1;
 	for (int32_t i = 0; i < 8; i++)

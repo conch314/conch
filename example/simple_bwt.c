@@ -93,7 +93,7 @@
  *
  * NOTE: bwt depends on strict cyclic rotation order (SA-1 != BWT)
  *
- * unsafe (qsort cyclic suffix array): IBWT success
+ * drsort_csa (doubling method and radix sort are cyclic): IBWT success
  *  aaaaaaabanan 5
  *  aaaaaabanana 6
  *  aaaaabananaa 7
@@ -756,12 +756,11 @@ uint32_t mtfd(uint8_t *out, uint16_t *in, uint32_t len, uint8_t *inuse)
 				if (in[i] > 1)
 					break;
 			}
+			i--;
 
 			c = seq[tab[0]];
 			while (n--)
 				*out++ = c;
-
-			i--;
 		} else {
 			c = tab[--pos];
 			*out++ = seq[c];

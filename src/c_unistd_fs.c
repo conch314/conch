@@ -49,9 +49,9 @@ ssize_t conch_read(int32_t fd, void *buf, size_t len)
 		buf,
 		len);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
-		x_errno = -ret;
+		x_errno = -(int32_t)ret;
 		return -1;
 	}
 
@@ -82,9 +82,9 @@ ssize_t conch_write(int32_t fd, const void *buf, size_t len)
 		buf,
 		len);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
-		x_errno = -ret;
+		x_errno = -(int32_t)ret;
 		return -1;
 	}
 
@@ -114,8 +114,8 @@ xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
 
 	ret = (xoff_t)conch_syscall_linux(__NR__llseek,
 		fd,
-		off >> 32,
-		off & 0xffffffff,
+		(uint64_t)off >> 32,
+		(uint64_t)off & 0xffffffff,
 		&_off,
 		whence);
 
@@ -130,9 +130,9 @@ xoff_t conch_lseek(int32_t fd, xoff_t off, int32_t whence)
 # error "!!!unknown machine bits!!!"
 #endif
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
-		x_errno = -ret;
+		x_errno = -(int32_t)ret;
 		return -1;
 	}
 
@@ -159,7 +159,7 @@ int32_t conch_close(int32_t fd)
 	ret = (int32_t)conch_syscall_linux(__NR_close,
 		fd);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

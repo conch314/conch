@@ -86,7 +86,7 @@ xpid_t conch_getpgid(xpid_t pid)
 	ret = (xpid_t)conch_syscall_linux(__NR_getpgid,
 		pid);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -117,7 +117,7 @@ int32_t conch_setpgid(xpid_t pid, xpid_t pg)
 		pid,
 		pg);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -188,7 +188,7 @@ int32_t conch_setuid(xuid_t uid)
 	ret = (int32_t)conch_syscall_linux(__NR_setuid,
 		uid);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -219,7 +219,7 @@ int32_t conch_seteuid(xuid_t euid)
 		euid,
 		-1);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -290,7 +290,7 @@ int32_t conch_setgid(xgid_t gid)
 	ret = (int32_t)conch_syscall_linux(__NR_setgid,
 		gid);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -321,7 +321,7 @@ int32_t conch_setegid(xgid_t egid)
 		egid,
 		-1);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -352,7 +352,7 @@ int32_t conch_getgroups(int32_t size, xgid_t gids[])
 		size,
 		gids);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -383,7 +383,7 @@ int32_t conch_setgroups(int32_t size, xgid_t gids[])
 		size,
 		gids);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

@@ -25,9 +25,9 @@
 #include <conch/c_stdint.h>
 #include <conch/c_errno.h>
 #include <conch/c_sys_types.h>
+#include <conch/c_poll.h>
 #include <conch/c_time.h>
 #include <conch/c_signal.h>
-#include <conch/c_poll.h>
 #include <conch/c_syscall.h>
 
 
@@ -55,7 +55,7 @@ int32_t conch_ppoll(struct xpollfd *fds, int32_t nfds,
 		mask,
 		sizeof(xsigset_t));
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

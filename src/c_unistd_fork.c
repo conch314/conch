@@ -45,7 +45,7 @@ xpid_t conch_fork(void)
 		X_SIGCHLD,
 		0);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

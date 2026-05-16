@@ -149,7 +149,7 @@ static int32_t _base32_dec_8(const char *s, char *t, uint32_t tlen)
 	/* c-2 */
 	if (!tlen--)
 		return -1;
-	*t++ = (c1 << 6) | (c2 << 1 ) | (c3 >> 4);
+	*t++ = (c1 << 6) | (c2 << 1) | (c3 >> 4);
 
 	if (c4 == 254) { /* '=' */
 		if (c5 == 254 && c6 == 254 && c7 == 254)

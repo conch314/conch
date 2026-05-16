@@ -25,9 +25,9 @@
 #include <conch/c_stdint.h>
 #include <conch/c_errno.h>
 #include <conch/c_sys_types.h>
+#include <conch/c_sys_select.h>
 #include <conch/c_time.h>
 #include <conch/c_signal.h>
-#include <conch/c_sys_select.h>
 #include <conch/c_syscall.h>
 
 
@@ -59,7 +59,7 @@ int32_t conch_pselect(int32_t nfds, xfd_set *rfds, xfd_set *wfds,
 		ts,
 		mask);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

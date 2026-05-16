@@ -52,7 +52,7 @@ int32_t conch_ioctl(int32_t fd, int32_t cmd, ...)
 		cmd,
 		arg);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

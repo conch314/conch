@@ -47,7 +47,7 @@ int32_t conch_clock_gettime(int32_t cid, struct xtimespec *ts)
 		cid,
 		ts);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -78,7 +78,7 @@ int32_t conch_clock_settime(int32_t cid, const struct xtimespec *ts)
 		cid,
 		ts);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

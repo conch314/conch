@@ -31,7 +31,7 @@
 struct out_ctx {
 	char *p;
 	char *e;
-	size_t len;
+	int32_t len;
 };
 
 static int32_t _call_out(const char *s, int32_t len, void *arg)
@@ -42,9 +42,9 @@ static int32_t _call_out(const char *s, int32_t len, void *arg)
 		ctx->len += len;
 		if (ctx->p < ctx->e) {
 			if ((ctx->p + len) > ctx->e)
-				len = (size_t)(ctx->e - ctx->p);
+				len = (int32_t)(ctx->e - ctx->p);
 
-			conch_memcpy(ctx->p, s, len);
+			conch_memcpy(ctx->p, s, (size_t)len);
 			ctx->p += len;
 		} else {
 			return -1;

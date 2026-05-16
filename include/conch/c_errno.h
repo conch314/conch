@@ -315,7 +315,7 @@ extern
 int32_t *__conch_errno(void)
 ;
 extern
-const char *conch_strerror(int32_t err)
+char *conch_strerror(int32_t err)
 ;
 
 #ifdef __cplusplus

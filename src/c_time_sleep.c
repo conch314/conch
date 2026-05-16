@@ -46,7 +46,7 @@ int32_t conch_nanosleep(const struct xtimespec *req, struct xtimespec *rem)
 		req,
 		rem);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

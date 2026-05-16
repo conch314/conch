@@ -29,7 +29,7 @@
 
 struct out_ctx {
 	xFILE *fp;
-	size_t len;
+	int32_t len;
 };
 
 static int32_t _call_out(const char *s, int32_t len, void *arg)
@@ -38,7 +38,7 @@ static int32_t _call_out(const char *s, int32_t len, void *arg)
 	size_t r;
 
 	if (len) {
-		r = conch_fwrite(s, 1, len, ctx->fp);
+		r = conch_fwrite(s, 1, (size_t)len, ctx->fp);
 		if (r != len && conch_ferror(ctx->fp))
 			return -1;
 		ctx->len += len;

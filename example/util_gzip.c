@@ -30,23 +30,25 @@
 static void _usage(void)
 {
 	printf(
-		"Usage: gzip [OPTION...] [<stdin>]\n"
-		" gzip (DEFLATE) compression utility.\n"
+		"Usage: gzip [OPTION...]\n"
+		" GZip (DEFLATE) compression utility.\n"
 		"\n"
 		" -#    compress level 0..9 (default 6)\n"
 		" -v    show compress radio\n"
 		" -h    display help\n"
+		"\n"
+		"  Use stdin as the input stream.\n"
 		);
 }
 
 static DEFLATE_NEW(ctx);
 
-static int32_t _gzip(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
+static int32_t _compress(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
 {
 	uint8_t buf[8192];
+	size_t total_len = 0, send_len = 0, len;
 	const uint32_t *crc_t;
 	uint32_t crc = 0xffffffff;
-	size_t total_len = 0, send_len = 0, len = 0;
 	int32_t r;
 
 	if (conch_deflate_init(&ctx, lev)) {
@@ -63,7 +65,7 @@ static int32_t _gzip(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
 	buf[8] = 0x00;
 	buf[9] = 0x03;
 
-	send_len = 10;
+	send_len += 10;
 	fwrite(buf, 1, 10, wfp);
 
 	while ((len = fread(buf, 1, sizeof(buf), rfp))) {
@@ -112,6 +114,8 @@ static int32_t _gzip(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
 			crc);
 	}
 
+	fflush(wfp);
+
 	return 0;
 }
 
@@ -121,7 +125,8 @@ int main(int argc, char *argv[])
 	char *arg = NULL;
 	int32_t is_v = 0, lev = 6;
 
-	while ((r = conch_getopt_r(argc, argv, "hv0123456789", &arg, &ind)) != -1) {
+	while ((r = conch_getopt_r(argc, argv, "hv0123456789",
+			&arg, &ind)) != -1) {
 		switch (r) {
 			case '0':
 			case '1': case '2': case '3':
@@ -136,12 +141,13 @@ int main(int argc, char *argv[])
 				_usage();
 				return 0;
 			default:
-				printf("unknown '%c' option!\n", OPT_ARGC(arg, r));
+				printf("unknown '%c' option!\n",
+					OPT_ARGC(arg, r));
 				return 1;
 		}
 	}
 
-	if (_gzip(stdin, stdout, lev, is_v))
+	if (_compress(stdin, stdout, lev, is_v))
 		return 1;
 
 	return 0;

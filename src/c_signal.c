@@ -25,8 +25,8 @@
 #include <conch/c_stdint.h>
 #include <conch/c_string.h>
 #include <conch/c_errno.h>
-#include <conch/c_signal.h>
 #include <conch/c_sys_types.h>
+#include <conch/c_signal.h>
 #include <conch/c_syscall.h>
 
 
@@ -48,7 +48,7 @@ int32_t conch_kill(xpid_t pid, int32_t sig)
 		pid,
 		sig);
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -96,7 +96,7 @@ int32_t conch_sigaction(int32_t sig, const struct xsigaction *act,
 		old,
 		sizeof(xsigset_t));
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -131,7 +131,7 @@ int32_t conch_sigprocmask(int32_t how, const xsigset_t *set,
 		old,
 		sizeof(xsigset_t));
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -161,7 +161,7 @@ int32_t conch_sigpending(xsigset_t *set)
 		set,
 		sizeof(xsigset_t));
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -191,7 +191,7 @@ int32_t conch_sigsuspend(const xsigset_t *set)
 		set,
 		sizeof(xsigset_t));
 
-	if (ret) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;

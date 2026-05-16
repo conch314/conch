@@ -693,7 +693,7 @@ static void _scan_tree(struct deflate_ctx *ctx, struct deflate_ctdata *tree,
 		count_min = 3;
 		count_max = 138;
 	}
-	tree[n].dl.len = (uint16_t)-1; /* high-mask */
+	tree[n].dl.len = (uint16_t)-1; /* mask */
 
 	for (int32_t i = 0; i < n; i++) {
 		curr = next;

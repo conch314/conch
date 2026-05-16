@@ -825,13 +825,14 @@ e:
 					ctx.va.i = va_arg(*ap,
 						long long);
 				} else if (ctx.flags & FG_SHORT) {
-					ctx.va.i = (signed short)
-						va_arg(*ap, int);
+					ctx.va.i = (signed short)va_arg(*ap,
+						int);
 				} else if (ctx.flags & FG_CHAR) {
-					ctx.va.i = (signed char)
-						va_arg(*ap, int);
+					ctx.va.i = (signed char)va_arg(*ap,
+						int);
 				} else {
-					ctx.va.i = va_arg(*ap, int);
+					ctx.va.i = va_arg(*ap,
+						int);
 				}
 
 				if (_printf_di(&ctx))
@@ -849,13 +850,14 @@ e:
 					ctx.va.i = va_arg(*ap,
 						unsigned long long);
 				} else if (ctx.flags & FG_SHORT) {
-					ctx.va.i = (unsigned short)
-						va_arg(*ap, unsigned int);
+					ctx.va.i = (unsigned short)va_arg(*ap,
+						unsigned int);
 				} else if (ctx.flags & FG_CHAR) {
-					ctx.va.i = (unsigned char)
-						va_arg(*ap, unsigned int);
+					ctx.va.i = (unsigned char)va_arg(*ap,
+						unsigned int);
 				} else {
-					ctx.va.i = va_arg(*ap, unsigned int);
+					ctx.va.i = va_arg(*ap,
+						unsigned int);
 				}
 
 				if (_printf_oux(&ctx))

@@ -205,7 +205,7 @@ struct inflate_ctx {
 	int32_t state;
 	int32_t flush;
 
-	const uint8_t *buf;
+	const uint8_t *buf; /* output buffer */
 	uint32_t len;
 };
 

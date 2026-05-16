@@ -132,7 +132,16 @@ struct xflock {
 /* close file descriptors when executing the exec */
 #define X_O_CLOEXEC  0x80000
 
-#define X_AT_FDCWD -100
+/* current working directory */
+#define X_AT_FDCWD            (-100)
+/* do not follow symbolic links */
+#define X_AT_SYMLINK_NOFOLLOW 0x100
+/* check access using effective user and group id */
+#define X_AT_EACCESS          0x200
+/* remove directory instead of unlinking file */
+#define X_AT_REMOVEDIR        0x200
+/* follow symbolic link */
+#define X_AT_SYMLINK_FOLLOW   0x400
 
 #else
 # error "!!!unknown platform!!!"

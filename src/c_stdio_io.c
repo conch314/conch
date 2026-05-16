@@ -428,7 +428,7 @@ static int32_t _stdio_fgetc(xFILE *fp)
  */
 static char *_stdio_fgets(char *buf, int32_t len, xFILE *fp)
 {
-	if (!_stdio_fread(buf, 1, len, fp))
+	if (!_stdio_fread(buf, 1, (size_t)len, fp))
 		return NULL;
 
 	return buf;

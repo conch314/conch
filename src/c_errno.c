@@ -46,7 +46,7 @@ int32_t *__conch_errno(void)
  * #1: err [in]  error number
  * #r:     [ret] return the error number string
  */
-const char *conch_strerror(int32_t err)
+char *conch_strerror(int32_t err)
 {
 #if defined(CONCH_PLATFORM_LINUX)
 

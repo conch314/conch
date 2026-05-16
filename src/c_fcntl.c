@@ -53,7 +53,7 @@ int32_t conch_fcntl(int32_t fd, int32_t cmd, ...)
 		cmd,
 		arg);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
@@ -89,7 +89,7 @@ static int32_t _openat(int32_t fd, const char *path, int32_t flags,
 		flags,
 		mode);
 
-	if (ret < 0) {
+	if (SYSCALL_LINUX_ISERR(ret)) {
 		/* errno */
 		x_errno = -ret;
 		return -1;
