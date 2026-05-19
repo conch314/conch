@@ -686,7 +686,7 @@ static int32_t _printf_pad(struct printf_ctx *ctx, char c, int32_t len)
  * #1: fmt [in]  format string
  * #2: ap  [in]  variable parameter pointer
  * #3: arg [in]  callback arg
- * #4: out [in]  callback (string, length, arg)
+ * #4: out [in]  output callback (string, length, arg)
  * #r:     [ret] 0: no error, -1: format error, -2: output error
  */
 int32_t __conch_printf(const char *fmt, va_list *ap, void *arg,

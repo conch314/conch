@@ -216,7 +216,7 @@ static void _fp448_add(uint32_t r[14],
 
 	/* NOTE: 2^448 == 2^224+1 (mod 2^448-2^224-1) */
 
- 	/* r = r % p modular reduction */
+	/* r = r % p modular reduction */
 	carry += carry2;
 	for (int32_t i = 0; i < 7; i++) {
 		tmp = (uint64_t)r[i] + carry;
@@ -255,7 +255,7 @@ static void _fp448_sub(uint32_t r[14],
 
 	/* NOTE: 2^448 == 2^224+1 (mod 2^448-2^224-1) */
 
- 	/* r = r % p modular reduction */
+	/* r = r % p modular reduction */
 	tmp = (uint64_t)r[0] - (carry2 & 1);
 	r[0] = tmp & 0xffffffff;
 	carry = tmp >> 32;
@@ -315,7 +315,7 @@ static void _fp448_mul(uint32_t r[14],
 
 	/* NOTE: 2^448 == 2^224+1 (mod 2^448-2^224-1) */
 
- 	/* r = rr % p modular reduction */
+	/* r = rr % p modular reduction */
 	carry2 = 0;
 	for (int32_t i = 0; i < 7; i++) { /* fold */
 		tmp = (uint64_t)rr[i] + rr[i + 14] + rr[i + 21] + carry2;
@@ -370,7 +370,7 @@ static void _fp448_mod(uint32_t r[14])
 		carry2 = tmp >> 32;
 	}
 
- 	/* r = r % p modular reduction */
+	/* r = r % p modular reduction */
 	carry += carry2;
 	for (int32_t i = 0; i < 7; i++) {
 		tmp = (uint64_t)r[i] + carry;
@@ -438,7 +438,7 @@ static void _fp448_mul39081(uint32_t r[14],
 
 	/* NOTE: 2^448 == 2^224+1 (mod 2^448-2^224-1) */
 
- 	/* r = rr % p modular reduction */
+	/* r = rr % p modular reduction */
 	carry += carry2;
 	for (int32_t i = 0; i < 7; i++) {
 		tmp = (uint64_t)r[i] + carry;

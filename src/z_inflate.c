@@ -318,7 +318,7 @@ static int32_t _decode_sym(const struct inflate_sym_desc *desc, uint32_t v,
 {
 	uint32_t base = 0, offs = 0, m = 1, g = *len;
 
-	for (; m <= g; m++) {
+	for (; m <= g; m++) { /* lsb */
 		offs = (offs << 1) + (v & 1);
 		if (offs < desc->count[m])
 			break;

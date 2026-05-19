@@ -47,7 +47,8 @@
 #  if (defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7R__) || __ARM_ARCH >= 7)
 #   define CONCH_MARCH_ARM_32
 #  else
-#   error "!!!only support arm-v7a!!!"
+#   define CONCH_MARCH_ARM_32
+#   warning "!!!not is armv7-a!!!"
 #  endif
 # elif defined(__aarch64__)
 #  define CONCH_MARCH_ARM_64

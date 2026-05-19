@@ -123,13 +123,13 @@ void conch_aes_decrypt_cfb(struct aes_ctx *ctx, uint8_t *iv,
 void conch_aes_crypto_ofb(struct aes_ctx *ctx, uint8_t *iv,
 		uint8_t *buf, size_t len)
 {
-	uint32_t n = AES_BLOCKSIZE;
+	size_t n = AES_BLOCKSIZE;
 	while (len) {
 		if (len < n)
 			n = len;
 
 		conch_aes_encrypt(ctx, iv);
-		for (uint32_t i = 0; i < n; i++)
+		for (size_t i = 0; i < n; i++)
 			buf[i] ^= iv[i];
 
 		buf += n;
@@ -157,13 +157,13 @@ void conch_aes_crypto_ctr(struct aes_ctx *ctx, uint8_t *ran,
 	for (int32_t i = 0; i < AES_BLOCKSIZE; i++)
 		u.ctr[i] = ran[i];
 
-	uint32_t n = AES_BLOCKSIZE;
+	size_t n = AES_BLOCKSIZE;
 	while (len) {
 		if (len < n)
 			n = len;
 
 		conch_aes_encrypt(ctx, ran);
-		for (uint32_t i = 0; i < n; i++)
+		for (size_t i = 0; i < n; i++)
 			buf[i] ^= ran[i];
 
 		buf += n;

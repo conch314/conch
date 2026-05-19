@@ -158,13 +158,13 @@ void conch_chacha20_block(struct chacha20_ctx *ctx, int32_t n)
 void conch_chacha20_crypto(struct chacha20_ctx *ctx, uint8_t *buf,
 		size_t len)
 {
-	uint32_t n = CHACHA20_BLOCKSIZE;
+	size_t n = CHACHA20_BLOCKSIZE;
 	while (len) {
 		if (len < n)
 			n = len;
 
 		conch_chacha20_block(ctx, CHACHA20_ROUNDS);
-		for (uint32_t i = 0; i < n; i++)
+		for (size_t i = 0; i < n; i++)
 			buf[i] ^= CHACHA20_KEYSTREAM(ctx, i);
 
 		buf += n;

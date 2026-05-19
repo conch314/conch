@@ -489,10 +489,10 @@ uint64_t conch_csf_fmul64(uint64_t a, uint64_t b)
 	b_sig = b & 0xfffffffffffffULL;
 	z_sign = a_sign ^ b_sign;
 	/*
-	 *   x * NaN      =>  NaN
-	 * Inf * 0        =>  NaN (invalid)
-	 * Inf * finite   =>  Inf
-	 * Inf * Inf      =>  Inf
+	 *   x * NaN    => NaN
+	 * Inf * 0      => NaN (invalid)
+	 * Inf * finite => Inf
+	 * Inf * Inf    => Inf
 	 */
 
 	if (a_exp == 0x7ff) { /* inf, nan, zero */
@@ -997,10 +997,10 @@ uint32_t conch_csf_fmul32(uint32_t a, uint32_t b)
 	b_sig = b & 0x7fffff;
 	z_sign = a_sign ^ b_sign;
 	/*
-	 *   x * NaN      =>  NaN
-	 * Inf * 0        =>  NaN (invalid)
-	 * Inf * finite   =>  Inf
-	 * Inf * Inf      =>  Inf
+	 *   x * NaN    => NaN
+	 * Inf * 0      => NaN (invalid)
+	 * Inf * finite => Inf
+	 * Inf * Inf    => Inf
 	 */
 
 	if (a_exp == 0xff) { /* inf, nan, zero */
@@ -1890,7 +1890,7 @@ uint32_t conch_csf_f64_to_f32(uint64_t a)
 uint64_t conch_csf_f32_to_f64(uint32_t a)
 {
 	int32_t sign, exp, sh;
-	uint64_t sig;
+	uint32_t sig;
 
 	sign = a >> 31;
 	exp = (a >> 23) & 0xff;
@@ -1904,12 +1904,12 @@ uint64_t conch_csf_f32_to_f64(uint32_t a)
 	if (!exp) { /* subnormal, zero */
 		if (!sig)
 			return _float_pack32(0, 0, 0);
-		sh = conch_csf_clz32((uint32_t)sig) - 8;
+		sh = conch_csf_clz32(sig) - 8;
 		exp = (1 - sh) - 1;
 		sig = sig << sh;
 	}
 
 	sh = exp - 127;
 
-	return _float_pack64(sign, sh + 1023, sig << 29);
+	return _float_pack64(sign, sh + 1023, (uint64_t)sig << 29);
 }

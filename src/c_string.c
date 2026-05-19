@@ -48,7 +48,8 @@ void *conch_memcpy(void *t, const void *s, size_t len)
 # define RS >>
 #endif
 
-	volatile uint8_t *_t = t, *_s = (uint8_t *)s;
+	volatile uint8_t *_t = (uint8_t *)t;
+	volatile uint8_t *_s = (uint8_t *)s;
 	uint32_t w, x;
 
 	for (; ((uintptr_t)_s & 3) && len; len--)
@@ -206,7 +207,7 @@ void *conch_memset(void *t, int32_t c, size_t len)
 		return t;
 
 	uint8_t cc[8];
-	volatile uint8_t *_t = t;
+	volatile uint8_t *_t = (uint8_t *)t;
 
 	for (; ((uintptr_t)_t & 3) && len; len--)
 		*_t++ = (uint8_t)c;

@@ -451,7 +451,7 @@ static void _gen_codes(struct deflate_ctdata *tree, const uint16_t *bl_count,
 		uint16_t len = tree[i].dl.len;
 		if (!len)
 			continue;
-		tree[i].fc.code = _bit_reverse(next_code[len]++, len);
+		tree[i].fc.code = _bit_reverse(next_code[len]++, len); /* lsb */
 	}
 }
 
@@ -857,6 +857,45 @@ static void _init_block(struct deflate_ctx *ctx)
 	ctx->sym_size = 0;
 }
 
+/* @func: _bits_overflow (static)
+ * #desc:
+ *    check bits overflow.
+ *
+ * #1: ctx  [in/out] deflate struct context
+ * #2: tree [in]     input tree
+ * #3: n    [in]     codes number
+ * #r:      [ret]    0: no error, <0: overflow
+ */
+static int32_t _bits_overflow(struct deflate_ctx *ctx,
+		const struct deflate_ctdata *tree, int32_t n)
+{
+	for (int32_t i = 0; i <= DEFLATE_BITS_MAX; i++)
+		ctx->bl_count[i] = 0;
+	for (int32_t i = 0; i < n; i++)
+		ctx->bl_count[tree[i].dl.len]++;
+
+	int32_t m, g, w;
+	for (m = 1; m <= DEFLATE_BITS_MAX; m++) {
+		if (ctx->bl_count[m])
+			break;
+	}
+	for (g = DEFLATE_BITS_MAX; g > 0; g--) {
+		if (ctx->bl_count[g])
+			break;
+	}
+
+	for (w = 1 << m; m < g; w <<= 1, m++) {
+		w -= ctx->bl_count[m];
+		if (w < 0)
+			return w;
+	}
+	w -= ctx->bl_count[g];
+	if (w < 0)
+		return w;
+
+	return 0;
+}
+
 /* @func: _flush_block (static)
  * #desc:
  *    send compressed data block.
@@ -898,6 +937,18 @@ static void _flush_block(struct deflate_ctx *ctx, int32_t flush)
 		+ 3;
 	opt_dlen = ctx->desc_ltree.opt_dlen + ctx->desc_dtree.opt_dlen
 		+ (3 + 5 + 5 + 4 + (3 * 19)) + 15;
+
+	/* check overflow */
+	if (_bits_overflow(ctx, ctx->dyn_bltree,
+			ctx->desc_bltree.code_max + 1)) {
+		opt_slen = 0;
+	} else if (_bits_overflow(ctx, ctx->dyn_ltree,
+			ctx->desc_ltree.code_max + 1)) {
+		opt_slen = 0;
+	} else if (_bits_overflow(ctx, ctx->dyn_dtree,
+			ctx->desc_dtree.code_max + 1)) {
+		opt_slen = 0;
+	}
 
 	/* dynamic */
 	if (opt_slen > opt_dlen) {
@@ -1181,7 +1232,7 @@ static int32_t _deflate_slow(struct deflate_ctx *ctx, const uint8_t *s,
 
 			/* symbol full */
 			if (ctx->flush) {
-				_flush_block(ctx, ctx->lsize ? 0 : flush);
+				_flush_block(ctx, 0);
 				ctx->block_start = ctx->start;
 				return DEFLATE_IS_FLUSH;
 			}
@@ -1191,7 +1242,7 @@ static int32_t _deflate_slow(struct deflate_ctx *ctx, const uint8_t *s,
 				/* symbol full */
 				ctx->start++;
 				ctx->lsize--;
-				_flush_block(ctx, ctx->lsize ? 0 : flush);
+				_flush_block(ctx, 0);
 				ctx->block_start = ctx->start;
 				ctx->flush = 1;
 				return DEFLATE_IS_FLUSH;
@@ -1208,7 +1259,7 @@ static int32_t _deflate_slow(struct deflate_ctx *ctx, const uint8_t *s,
 
 		/* flush block > DEFLATE_WSIZE */
 		if ((ctx->start - ctx->block_start) > DEFLATE_WSIZE) {
-			_flush_block(ctx, ctx->lsize ? 0 : flush);
+			_flush_block(ctx, 0);
 			ctx->block_start = ctx->start;
 			ctx->flush = 1;
 			return DEFLATE_IS_FLUSH;
@@ -1216,13 +1267,10 @@ static int32_t _deflate_slow(struct deflate_ctx *ctx, const uint8_t *s,
 	}
 
 	/* end */
-	if (flush && !ctx->lsize && (ctx->sym_size || ctx->match_avail)) {
+	if (flush && !ctx->lsize) {
 		if (ctx->match_avail)
 			_symbol_add(ctx, 0, ctx->window[ctx->start - 1]);
-		_flush_block(ctx, flush);
-		SEND_FINISH(ctx);
-		return DEFLATE_IS_END;
-	} else if (flush && !ctx->lsize) {
+		_flush_block(ctx, 1);
 		SEND_FINISH(ctx);
 		return DEFLATE_IS_END;
 	}
@@ -1296,7 +1344,7 @@ static int32_t _deflate_fast(struct deflate_ctx *ctx, const uint8_t *s,
 
 			/* symbol full */
 			if (ctx->flush) {
-				_flush_block(ctx, ctx->lsize ? 0 : flush);
+				_flush_block(ctx, 0);
 				ctx->block_start = ctx->start;
 				return DEFLATE_IS_FLUSH;
 			}
@@ -1305,7 +1353,7 @@ static int32_t _deflate_fast(struct deflate_ctx *ctx, const uint8_t *s,
 				/* symbol full */
 				ctx->start++;
 				ctx->lsize--;
-				_flush_block(ctx, ctx->lsize ? 0 : flush);
+				_flush_block(ctx, 0);
 				ctx->block_start = ctx->start;
 				ctx->flush = 1;
 				return DEFLATE_IS_FLUSH;
@@ -1316,7 +1364,7 @@ static int32_t _deflate_fast(struct deflate_ctx *ctx, const uint8_t *s,
 
 		/* flush block > DEFLATE_WSIZE */
 		if ((ctx->start - ctx->block_start) > DEFLATE_WSIZE) {
-			_flush_block(ctx, ctx->lsize ? 0 : flush);
+			_flush_block(ctx, 0);
 			ctx->block_start = ctx->start;
 			ctx->flush = 1;
 			return DEFLATE_IS_FLUSH;
@@ -1324,11 +1372,8 @@ static int32_t _deflate_fast(struct deflate_ctx *ctx, const uint8_t *s,
 	}
 
 	/* end */
-	if (flush && !ctx->lsize && ctx->sym_size) {
-		_flush_block(ctx, flush);
-		SEND_FINISH(ctx);
-		return DEFLATE_IS_END;
-	} else if (flush && !ctx->lsize) {
+	if (flush && !ctx->lsize) {
+		_flush_block(ctx, 1);
 		SEND_FINISH(ctx);
 		return DEFLATE_IS_END;
 	}
@@ -1379,19 +1424,19 @@ static int32_t _deflate_stored(struct deflate_ctx *ctx, const uint8_t *s,
 
 		/* flush block > (DEFLATE_WSIZE - DEFLATE_LSIZE) */
 		if (ctx->start > (DEFLATE_WSIZE - DEFLATE_LSIZE)) {
-			SEND_BITS(ctx, 0x01 & flush, 1);
+			SEND_BITS(ctx, 0x00, 1);
 			SEND_BITS(ctx, 0x00, 2);
 			SEND_SKIP(ctx);
 			SEND_BITS(ctx, ctx->start, 16);
 			SEND_BITS(ctx, 0xffff - ctx->start, 16);
 			SEND_FINISH(ctx);
 
-			conch_memcpy(ctx->buf + ctx->len,
-				ctx->window, ctx->start);
+			conch_memcpy(ctx->buf + ctx->len, ctx->window,
+				ctx->start);
 			ctx->len += ctx->start;
 
-			conch_memcpy(ctx->window,
-				ctx->window + ctx->start, ctx->lsize);
+			conch_memcpy(ctx->window, ctx->window + ctx->start,
+				ctx->lsize);
 
 			ctx->start = 0;
 			ctx->flush = 1;
@@ -1401,7 +1446,7 @@ static int32_t _deflate_stored(struct deflate_ctx *ctx, const uint8_t *s,
 
 	/* end */
 	if (flush && !ctx->lsize) {
-		SEND_BITS(ctx, 0x01 & flush, 1);
+		SEND_BITS(ctx, 0x01, 1);
 		SEND_BITS(ctx, 0x00, 2);
 		SEND_SKIP(ctx);
 		SEND_BITS(ctx, ctx->start, 16);

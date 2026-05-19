@@ -119,13 +119,13 @@ void conch_salsa20_block(struct salsa20_ctx *ctx, int32_t n)
 void conch_salsa20_crypto(struct salsa20_ctx *ctx, uint8_t *buf,
 		size_t len)
 {
-	uint32_t n = SALSA20_BLOCKSIZE;
+	size_t n = SALSA20_BLOCKSIZE;
 	while (len) {
 		if (len < n)
 			n = len;
 
 		conch_salsa20_block(ctx, SALSA20_ROUNDS);
-		for (uint32_t i = 0; i < n; i++)
+		for (size_t i = 0; i < n; i++)
 			buf[i] ^= SALSA20_KEYSTREAM(ctx, i);
 
 		buf += n;

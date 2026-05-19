@@ -78,8 +78,7 @@ extern
 void conch_sha256_finish(struct sha256_ctx *ctx, uint64_t len)
 ;
 extern
-void conch_sha256(struct sha256_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_sha256(struct sha256_ctx *ctx, const uint8_t *s, size_t len)
 ;
 
 /* sha512.c */
@@ -97,8 +96,7 @@ extern
 void conch_sha512_finish(struct sha512_ctx *ctx, uint64_t len)
 ;
 extern
-void conch_sha512(struct sha512_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_sha512(struct sha512_ctx *ctx, const uint8_t *s, size_t len)
 ;
 
 #ifdef __cplusplus

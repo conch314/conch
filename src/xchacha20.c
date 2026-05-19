@@ -171,13 +171,13 @@ void conch_xchacha20_block(struct xchacha20_ctx *ctx, int32_t n)
 void conch_xchacha20_crypto(struct xchacha20_ctx *ctx, uint8_t *buf,
 		size_t len)
 {
-	uint32_t n = XCHACHA20_BLOCKSIZE;
+	size_t n = XCHACHA20_BLOCKSIZE;
 	while (len) {
 		if (len < n)
 			n = len;
 
 		conch_xchacha20_block(ctx, XCHACHA20_ROUNDS);
-		for (uint32_t i = 0; i < n; i++)
+		for (size_t i = 0; i < n; i++)
 			buf[i] ^= XCHACHA20_KEYSTREAM(ctx, i);
 
 		buf += n;

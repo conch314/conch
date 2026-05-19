@@ -5,6 +5,7 @@ AR = ar
 AR_FLAGS = rc
 
 CC = cc
+CC_AS = cc
 CFLAGS = -O1 -g -std=c99 -Wall -Wextra -Wpedantic -Wshadow -Wno-format-pedantic -Wno-trigraphs -fno-builtin -fno-inline-functions -Wsign-compare -Wconversion
 CPPFLAGS =
 HEADERS = -I../include
@@ -62,4 +63,4 @@ clean: clean_liba clean_libb clean_libc
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(HEADERS) -c -o $@ $<
 
 %.o: %.S
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(HEADERS) -c -o $@ $<
+	$(CC_AS) $(CFLAGS) $(CPPFLAGS) $(HEADERS) -c -o $@ $<

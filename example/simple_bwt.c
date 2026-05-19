@@ -137,7 +137,7 @@
  *  'anb => 'anb => 0
  */
 
-#define BWT_DRSORT_TMPSIZE(n) (4 * (n) + 256)
+#define BWT_DRSORT_TMPSIZE(n) ((n) + 256)
 
 #define QS_MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define QS_SWAP(a, b) \
@@ -146,24 +146,24 @@
 		a = b; \
 		b = ___tmp; \
 	} while (0)
-#define QS_VSWAP(x, a, b, n) \
+#define QS_VSWAP(suffix, a, b, n) \
 	do { \
 		int32_t ___tmp1 = a; \
 		int32_t ___tmp2 = b; \
 		int32_t ___tmp3 = n; \
 		for (; ___tmp3 > 0; ___tmp3--) { \
-			QS_SWAP((x)[___tmp1], (x)[___tmp2]); \
+			QS_SWAP(suffix[___tmp1], suffix[___tmp2]); \
 			___tmp1++; \
 			___tmp2++; \
 		} \
 	} while (0)
-#define QS_PUSH(stack, lo, hi) \
+#define QS_PUSH(stack, sp, lo, hi) \
 	do { \
 		stack[sp] = lo; \
 		stack[sp + 1] = hi; \
 		sp += 2; \
 	} while (0)
-#define QS_POP(stack, lo, hi) \
+#define QS_POP(stack, sp, lo, hi) \
 	do { \
 		sp -= 2; \
 		lo = stack[sp]; \
@@ -176,7 +176,7 @@
 #define BH_WORD(x, n) ((x)[(n) >> 5])
 #define BH_UNALIGNED(n) ((n) & 0x1f)
 
-#define FALLBACK_SORT_TMPSIZE(n) (4 * ((n) + ((n) / 32 + 3)))
+#define FALLBACK_SORT_TMPSIZE(n) ((n) + ((n) / 32 + 3))
 
 
 const uint8_t *unsafe_in;
@@ -439,10 +439,10 @@ static void _fallback_qsort3(uint32_t *sa, uint32_t *rk, int32_t l,
 	int32_t un_lo, un_hi, lt_lo, gt_hi, n, m;
 	uint32_t t, tt, q = 0;
 
-	QS_PUSH(stack, l, r);
+	QS_PUSH(stack, sp, l, r);
 
 	while (sp) {
-		QS_POP(stack, lo, hi);
+		QS_POP(stack, sp, lo, hi);
 		if (lo == hi)
 			continue;
 
@@ -520,7 +520,7 @@ static void _fallback_qsort3(uint32_t *sa, uint32_t *rk, int32_t l,
 				if (t < tt) { /* < pivot */
 					break;
 				} else if (t > tt) { /* > pivot */
-            				un_hi--;
+					un_hi--;
 					continue;
 				}
 
@@ -554,11 +554,11 @@ static void _fallback_qsort3(uint32_t *sa, uint32_t *rk, int32_t l,
 		m = hi - (gt_hi - un_hi) + 1;
 
 		if ((n - lo) > (hi - m)) {
-			QS_PUSH(stack, lo, n);
-			QS_PUSH(stack, m, hi);
+			QS_PUSH(stack, sp, lo, n);
+			QS_PUSH(stack, sp, m, hi);
 		} else {
-			QS_PUSH(stack, m, hi);
-			QS_PUSH(stack, lo, n);
+			QS_PUSH(stack, sp, m, hi);
+			QS_PUSH(stack, sp, lo, n);
 		}
 	}
 }
@@ -572,7 +572,7 @@ static void _fallback_sort(const uint8_t *in, uint32_t len, uint32_t *sa,
 	uint32_t l, r, t, c, cc, n;
 
 	/* single character sorting */
-	memset(count, 0, sizeof(count));
+	conch_memset(count, 0, sizeof(count));
 	for (uint32_t i = 0; i < len; i++)
 		count[in[i]]++;
 	for (uint32_t i = 1; i < 256; i++)
@@ -583,7 +583,7 @@ static void _fallback_sort(const uint8_t *in, uint32_t len, uint32_t *sa,
 	}
 
 	/* build bucket boundary */
-	memset(bh, 0, sizeof(uint32_t) * (len / 32 + 3));
+	conch_memset(bh, 0, sizeof(uint32_t) * (len / 32 + 3));
 	for (uint32_t i = 0; i < 256; i++)
 		BH_SET(bh, count[i]);
 	for (uint32_t i = 0; i < 32; i++) {
@@ -673,17 +673,20 @@ void bwt_transform_fsort_csa(uint8_t *out, const uint8_t *in, uint32_t len,
 uint32_t mtfe(uint16_t *out, uint8_t *in, uint32_t len, uint8_t *inuse)
 {
 	uint8_t tab[256], seq[256], c;
-	uint32_t pos, n = 0;
-	uint16_t *p = out;
+	uint32_t pos, n = 0, w = 0;
 
 	for (uint32_t i = 0; i < len; i++)
 		inuse[in[i]] = 1;
+
+	/* make a sequence table */
 	for (uint32_t i = 0; i < 256; i++) {
 		if (inuse[i]) {
 			seq[i] = (uint8_t)n;
 			n++;
 		}
 	}
+
+	/* characters set */
 	for (uint32_t i = 0; i < n; i++)
 		tab[i] = (uint8_t)i;
 
@@ -696,7 +699,7 @@ uint32_t mtfe(uint16_t *out, uint8_t *in, uint32_t len, uint8_t *inuse)
 			if (n > 0) { /* zero rle */
 				n--;
 				while (1) {
-					*out++ = n & 1;
+					out[w++] = n & 1;
 					if (n < 2)
 						break;
 					n = (n - 2) >> 1;
@@ -704,10 +707,11 @@ uint32_t mtfe(uint16_t *out, uint8_t *in, uint32_t len, uint8_t *inuse)
 				n = 0;
 			}
 
+			/* character position */
 			for (pos = 0; tab[pos] != c; pos++);
-			*out++ = pos + 1;
+			out[w++] = pos + 1; /* zero rle + 1 */
 
-			for (; pos > 0; pos--)
+			for (; pos > 0; pos--) /* move */
 				tab[pos] = tab[pos - 1];
 			tab[0] = c;
 		}
@@ -716,7 +720,7 @@ uint32_t mtfe(uint16_t *out, uint8_t *in, uint32_t len, uint8_t *inuse)
 	if (n > 0) { /* zero rle */
 		n--;
 		while (1) {
-			*out++ = n & 1;
+			out[w++] = n & 1;
 			if (n < 2)
 				break;
 			n = (n - 2) >> 1;
@@ -724,28 +728,30 @@ uint32_t mtfe(uint16_t *out, uint8_t *in, uint32_t len, uint8_t *inuse)
 		n = 0;
 	}
 
-	return (uint32_t)(out - p);
+	return w;
 }
 
 /* mtf decoding */
 uint32_t mtfd(uint8_t *out, uint16_t *in, uint32_t len, uint8_t *inuse)
 {
 	uint8_t tab[256], seq[256], c;
-	uint32_t pos, e, n = 0;
-	uint8_t *p = out;
+	uint32_t pos, e, n = 0, w = 0;
 
+	/* make a sequence table */
 	for (uint32_t i = 0; i < 256; i++) {
 		if (inuse[i]) {
 			seq[n] = (uint8_t)i;
 			n++;
 		}
 	}
+
+	/* characters set */
 	for (uint32_t i = 0; i < n; i++)
 		tab[i] = (uint8_t)i;
 
 	for (uint32_t i = 0; i < len; i++) {
 		pos = in[i];
-		if (pos < 2) {
+		if (pos < 2) { /* zero rle */
 			n = 0;
 			e = 1;
 			while (1) {
@@ -760,18 +766,18 @@ uint32_t mtfd(uint8_t *out, uint16_t *in, uint32_t len, uint8_t *inuse)
 
 			c = seq[tab[0]];
 			while (n--)
-				*out++ = c;
+				out[w++] = c;
 		} else {
 			c = tab[--pos];
-			*out++ = seq[c];
+			out[w++] = seq[c];
 
-			for (; pos > 0; pos--)
+			for (; pos > 0; pos--) /* move */
 				tab[pos] = tab[pos - 1];
 			tab[0] = c;
 		}
 	}
 
-	return (uint32_t)(out - p);
+	return w;
 }
 
 int main(void)

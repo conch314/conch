@@ -159,7 +159,7 @@ conch_longjmp:
 
 	xorq %rax, %rax
 	cmpl $1, %esi
- 	adcl %esi, %rax
+	adcl %esi, %rax
 	movq (%rdi), %rbx
 	movq 8(%rdi), %rbp
 	movq 16(%rdi), %r12

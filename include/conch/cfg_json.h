@@ -116,6 +116,10 @@ struct json_stack {
 		struct json_array **array;
 		struct json_object **object;
 	} u;
+	union {
+		struct json_array *array;
+		struct json_object *object;
+	} t;
 	struct json_stack *next;
 };
 

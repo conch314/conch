@@ -610,7 +610,7 @@ e:
  * #1: fmt [in]  format string
  * #2: ap  [out] variable argument pointer
  * #3: arg [in]  callback arg
- * #4: get [in]  callback (is-peek, arg)
+ * #4: get [in]  input callback (is-peek, arg)
  * #r:     [ret] >0: number of matching, <0: format error
  */
 int32_t __conch_scanf(const char *fmt, va_list *ap, void *arg,

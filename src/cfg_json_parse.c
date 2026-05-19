@@ -146,7 +146,6 @@ static int32_t _json_token(char c)
 			} else if (c == 'I' || c == 'N') {
 				return TOKEN_NUMBER;
 			}
-
 			return -1;
 	}
 

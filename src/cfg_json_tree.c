@@ -53,13 +53,27 @@ static struct json_value *_json_value_add(struct json_stack *s)
 		o->name = s->name;
 		s->name = NULL;
 		v = &o->value;
-		o->next = *s->u.object;
-		*s->u.object = o;
+
+		o->next = NULL;
+		if (*s->u.object) {
+			s->t.object->next = o;
+			s->t.object = o;
+		} else {
+			*s->u.object = o;
+			s->t.object = o;
+		}
 	} else {
 		a = conch_malloc(sizeof(struct json_array));
 		v = &a->value;
-		a->next = *s->u.array;
-		*s->u.array = a;
+
+		a->next = NULL;
+		if (*s->u.array) {
+			s->t.array->next = a;
+			s->t.array = a;
+		} else {
+			*s->u.array = a;
+			s->t.array = a;
+		}
 	}
 
 	return v;

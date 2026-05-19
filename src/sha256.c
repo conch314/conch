@@ -232,8 +232,7 @@ void conch_sha256_finish(struct sha256_ctx *ctx, uint64_t len)
  * #2: s   [in]     input buffer
  * #3: len [in]     input length
  */
-void conch_sha256(struct sha256_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_sha256(struct sha256_ctx *ctx, const uint8_t *s, size_t len)
 {
 	conch_sha256_process(ctx, s, len);
 	conch_sha256_finish(ctx, len);

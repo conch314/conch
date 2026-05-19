@@ -38,41 +38,54 @@ void _print_array(struct json_array *a, int32_t ind)
 		v = &a->value;
 		switch (v->type) {
 			case JSON_ARRAY_TYPE:
-				conch_printf("%*s[\n", ind, "");
+				conch_printf("%*s[\n",
+					ind, "");
 				_print_array(v->u.array, ind + 2);
-				conch_printf("%*s]", ind, "");
+				conch_printf("%*s]",
+					ind, "");
 				break;
 			case JSON_OBJECT_TYPE:
-				conch_printf("%*s{\n", ind, "");
+				conch_printf("%*s{\n",
+					ind, "");
 				_print_object(v->u.object, ind + 2);
-				conch_printf("%*s}", ind, "");
+				conch_printf("%*s}",
+					ind, "");
 				break;
 			case JSON_STRING_TYPE:
-				conch_printf("%*s\"%s\"", ind, "", v->u.str);
+				conch_printf("%*s\"%s\"",
+					ind, "", v->u.str);
 				break;
 			case JSON_NUMBER_DEC_TYPE:
-				conch_printf("%*s%lld", ind, "", v->u.i);
+				conch_printf("%*s%lld",
+					ind, "", v->u.i);
 				break;
 			case JSON_NUMBER_HEX_TYPE:
-				conch_printf("%*s%llx", ind, "", v->u.i);
+				conch_printf("%*s0x%llx",
+					ind, "", v->u.i);
 				break;
 			case JSON_NUMBER_FLT_TYPE:
-				conch_printf("%*s%f", ind, "", v->u.f);
+				conch_printf("%*s%f",
+					ind, "", v->u.f);
 				break;
 			case JSON_NUMBER_INF_TYPE:
-				conch_printf("%*s%f", ind, "", v->u.f);
+				conch_printf("%*sInfinity",
+					ind, "");
 				break;
 			case JSON_NUMBER_NAN_TYPE:
-				conch_printf("%*s%f", ind, "", v->u.f);
+				conch_printf("%*sNaN",
+					ind, "");
 				break;
 			case JSON_NULL_TYPE:
-				conch_printf("%*snull", ind, "");
+				conch_printf("%*snull",
+					ind, "");
 				break;
 			case JSON_TRUE_TYPE:
-				conch_printf("%*strue", ind, "");
+				conch_printf("%*strue",
+					ind, "");
 				break;
 			case JSON_FALSE_TYPE:
-				conch_printf("%*sfalse", ind, "");
+				conch_printf("%*sfalse",
+					ind, "");
 				break;
 			default:
 				return;
@@ -91,41 +104,54 @@ void _print_object(struct json_object *o, int32_t ind)
 		v = &o->value;
 		switch (v->type) {
 			case JSON_ARRAY_TYPE:
-				conch_printf("%*s\"%s\": [\n", ind, "", o->name);
+				conch_printf("%*s\"%s\": [\n",
+					ind, "", o->name);
 				_print_array(v->u.array, ind + 2);
-				conch_printf("%*s]", ind, "");
+				conch_printf("%*s]",
+					ind, "");
 				break;
 			case JSON_OBJECT_TYPE:
-				conch_printf("%*s\"%s\": {\n", ind, "", o->name);
+				conch_printf("%*s\"%s\": {\n",
+					ind, "", o->name);
 				_print_object(v->u.object, ind + 2);
-				conch_printf("%*s}", ind, "");
+				conch_printf("%*s}",
+					ind, "");
 				break;
 			case JSON_STRING_TYPE:
-				conch_printf("%*s\"%s\": \"%s\"", ind, "", o->name, v->u.str);
+				conch_printf("%*s\"%s\": \"%s\"",
+					ind, "", o->name, v->u.str);
 				break;
 			case JSON_NUMBER_DEC_TYPE:
-				conch_printf("%*s\"%s\": %lld", ind, "", o->name, v->u.i);
+				conch_printf("%*s\"%s\": %lld",
+					ind, "", o->name, v->u.i);
 				break;
 			case JSON_NUMBER_HEX_TYPE:
-				conch_printf("%*s\"%s\": %llx", ind, "", o->name, v->u.i);
+				conch_printf("%*s\"%s\": 0x%llx",
+					ind, "", o->name, v->u.i);
 				break;
 			case JSON_NUMBER_FLT_TYPE:
-				conch_printf("%*s\"%s\": %f", ind, "", o->name, v->u.f);
+				conch_printf("%*s\"%s\": %f",
+					ind, "", o->name, v->u.f);
 				break;
 			case JSON_NUMBER_INF_TYPE:
-				conch_printf("%*s\"%s\": %f", ind, "", o->name, v->u.f);
+				conch_printf("%*s\"%s\": Infinity",
+					ind, "", o->name);
 				break;
 			case JSON_NUMBER_NAN_TYPE:
-				conch_printf("%*s\"%s\": %f", ind, "", o->name, v->u.f);
+				conch_printf("%*s\"%s\": NaN",
+					ind, "", o->name);
 				break;
 			case JSON_NULL_TYPE:
-				conch_printf("%*s\"%s\": null", ind, "", o->name);
+				conch_printf("%*s\"%s\": null",
+					ind, "", o->name);
 				break;
 			case JSON_TRUE_TYPE:
-				conch_printf("%*s\"%s\": true", ind, "", o->name);
+				conch_printf("%*s\"%s\": true",
+					ind, "", o->name);
 				break;
 			case JSON_FALSE_TYPE:
-				conch_printf("%*s\"%s\": false", ind, "", o->name);
+				conch_printf("%*s\"%s\": false",
+					ind, "", o->name);
 				break;
 			default:
 				return;
