@@ -54,7 +54,7 @@ static int32_t _compress(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
 	}
 
 	buf[0] = 'B';
-	buf[1] = 'Z':
+	buf[1] = 'Z';
 	buf[2] = 'h';
 	buf[3] = '0' + lev;
 
@@ -70,7 +70,6 @@ static int32_t _compress(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
 					1, BZIP2_LEN(&ctx), wfp);
 			}
 		} while (r);
-
 		total_len += len;
 	}
 

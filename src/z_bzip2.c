@@ -24,7 +24,6 @@
 #include <conch/c_stdint.h>
 #include <conch/c_string.h>
 #include <conch/z_bzip2.h>
-#include <conch/bits_add.h>
 #include <conch/crc.h>
 
 
@@ -106,32 +105,10 @@
 		heap[___tmp_k] = ___tmp_v; \
 	} while (0)
 
-#define SEND_SKIP(s) _send_bits_skip(s)
 #define SEND_BYTE(s, x) _send_bits(s, x, 8)
 #define SEND_BITS(s, x, n) _send_bits(s, x, n)
 #define SEND_FINISH(s) _send_bits_finish(s)
 
-
-/* @func: _send_byte (static)
- * #desc:
- *    send byte to buffer.
- *
- * #1: ctx [in/out] bzip2 struct context
- * #2: v   [in]     value
- */
-static void _send_byte(struct bzip2_ctx *ctx, uint8_t v)
-{
-	if (!conch_bits_add(&ctx->bits_ctx, v, 8))
-		return;
-
-	conch_memcpy(ctx->buf + ctx->len,
-		BITS_ADD_BUF(&ctx->bits_ctx), BITS_ADD_BUFSIZE);
-	BITS_ADD_FLUSH(&ctx->bits_ctx);
-	ctx->len += BITS_ADD_BUFSIZE;
-
-	if (BITS_ADD_REM(&ctx->bits_ctx))
-		conch_bits_add(&ctx->bits_ctx, v, 8);
-}
 
 /* @func: _send_bits (static)
  * #desc:
@@ -144,7 +121,7 @@ static void _send_byte(struct bzip2_ctx *ctx, uint8_t v)
 static void _send_bits(struct bzip2_ctx *ctx, uint32_t v, uint32_t len)
 {
 	while (ctx->be_len >= 8) {
-		_send_byte(ctx, (uint8_t)(ctx->be_val >> 24));
+		ctx->buf[ctx->len++] = (uint8_t)(ctx->be_val >> 24);
 		ctx->be_val <<= 8;
 		ctx->be_len -= 8;
 	}
@@ -162,19 +139,10 @@ static void _send_bits(struct bzip2_ctx *ctx, uint32_t v, uint32_t len)
 static void _send_bits_finish(struct bzip2_ctx *ctx)
 {
 	while (ctx->be_len > 0) {
-		_send_byte(ctx, (uint8_t)(ctx->be_val >> 24));
+		ctx->buf[ctx->len++] = (uint8_t)(ctx->be_val >> 24);
 		ctx->be_val <<= 8;
 		ctx->be_len -= 8;
 	}
-
-	uint32_t n = BITS_ADD_GETSIZE(&ctx->bits_ctx);
-	if (!n)
-		return;
-
-	conch_memcpy(ctx->buf + ctx->len,
-		BITS_ADD_BUF(&ctx->bits_ctx), n);
-	BITS_ADD_FLUSH(&ctx->bits_ctx);
-	ctx->len += n;
 }
 
 /* @func: _fallback_qsort3 (static)
@@ -608,6 +576,224 @@ static void _gen_codes(uint32_t *code, const uint8_t *lens,
 	}
 }
 
+static void _send_block(struct bzip2_ctx *ctx)
+{
+	int32_t alpha_size = ctx->mtf_e + 1;
+	int32_t ngroups = 1, ge, gs, nselectors;
+	uint16_t *mtf_v = ctx->mtf_v;
+	uint16_t cost[6];
+	int32_t fave[6];
+
+	if (ctx->mtf_n < 200) {
+		ngroups = 2;
+	} else if (ctx->mtf_n < 600) {
+		ngroups = 3;
+	} else if (ctx->mtf_n < 1200) {
+		ngroups = 4;
+	} else if (ctx->mtf_n < 2400) {
+		ngroups = 5;
+	} else {
+		ngroups = 6;
+	}
+
+	for (int32_t i = 0; i < 6; i++) {
+		for (int32_t j = 0; j < alpha_size; j++)
+			ctx->huf_len[i][j] = 15;
+	}
+
+	int32_t rem_freq = ctx->mtf_n;
+	gs = 0;
+
+	for (int32_t k = ngroups; k > 0; k--) {
+		int32_t t = rem_freq / k;
+		int32_t a = 0;
+		ge = gs - 1;
+
+		while (a < t && ge < (alpha_size - 1)) {
+			ge++;
+			a += ctx->mtf_freq[ge];
+		}
+
+		if (ge > gs && k != ngroups && k != 1
+				&& ((ngroups - k) % 2) == 1) {
+			a -= ctx->mtf_freq[ge];
+			ge--;
+		}
+
+		for (int32_t j = 0; j < alpha_size; j++) {
+			if (j >= gs && j <= ge) {
+				ctx->huf_len[k - 1][j] = 0;
+			} else {
+				ctx->huf_len[k - 1][j] = 15;
+			}
+		}
+
+		gs = ge + 1;
+		rem_freq -= a;
+	}
+
+	for (int32_t k = 0; k < 4; k++) {
+		for (int32_t i = 0; i < 6; i++)
+			fave[i] = 0;
+		for (int32_t i = 0; i < ngroups; i++) {
+			for (int32_t j = 0; j < alpha_size; j++)
+				ctx->huf_rfreq[i][j] = 0;
+		}
+
+		nselectors = 0;
+		int32_t totc = 0;
+		gs = 0;
+		while (gs < ctx->mtf_n) {
+			ge = gs + 50 - 1;
+			if (ge >= ctx->mtf_n)
+				ge = ctx->mtf_n - 1;
+
+			for (int32_t i = 0; i < 6; i++)
+				cost[i] = 0;
+
+			for (int32_t i = gs; i <= ge; i++) {
+				uint16_t v = mtf_v[i];
+				for (int32_t j = 0; j < ngroups; j++)
+					cost[j] += ctx->huf_len[j][v];
+			}
+
+			int32_t bc = 999999999;
+			int32_t bt = -1;
+			for (int32_t j = 0; j < ngroups; j++) {
+				if (cost[j] < bc) {
+					bc = cost[j];
+					bt = j;
+				}
+			}
+
+			totc += bc;
+			fave[bt]++;
+			ctx->selector[nselectors] = bt;
+			nselectors++;
+
+			for (int32_t i = gs; i <= ge; i++)
+				ctx->huf_rfreq[bt][mtf_v[i]]++;
+			gs = ge + 1;
+		}
+
+		for (int32_t i = 0; i < ngroups; i++) {
+			_gen_lens(ctx->huf_len[i],
+					ctx->huf_rfreq[i],
+					alpha_size,
+					17);
+		}
+	}
+
+	uint8_t tab[6];
+	for (int32_t i = 0; i < ngroups; i++)
+		tab[i] = i;
+
+	for (int32_t i = 0; i < nselectors; i++) {
+		int32_t c = ctx->selector[i];
+		int32_t pos = 0;
+
+		for (; tab[pos] != c; pos++);
+		ctx->selector_mtf[i] = pos;
+
+		for (; pos > 0; pos--) /* move */
+			tab[pos] = tab[pos - 1];
+		tab[0] = c;
+	}
+
+	for (int32_t i = 0; i < ngroups; i++) {
+		int32_t min_len = 32;
+		int32_t max_len = 0;
+		for (int32_t j = 0; j < alpha_size; j++) {
+			if (ctx->huf_len[i][j] > max_len)
+				max_len = ctx->huf_len[i][j];
+			if (ctx->huf_len[i][j] < min_len)
+				min_len = ctx->huf_len[i][j];
+		}
+
+		_gen_codes(ctx->huf_code[i],
+			ctx->huf_len[i],
+			alpha_size,
+			min_len,
+			max_len);
+	}
+
+	SEND_BYTE(ctx, 0x31);
+	SEND_BYTE(ctx, 0x41);
+	SEND_BYTE(ctx, 0x59);
+	SEND_BYTE(ctx, 0x26);
+	SEND_BYTE(ctx, 0x53);
+	SEND_BYTE(ctx, 0x59);
+	SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 24));
+	SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 16));
+	SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 8));
+	SEND_BYTE(ctx, (uint8_t)ctx->block_crc);
+	SEND_BITS(ctx, 0, 1);
+	SEND_BITS(ctx, ctx->orig_index, 24);
+
+	uint8_t inuse16[16];
+	for (int32_t i = 0; i < 16; i++) {
+		inuse16[i] = 0;
+		for (int32_t j = 0; j < 16; j++) {
+			if (ctx->inuse[i * 16 + j])
+				inuse16[i] = 1;
+		}
+	}
+	for (int32_t i = 0; i < 16; i++)
+		SEND_BITS(ctx, inuse16[i] & 1, 1);
+
+	for (int32_t i = 0; i < 16; i++) {
+		if (!inuse16[i])
+			continue;
+		for (int32_t j = 0; j < 16; j++)
+			SEND_BITS(ctx, ctx->inuse[i * 16 + j] & 1, 1);
+	}
+
+	SEND_BITS(ctx, ngroups, 3);
+	SEND_BITS(ctx, nselectors, 15);
+
+	for (int32_t i = 0; i < nselectors; i++) {
+		for (int32_t j = 0; j < ctx->selector_mtf[i]; j++)
+			SEND_BITS(ctx, 1, 1);
+		SEND_BITS(ctx, 0, 1);
+	}
+
+	for (int32_t i = 0; i < ngroups; i++) {
+		int32_t curr = ctx->huf_len[i][0];
+		SEND_BITS(ctx, curr, 5);
+		for (int32_t j = 0; j < alpha_size; j++) {
+			while (curr < ctx->huf_len[i][j]) {
+				SEND_BITS(ctx, 2, 2);
+				curr++;
+			}
+			while (curr > ctx->huf_len[i][j]) {
+				SEND_BITS(ctx, 3, 2);
+				curr--;
+			}
+			SEND_BITS(ctx, 0, 1);
+		}
+	}
+
+	int32_t selctr = 0;
+	gs = 0;
+	while (1) {
+		if (gs >= ctx->mtf_n)
+			break;
+
+		ge = gs + 50 - 1;
+		if (ge >= ctx->mtf_n)
+			ge = ctx->mtf_n - 1;
+
+		for (int32_t i = gs; i <= ge; i++) {
+			SEND_BITS(ctx,
+				ctx->huf_code[ctx->selector[selctr]][mtf_v[i]],
+				ctx->huf_len[ctx->selector[selctr]][mtf_v[i]]);
+		}
+
+		gs = ge + 1;
+		selctr++;
+	}
+}
+
 /* @func: _init_block (static)
  * #desc:
  *    initialization block.
@@ -618,6 +804,7 @@ static void _init_block(struct bzip2_ctx *ctx)
 {
 	ctx->block_len = 0;
 	ctx->block_crc = 0xffffffff;
+
 	ctx->rle_inchr = 256;
 	ctx->rle_inlen = 0;
 	conch_memset(ctx->inuse, 0, sizeof(ctx->inuse));
@@ -734,7 +921,7 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 	}
 	_input_block_flush(ctx);
 
-	/* send compressed block */
+	/* flush block */
 	if (ctx->block_len) {
 		ctx->block_crc = ~ctx->block_crc;
 		ctx->combined_crc = (ctx->combined_crc << 1)
@@ -791,7 +978,8 @@ int32_t conch_bzip2_init(struct bzip2_ctx *ctx, int32_t lev)
 	/* initialize block */
 	_init_block(ctx);
 
-	BITS_ADD_INIT(&ctx->bits_ctx);
+	ctx->be_val = 0;
+	ctx->be_len = 0;
 	ctx->lev = lev;
 	ctx->flush = 0;
 	ctx->len = 0;
