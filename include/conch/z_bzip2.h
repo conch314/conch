@@ -30,21 +30,15 @@
 
 /* max block size */
 #define BZIP2_BLOCKSIZE_MAX 900000
-
 /* number of the alpha symbol */
 #define BZIP2_ALPHA_SIZE 258
-
 /* number of the huffman groups */
 #define BZIP2_NGROUPS 6
 /* number of the groups selectors */
 #define BZIP2_NSELECTORS (BZIP2_BLOCKSIZE_MAX / 50 + 2)
-
 /* temporary size for block sorting */
 #define BZIP2_SORT_TMPSIZE \
 	(BZIP2_BLOCKSIZE_MAX + (BZIP2_BLOCKSIZE_MAX / 32 + 3))
-
-/* output buffer size */
-#define BZIP2_BUFSIZE (BZIP2_BLOCKSIZE_MAX * 2)
 
 /* flush buffer */
 #define BZIP2_IS_FLUSH 1
@@ -62,20 +56,20 @@ struct bzip2_ctx {
 	const uint32_t *crc_t;
 
 	/* input run-length */
-	uint32_t rle_inchr;
-	uint32_t rle_inlen;
+	uint32_t rle_inchr; /* repeat character */
+	uint32_t rle_inlen; /* repeat length */
 	uint8_t inuse[256]; /* characters in use */
 
 	/* block sorting */
 	uint32_t sort_sa[BZIP2_BLOCKSIZE_MAX]; /* suffix array */
-	uint32_t sort_tmp[BZIP2_SORT_TMPSIZE];
-	uint32_t orig_index; /* primary index */
+	uint32_t sort_tmp[BZIP2_SORT_TMPSIZE]; /* temporary buffer */
+	uint32_t orig_index;                   /* primary index */
 
 	/* move-to-front */
 	uint16_t *mtf_v;        /* mtf value */
 	uint16_t mtf_e;         /* end-block value */
-	uint32_t mtf_n;         /* number of mtf value */
-	uint32_t mtf_freq[258]; /* freq of mtf value */
+	uint32_t mtf_n;         /* number of the mtf value */
+	uint32_t mtf_freq[258]; /* freq of the mtf value */
 
 	/* huffman coding */
 	uint8_t huf_len[BZIP2_NGROUPS][BZIP2_ALPHA_SIZE];
@@ -95,7 +89,7 @@ struct bzip2_ctx {
 	int32_t lev;
 	int32_t flush;
 
-	uint8_t buf[BZIP2_BUFSIZE]; /* output buffer */
+	uint8_t buf[BZIP2_BLOCKSIZE_MAX * 2]; /* output buffer */
 	uint32_t len;
 };
 

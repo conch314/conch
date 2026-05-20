@@ -651,21 +651,19 @@ static void _send_inuse(struct bzip2_ctx *ctx)
 
 static void _send_block(struct bzip2_ctx *ctx)
 {
+	uint16_t cost[BZIP2_NGROUPS];
 	int32_t alpha_size = ctx->mtf_e + 1;
-	int32_t rem_freq = ctx->mtf_n;
 	int32_t ngroups = 1, nselectors, ge, gs;
-	int32_t min_len, max_len;
 	uint16_t *mtf_v = ctx->mtf_v;
-	uint16_t cost[6];
-	int32_t fave[6];
+	int32_t mtf_n = ctx->mtf_n;
 
-	if (ctx->mtf_n < 200) {
+	if (mtf_n < 200) {
 		ngroups = 2;
-	} else if (ctx->mtf_n < 600) {
+	} else if (mtf_n < 600) {
 		ngroups = 3;
-	} else if (ctx->mtf_n < 1200) {
+	} else if (mtf_n < 1200) {
 		ngroups = 4;
-	} else if (ctx->mtf_n < 2400) {
+	} else if (mtf_n < 2400) {
 		ngroups = 5;
 	} else {
 		ngroups = BZIP2_NGROUPS;
@@ -676,7 +674,9 @@ static void _send_block(struct bzip2_ctx *ctx)
 			ctx->huf_len[i][j] = 15;
 	}
 
+	int32_t rem_freq = mtf_n;
 	gs = 0;
+
 	for (int32_t k = ngroups; k > 0; k--) {
 		int32_t t = rem_freq / k;
 		int32_t a = 0;
@@ -706,20 +706,17 @@ static void _send_block(struct bzip2_ctx *ctx)
 	}
 
 	for (int32_t k = 0; k < 4; k++) {
-		for (int32_t i = 0; i < 6; i++)
-			fave[i] = 0;
 		for (int32_t i = 0; i < ngroups; i++) {
 			for (int32_t j = 0; j < alpha_size; j++)
 				ctx->huf_rfreq[i][j] = 0;
 		}
 
 		nselectors = 0;
-		int32_t totc = 0;
 		gs = 0;
-		while (gs < ctx->mtf_n) {
+		while (gs < mtf_n) {
 			ge = gs + 50 - 1;
-			if (ge >= ctx->mtf_n)
-				ge = ctx->mtf_n - 1;
+			if (ge >= mtf_n)
+				ge = mtf_n - 1;
 
 			for (int32_t i = 0; i < 6; i++)
 				cost[i] = 0;
@@ -739,8 +736,6 @@ static void _send_block(struct bzip2_ctx *ctx)
 				}
 			}
 
-			totc += bc;
-			fave[bt]++;
 			ctx->selector[nselectors] = bt;
 			nselectors++;
 
@@ -756,8 +751,8 @@ static void _send_block(struct bzip2_ctx *ctx)
 	}
 
 	for (int32_t i = 0; i < ngroups; i++) {
-		min_len = 32;
-		max_len = 0;
+		int32_t min_len = 32;
+		int32_t max_len = 0;
 		for (int32_t j = 0; j < alpha_size; j++) {
 			if (ctx->huf_len[i][j] > max_len)
 				max_len = ctx->huf_len[i][j];
@@ -817,12 +812,12 @@ static void _send_block(struct bzip2_ctx *ctx)
 	int32_t selctr = 0;
 	gs = 0;
 	while (1) {
-		if (gs >= ctx->mtf_n)
+		if (gs >= mtf_n)
 			break;
 
 		ge = gs + 50 - 1;
-		if (ge >= ctx->mtf_n)
-			ge = ctx->mtf_n - 1;
+		if (ge >= mtf_n)
+			ge = mtf_n - 1;
 
 		for (int32_t i = gs; i <= ge; i++) {
 			SEND_BITS(ctx,
@@ -956,6 +951,8 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 			return 0;
 
 		len -= _input_block(ctx, ctx->s, len);
+
+		/* crc */
 		ctx->block_crc = conch_crc32_msb(ctx->crc_t,
 			ctx->block_crc, ctx->s, len);
 
@@ -966,6 +963,7 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 
 	/* flush block */
 	if (ctx->block_len) {
+		/* crc */
 		ctx->block_crc = ~ctx->block_crc;
 		ctx->combined_crc = (ctx->combined_crc << 1)
 			| (ctx->combined_crc >> 31);
@@ -1013,20 +1011,20 @@ int32_t conch_bzip2_init(struct bzip2_ctx *ctx, int32_t lev)
 	if (!(lev >= 1 && lev <= 9))
 		return -1;
 
-	/* initialization */
 	ctx->block_max = 100000 * lev - 19;
 	ctx->mtf_v = (uint16_t *)ctx->sort_tmp; /* reuse */
 
+	/* crc */
 	ctx->combined_crc = 0;
 	ctx->crc_t = conch_crc32_table(CRC32_DEFAULT_MSB_TYPE);
-
-	/* initialize block */
-	_init_block(ctx);
 
 	BITS_ADD_INIT(&ctx->bits_ctx);
 	ctx->lev = lev;
 	ctx->flush = 0;
 	ctx->len = 0;
+
+	/* initialize block */
+	_init_block(ctx);
 
 	return 0;
 }

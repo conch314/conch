@@ -1475,7 +1475,6 @@ int32_t conch_deflate_init(struct deflate_ctx *ctx, int32_t lev)
 	if (!(lev >= 0 && lev <= 9))
 		return -1;
 
-	/* initialization */
 	conch_memset(ctx->head, 0, sizeof(ctx->head));
 	ctx->hash = 0;
 
@@ -1506,13 +1505,13 @@ int32_t conch_deflate_init(struct deflate_ctx *ctx, int32_t lev)
 	ctx->desc_bltree.elems = DEFLATE_BL_CODES;
 	ctx->desc_bltree.bits_max = DEFLATE_BL_BITS_MAX;
 
-	/* initialize block */
-	_init_block(ctx);
-
 	BITS_ADD_INIT(&ctx->bits_ctx);
 	ctx->lev = lev;
 	ctx->flush = 0;
 	ctx->len = 0;
+
+	/* initialize block */
+	_init_block(ctx);
 
 	return 0;
 }
