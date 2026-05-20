@@ -75,6 +75,9 @@ extern "C" {
 extern
 int32_t conch_bits_add(struct bits_add_ctx *ctx, uint32_t v, uint32_t bits)
 ;
+extern
+int32_t conch_bits_beadd(struct bits_add_ctx *ctx, uint32_t v, uint32_t bits)
+;
 
 #ifdef __cplusplus
 }

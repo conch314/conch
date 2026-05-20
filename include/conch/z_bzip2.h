@@ -25,6 +25,7 @@
 
 #include <conch/config.h>
 #include <conch/c_stdint.h>
+#include <conch/bits_add.h>
 
 
 /* max block size */
@@ -81,8 +82,7 @@ struct bzip2_ctx {
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
 
-	uint32_t be_val; /* big-endian output */
-	int32_t be_len;
+	struct bits_add_ctx bits_ctx;
 	int32_t lev;
 	int32_t flush;
 

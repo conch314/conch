@@ -120,14 +120,16 @@
  */
 static void _send_bits(struct bzip2_ctx *ctx, uint32_t v, uint32_t len)
 {
-	while (ctx->be_len >= 8) {
-		ctx->buf[ctx->len++] = (uint8_t)(ctx->be_val >> 24);
-		ctx->be_val <<= 8;
-		ctx->be_len -= 8;
-	}
+	if (!conch_bits_beadd(&ctx->bits_ctx, v, len))
+		return;
 
-	ctx->be_val |= v << (32 - ctx->be_len - len);
-	ctx->be_len += len;
+	conch_memcpy(ctx->buf + ctx->len,
+		BITS_ADD_BUF(&ctx->bits_ctx), BITS_ADD_BUFSIZE);
+	BITS_ADD_FLUSH(&ctx->bits_ctx);
+	ctx->len += BITS_ADD_BUFSIZE;
+
+	if (BITS_ADD_REM(&ctx->bits_ctx))
+		conch_bits_beadd(&ctx->bits_ctx, v, len);
 }
 
 /* @func: _send_bits_finish (static)
@@ -138,11 +140,14 @@ static void _send_bits(struct bzip2_ctx *ctx, uint32_t v, uint32_t len)
  */
 static void _send_bits_finish(struct bzip2_ctx *ctx)
 {
-	while (ctx->be_len > 0) {
-		ctx->buf[ctx->len++] = (uint8_t)(ctx->be_val >> 24);
-		ctx->be_val <<= 8;
-		ctx->be_len -= 8;
-	}
+	uint32_t n = BITS_ADD_GETSIZE(&ctx->bits_ctx);
+	if (!n)
+		return;
+
+	conch_memcpy(ctx->buf + ctx->len,
+		BITS_ADD_BUF(&ctx->bits_ctx), n);
+	BITS_ADD_FLUSH(&ctx->bits_ctx);
+	ctx->len += n;
 }
 
 /* @func: _fallback_qsort3 (static)
@@ -978,8 +983,7 @@ int32_t conch_bzip2_init(struct bzip2_ctx *ctx, int32_t lev)
 	/* initialize block */
 	_init_block(ctx);
 
-	ctx->be_val = 0;
-	ctx->be_len = 0;
+	BITS_ADD_INIT(&ctx->bits_ctx);
 	ctx->lev = lev;
 	ctx->flush = 0;
 	ctx->len = 0;

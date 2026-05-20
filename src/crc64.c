@@ -593,9 +593,8 @@ const uint64_t *conch_crc64_table(int32_t type)
 uint64_t conch_crc64_msb(const uint64_t *t, uint64_t c, const uint8_t *s,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = 0; i < len; i++) {
-		k = s[i] ^ (c >> 56);
+		uint8_t k = s[i] ^ (c >> 56);
 		c = t[k] ^ (c << 8);
 	}
 
@@ -615,9 +614,8 @@ uint64_t conch_crc64_msb(const uint64_t *t, uint64_t c, const uint8_t *s,
 uint64_t conch_crc64_lsb(const uint64_t *t, uint64_t c, const uint8_t *s,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = 0; i < len; i++) {
-		k = s[i] ^ (c & 0xff);
+		uint8_t k = s[i] ^ (c & 0xff);
 		c = t[k] ^ (c >> 8);
 	}
 
@@ -635,7 +633,7 @@ uint64_t conch_crc64_lsb(const uint64_t *t, uint64_t c, const uint8_t *s,
  */
 uint64_t conch_crc64(const uint8_t *s, uint32_t len, int32_t type)
 {
-	uint64_t b = 0xffffffffffffffffULL, e = 0xffffffffffffffffULL, c = 0;
+	uint64_t b = 0xffffffffffffffffULL, e = 0xffffffffffffffffULL, c;
 
 	switch (type) {
 		case CRC64_DEFAULT_MSB_TYPE:

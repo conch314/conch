@@ -197,9 +197,8 @@ const uint16_t *conch_crc16_table(int32_t type)
 uint16_t conch_crc16_msb(const uint16_t *t, uint16_t c, const uint8_t *s,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = 0; i < len; i++) {
-		k = s[i] ^ (c >> 8);
+		uint8_t k = s[i] ^ (c >> 8);
 		c = t[k] ^ (c << 8);
 	}
 
@@ -219,9 +218,8 @@ uint16_t conch_crc16_msb(const uint16_t *t, uint16_t c, const uint8_t *s,
 uint16_t conch_crc16_lsb(const uint16_t *t, uint16_t c, const uint8_t *s,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = 0; i < len; i++) {
-		k = s[i] ^ (c & 0xff);
+		uint8_t k = s[i] ^ (c & 0xff);
 		c = t[k] ^ (c >> 8);
 	}
 
@@ -239,7 +237,7 @@ uint16_t conch_crc16_lsb(const uint16_t *t, uint16_t c, const uint8_t *s,
  */
 uint32_t conch_crc16(const uint8_t *s, uint32_t len, int32_t type)
 {
-	uint16_t b = 0xffff, e = 0xffff, c = 0;
+	uint16_t b = 0xffff, e = 0xffff, c;
 
 	switch (type) {
 		case CRC16_DEFAULT_MSB_TYPE:

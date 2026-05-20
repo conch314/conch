@@ -76,6 +76,10 @@ extern
 int32_t conch_bits_get(struct bits_get_ctx *ctx, uint32_t *v, uint32_t bits,
 		int32_t peek)
 ;
+extern
+int32_t conch_bits_beget(struct bits_get_ctx *ctx, uint32_t *v, uint32_t bits,
+		int32_t peek)
+;
 
 #ifdef __cplusplus
 }

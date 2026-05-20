@@ -39,7 +39,7 @@ static int32_t _call_out(const char *s, int32_t len, void *arg)
 
 	if (len) {
 		r = conch_fwrite(s, 1, (size_t)len, ctx->fp);
-		if (r != len && conch_ferror(ctx->fp))
+		if (r != (size_t)len && conch_ferror(ctx->fp))
 			return -1;
 		ctx->len += len;
 	}

@@ -615,9 +615,8 @@ const uint32_t *conch_crc32_table(int32_t type)
 uint32_t conch_crc32_msb(const uint32_t *t, uint32_t c, const uint8_t *s,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = 0; i < len; i++) {
-		k = s[i] ^ (c >> 24);
+		uint8_t k = s[i] ^ (c >> 24);
 		c = t[k] ^ (c << 8);
 	}
 
@@ -637,9 +636,8 @@ uint32_t conch_crc32_msb(const uint32_t *t, uint32_t c, const uint8_t *s,
 uint32_t conch_crc32_lsb(const uint32_t *t, uint32_t c, const uint8_t *s,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = 0; i < len; i++) {
-		k = s[i] ^ (c & 0xff);
+		uint8_t k = s[i] ^ (c & 0xff);
 		c = t[k] ^ (c >> 8);
 	}
 
@@ -658,9 +656,8 @@ uint32_t conch_crc32_lsb(const uint32_t *t, uint32_t c, const uint8_t *s,
 uint32_t conch_crc32_cksum_size_msb(const uint32_t *t, uint32_t c,
 		uint32_t len)
 {
-	uint8_t k = 0;
 	for (uint32_t i = len; i; i >>= 8) {
-		k = (i ^ (c >> 24)) & 0xff;
+		uint8_t k = (i ^ (c >> 24)) & 0xff;
 		c = t[k] ^ (c << 8);
 	}
 
@@ -678,7 +675,7 @@ uint32_t conch_crc32_cksum_size_msb(const uint32_t *t, uint32_t c,
  */
 uint32_t conch_crc32(const uint8_t *s, uint32_t len, int32_t type)
 {
-	uint32_t b = 0xffffffff, e = 0xffffffff, c = 0;
+	uint32_t b = 0xffffffff, e = 0xffffffff, c;
 
 	switch (type) {
 		case CRC32_DEFAULT_MSB_TYPE:

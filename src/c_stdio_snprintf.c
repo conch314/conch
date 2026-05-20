@@ -44,7 +44,7 @@ static int32_t _call_out(const char *s, int32_t len, void *arg)
 			if ((ctx->p + len) > ctx->e)
 				len = (int32_t)(ctx->e - ctx->p);
 
-			conch_memcpy(ctx->p, s, (size_t)len);
+			conch_memcpy(ctx->p, s, len);
 			ctx->p += len;
 		} else {
 			return -1;

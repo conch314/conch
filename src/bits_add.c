@@ -27,8 +27,9 @@
 
 /* @func: conch_bits_add
  * #desc:
- *    add bits to the buffer.  flush the buffer when it is full.
- *    if there are any remaining bits, keep it as is, then add it again.
+ *    add bits to the buffer (little-endian / msb-first).
+ *    flush the buffer when it is full.  if there are any
+ *    remaining bits, keep it as is, then add it again.
  *
  * #1: ctx  [in/out] bits-add struct context
  * #2: v    [in]     bits value
@@ -69,6 +70,63 @@ int32_t conch_bits_add(struct bits_add_ctx *ctx, uint32_t v, uint32_t bits)
 		}
 
 		v >>= rem;
+		bits -= rem;
+	}
+
+	ctx->size = n;
+	ctx->cur = cur;
+	ctx->rem = bits;
+
+	return n == BITS_ADD_BUFSIZE;
+}
+
+/* @func: conch_bits_beadd
+ * #desc:
+ *    add bits to the buffer (big-endian / lsb-first).
+ *
+ * #1: ctx  [in/out] bits-add struct context
+ * #2: v    [in]     bits value
+ * #3: bits [in]     bits length
+ * #r:      [ret]    0: not full, 1: buffer full
+ */
+int32_t conch_bits_beadd(struct bits_add_ctx *ctx, uint32_t v, uint32_t bits)
+{
+	uint32_t n = ctx->size;
+	uint32_t cur = ctx->cur;
+	uint32_t rem = ctx->rem;
+
+	if (n == BITS_ADD_BUFSIZE)
+		return 1;
+
+	if (rem)
+		bits = rem;
+
+	static uint8_t mask[9] = {
+		0x00,
+		0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff
+		};
+	static uint8_t mask2[9] = {
+		0x00,
+		0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff
+		};
+
+#undef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+	uint32_t _v;
+	while (n != BITS_ADD_BUFSIZE && bits) {
+		rem = MIN(8 - cur, bits);
+		ctx->buf[n] &= mask[cur];
+
+		_v = (v >> (bits - rem)) & mask2[rem];
+		ctx->buf[n] |= _v << (8 - cur - rem);
+
+		cur += rem;
+		if (cur == 8) {
+			cur = 0;
+			n++;
+		}
+
 		bits -= rem;
 	}
 

@@ -61,10 +61,10 @@ uint32_t conch_bits_getfill(struct bits_get_ctx *ctx, const uint8_t *s,
 
 /* @func: conch_bits_get
  * #desc:
- *    get bits from the buffer.
+ *    get bits from the buffer (little-endian / msb-first).
  *
  * #1: ctx  [in/out] bits-get struct context
- * #2: v    [out]    bits value pointer
+ * #2: v    [out]    bits result value
  * #3: bits [in]     bits length
  * #4: peek [in]     peeping bits only
  * #r:      [ret]    0: not end, -1: buffer end, >0: remaining unobtained bits
@@ -86,19 +86,70 @@ int32_t conch_bits_get(struct bits_get_ctx *ctx, uint32_t *v, uint32_t bits,
 #undef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-	uint32_t _v = 0, w = 0, x;
+	uint32_t _v = 0, w = 0, rem;
 	while (n != ctx->len && bits) {
-		x = MIN(8 - cur, bits);
-		_v |= (uint32_t)((ctx->buf[n] >> cur) & mask[x]) << w;
+		rem = MIN(8 - cur, bits);
+		_v |= (uint32_t)((ctx->buf[n] >> cur) & mask[rem]) << w;
 
-		cur += x;
+		cur += rem;
 		if (cur == 8) {
 			cur = 0;
 			n++;
 		}
 
-		w += x;
-		bits -= x;
+		w += rem;
+		bits -= rem;
+	}
+	*v = _v;
+
+	if (!peek) {
+		ctx->pos = n;
+		ctx->cur = cur;
+	}
+
+	return bits;
+}
+
+/* @func: conch_bits_beget
+ * #desc:
+ *    get bits from the buffer (big-endian / lsb-first).
+ *
+ * #1: ctx  [in/out] bits-get struct context
+ * #2: v    [out]    bits result value
+ * #3: bits [in]     bits length
+ * #4: peek [in]     peeping bits only
+ * #r:      [ret]    0: not end, -1: buffer end, >0: remaining unobtained bits
+ */
+int32_t conch_bits_beget(struct bits_get_ctx *ctx, uint32_t *v, uint32_t bits,
+		int32_t peek)
+{
+	uint32_t n = ctx->pos;
+	uint32_t cur = ctx->cur;
+
+	if (n == ctx->len)
+		return -1;
+
+	static uint8_t mask[9] = {
+		0x00,
+		0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff
+		};
+
+#undef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+	uint32_t _v = 0, _x, rem;
+	while (n != ctx->len && bits) {
+		rem = MIN(8 - cur, bits);
+		_x = (ctx->buf[n] >> (8 - cur - rem)) & mask[rem];
+		_v |= _x << (bits - rem);
+
+		cur += rem;
+		if (cur == 8) {
+			cur = 0;
+			n++;
+		}
+
+		bits -= rem;
 	}
 	*v = _v;
 
