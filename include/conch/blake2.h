@@ -125,8 +125,7 @@ extern
 void conch_blake2b_finish(struct blake2b_ctx *ctx)
 ;
 extern
-void conch_blake2b(struct blake2b_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_blake2b(struct blake2b_ctx *ctx, const uint8_t *s, size_t len)
 ;
 
 /* blake2s.c */
@@ -145,8 +144,7 @@ extern
 void conch_blake2s_finish(struct blake2s_ctx *ctx)
 ;
 extern
-void conch_blake2s(struct blake2s_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_blake2s(struct blake2s_ctx *ctx, const uint8_t *s, size_t len)
 ;
 
 #ifdef __cplusplus

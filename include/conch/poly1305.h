@@ -70,8 +70,7 @@ extern
 void conch_poly1305_finish(struct poly1305_ctx *ctx)
 ;
 extern
-void conch_poly1305(struct poly1305_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_poly1305(struct poly1305_ctx *ctx, const uint8_t *s, size_t len)
 ;
 
 #ifdef __cplusplus

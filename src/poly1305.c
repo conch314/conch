@@ -286,8 +286,7 @@ void conch_poly1305_finish(struct poly1305_ctx *ctx)
  * #2: s   [in]     input buffer
  * #3: len [in]     input length
  */
-void conch_poly1305(struct poly1305_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_poly1305(struct poly1305_ctx *ctx, const uint8_t *s, size_t len)
 {
 	conch_poly1305_process(ctx, s, len);
 	conch_poly1305_finish(ctx);
