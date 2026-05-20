@@ -180,7 +180,7 @@ struct inflate_sym_desc {
 
 struct inflate_ctx {
 	uint8_t window[INFLATE_TSIZE]; /* sliding window */
-	uint32_t start;                /* sliding position of the window */
+	uint32_t start; /* sliding position of the window */
 
 	/* dynamic symbol */
 	struct inflate_sym_desc desc_lsym;
