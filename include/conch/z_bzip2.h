@@ -30,10 +30,14 @@
 
 /* max block size */
 #define BZIP2_BLOCKSIZE_MAX 900000
-/* number of selector groups */
-#define BZIP2_SELECTOR (BZIP2_BLOCKSIZE_MAX / 50 + 2)
-/* number of alpha symbol */
+
+/* number of the alpha symbol */
 #define BZIP2_ALPHA_SIZE 258
+
+/* number of the huffman groups */
+#define BZIP2_NGROUPS 6
+/* number of the groups selectors */
+#define BZIP2_NSELECTORS (BZIP2_BLOCKSIZE_MAX / 50 + 2)
 
 /* temporary size for block sorting */
 #define BZIP2_SORT_TMPSIZE \
@@ -48,10 +52,11 @@
 #define BZIP2_IS_END 2
 
 struct bzip2_ctx {
-	uint8_t block[BZIP2_BLOCKSIZE_MAX]; /* input block */
-	uint32_t block_max; /* max input length */
+	uint8_t block[BZIP2_BLOCKSIZE_MAX]; /* input block (after rle) */
+	uint32_t block_max; /* max block length */
 	uint32_t block_len; /* block length */
 
+	/* crc32 */
 	uint32_t block_crc;
 	uint32_t combined_crc;
 	const uint32_t *crc_t;
@@ -67,17 +72,21 @@ struct bzip2_ctx {
 	uint32_t orig_index; /* primary index */
 
 	/* move-to-front */
-	uint16_t *mtf_v;
+	uint16_t *mtf_v;        /* mtf value */
 	uint16_t mtf_e;         /* end-block value */
-	uint32_t mtf_n;
-	uint32_t mtf_freq[258]; /* freq of value */
+	uint32_t mtf_n;         /* number of mtf value */
+	uint32_t mtf_freq[258]; /* freq of mtf value */
 
 	/* huffman coding */
-	uint8_t huf_len[6][BZIP2_ALPHA_SIZE];
-	uint32_t huf_code[6][BZIP2_ALPHA_SIZE];
-	uint32_t huf_rfreq[6][BZIP2_ALPHA_SIZE];
-	uint8_t selector[BZIP2_SELECTOR];
-	uint8_t selector_mtf[BZIP2_SELECTOR];
+	uint8_t huf_len[BZIP2_NGROUPS][BZIP2_ALPHA_SIZE];
+	uint32_t huf_code[BZIP2_NGROUPS][BZIP2_ALPHA_SIZE];
+	uint32_t huf_rfreq[BZIP2_NGROUPS][BZIP2_ALPHA_SIZE];
+
+	/* huffman groups selectors */
+	uint8_t selector[BZIP2_NSELECTORS];
+	uint8_t selector_mtf[BZIP2_NSELECTORS];
+	int32_t ngroups;
+	int32_t nselectors;
 
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */

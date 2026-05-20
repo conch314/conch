@@ -222,9 +222,9 @@ static int32_t _call_end(int32_t type, void *arg)
  * #desc:
  *    json tree parser.
  *
- * #1: t [in/out] json tree struct
- * #2: s [in]     input string
- * #r:   [ret]    0: no error, -1: error, -2: call error
+ * #1: tree [in/out] json tree struct
+ * #2: s    [in]     input string
+ * #r:      [ret]    0: no error, -1: error, -2: call error
  */
 int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
 {

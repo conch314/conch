@@ -244,8 +244,7 @@ void conch_blake2b_finish(struct blake2b_ctx *ctx)
  * #2: s   [in]     input buffer
  * #3: len [in]     input length
  */
-void conch_blake2b(struct blake2b_ctx *ctx, const uint8_t *s,
-		size_t len)
+void conch_blake2b(struct blake2b_ctx *ctx, const uint8_t *s, size_t len)
 {
 	conch_blake2b_process(ctx, s, len);
 	conch_blake2b_finish(ctx);
