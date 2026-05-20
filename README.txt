@@ -26,7 +26,7 @@ Includes
   Salsa20
   XChaCha20
   XSalsa20
-  Bits stream (get/add)
+  Bits stream (get/add/msb/lsb)
   Base coding (16/32/64)
   JSON
   INI
@@ -50,6 +50,7 @@ Includes
   CRC (16/32/64)
   Deflate
   Inflate
+  Bzip2
   RSA (2048/3072/4096)
   Curve25519
   Curve448
