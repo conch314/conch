@@ -595,65 +595,17 @@ static void _gen_codes(uint32_t *codes, const uint8_t *lens,
 	}
 }
 
-/* @func: _gen_selector_mtfval (static)
+/* @func: _send_block (static)
  * #desc:
- *    generate move-to-front coding values of the selector.
+ *    send compressed data block.
  *
  * #1: ctx [in/out] bzip2 struct context
  */
-static void _gen_selector_mtfval(struct bzip2_ctx *ctx)
-{
-	uint8_t tab[BZIP2_NGROUPS];
-	uint32_t pos, c;
-
-	for (int32_t i = 0; i < ctx->ngroups; i++)
-		tab[i] = i;
-
-	for (int32_t i = 0; i < ctx->nselectors; i++) {
-		c = ctx->selector[i];
-
-		for (pos = 0; tab[pos] != c; pos++);
-		ctx->selector_mtf[i] = pos;
-
-		for (; pos > 0; pos--) /* move */
-			tab[pos] = tab[pos - 1];
-		tab[0] = c;
-	}
-}
-
-/* @func: _send_inuse (static)
- * #desc:
- *    send the used character mapping table.
- *
- * #1: ctx [in/out] bzip2 struct context
- */
-static void _send_inuse(struct bzip2_ctx *ctx)
-{
-	uint8_t inuse16[16];
-	for (int32_t i = 0; i < 16; i++) {
-		inuse16[i] = 0;
-		for (int32_t j = 0; j < 16; j++) {
-			if (ctx->inuse[i * 16 + j])
-				inuse16[i] = 1;
-		}
-	}
-
-	for (int32_t i = 0; i < 16; i++)
-		SEND_BITS(ctx, inuse16[i] & 1, 1);
-
-	for (int32_t i = 0; i < 16; i++) {
-		if (!inuse16[i])
-			continue;
-		for (int32_t j = 0; j < 16; j++)
-			SEND_BITS(ctx, ctx->inuse[i * 16 + j] & 1, 1);
-	}
-}
-
 static void _send_block(struct bzip2_ctx *ctx)
 {
-	uint16_t cost[BZIP2_NGROUPS];
-	int32_t alpha_size = ctx->mtf_e + 1;
+	int32_t cost[BZIP2_NGROUPS];
 	int32_t ngroups = 1, nselectors, ge, gs;
+	int32_t alpha_size = ctx->mtf_e + 1;
 	uint16_t *mtf_v = ctx->mtf_v;
 	int32_t mtf_n = ctx->mtf_n;
 
@@ -688,7 +640,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 		}
 
 		if (ge > gs && k != ngroups && k != 1
-				&& ((ngroups - k) % 2) == 1) {
+				&& ((ngroups - k) & 1)) {
 			a -= ctx->mtf_freq[ge];
 			ge--;
 		}
@@ -764,35 +716,54 @@ static void _send_block(struct bzip2_ctx *ctx)
 			alpha_size, min_len, max_len);
 	}
 
-	ctx->ngroups = ngroups;
-	ctx->nselectors = nselectors;
+	/* mtf coding values of the generate selector */
+	uint8_t tab[BZIP2_NGROUPS], pos, c;
+	for (int32_t i = 0; i < ngroups; i++)
+		tab[i] = i;
 
-	_gen_selector_mtfval(ctx);
+	for (int32_t i = 0; i < nselectors; i++) {
+		c = ctx->selector[i];
 
-	SEND_BYTE(ctx, 0x31);
-	SEND_BYTE(ctx, 0x41);
-	SEND_BYTE(ctx, 0x59);
-	SEND_BYTE(ctx, 0x26);
-	SEND_BYTE(ctx, 0x53);
-	SEND_BYTE(ctx, 0x59);
-	SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 24));
-	SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 16));
-	SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 8));
-	SEND_BYTE(ctx, (uint8_t)ctx->block_crc);
-	SEND_BITS(ctx, 0, 1);
-	SEND_BITS(ctx, ctx->orig_index, 24);
+		for (pos = 0; tab[pos] != c; pos++);
+		ctx->selector_mtf[i] = pos;
 
-	_send_inuse(ctx);
+		for (; pos > 0; pos--) /* move */
+			tab[pos] = tab[pos - 1];
+		tab[0] = c;
+	}
 
+	/* send the characters in use */
+	uint8_t inuse16[16];
+	for (int32_t i = 0; i < 16; i++) {
+		inuse16[i] = 0;
+		for (int32_t j = 0; j < 16; j++) {
+			if (ctx->inuse[i * 16 + j])
+				inuse16[i] = 1;
+		}
+	}
+
+	for (int32_t i = 0; i < 16; i++)
+		SEND_BITS(ctx, inuse16[i] & 1, 1);
+
+	for (int32_t i = 0; i < 16; i++) {
+		if (!inuse16[i])
+			continue;
+		for (int32_t j = 0; j < 16; j++)
+			SEND_BITS(ctx, ctx->inuse[i * 16 + j] & 1, 1);
+	}
+
+	/* send the number of groups and selector */
 	SEND_BITS(ctx, ngroups, 3);
 	SEND_BITS(ctx, nselectors, 15);
 
+	/* send the selector mtf values */
 	for (int32_t i = 0; i < nselectors; i++) {
 		for (int32_t j = 0; j < ctx->selector_mtf[i]; j++)
 			SEND_BITS(ctx, 1, 1);
 		SEND_BITS(ctx, 0, 1);
 	}
 
+	/* send huffman groups codes length */
 	for (int32_t i = 0; i < ngroups; i++) {
 		int32_t curr = ctx->huf_len[i][0];
 		SEND_BITS(ctx, curr, 5);
@@ -809,6 +780,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 		}
 	}
 
+	/* send huffman coding block */
 	int32_t selctr = 0;
 	gs = 0;
 	while (1) {
@@ -971,6 +943,20 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 
 		_blocksort(ctx);
 		_gen_mtfval(ctx);
+
+		SEND_BYTE(ctx, 0x31);
+		SEND_BYTE(ctx, 0x41);
+		SEND_BYTE(ctx, 0x59);
+		SEND_BYTE(ctx, 0x26);
+		SEND_BYTE(ctx, 0x53);
+		SEND_BYTE(ctx, 0x59);
+		SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 24));
+		SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 16));
+		SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 8));
+		SEND_BYTE(ctx, (uint8_t)ctx->block_crc);
+		SEND_BITS(ctx, 0, 1);
+		SEND_BITS(ctx, ctx->orig_index, 24);
+
 		_send_block(ctx);
 		ctx->flush = 1;
 

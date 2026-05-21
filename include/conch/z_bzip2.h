@@ -50,7 +50,7 @@ struct bzip2_ctx {
 	uint32_t block_max; /* max block length */
 	uint32_t block_len; /* block length */
 
-	/* crc32 */
+	/* crc */
 	uint32_t block_crc;
 	uint32_t combined_crc;
 	const uint32_t *crc_t;
@@ -63,11 +63,11 @@ struct bzip2_ctx {
 	/* block sorting */
 	uint32_t sort_sa[BZIP2_BLOCKSIZE_MAX]; /* suffix array */
 	uint32_t sort_tmp[BZIP2_SORT_TMPSIZE]; /* temporary buffer */
-	uint32_t orig_index;                   /* primary index */
+	uint32_t orig_index; /* primary index */
 
 	/* move-to-front */
 	uint16_t *mtf_v;        /* mtf value */
-	uint16_t mtf_e;         /* end-block value */
+	uint32_t mtf_e;         /* end-block value */
 	uint32_t mtf_n;         /* number of the mtf value */
 	uint32_t mtf_freq[258]; /* freq of the mtf value */
 
@@ -79,8 +79,6 @@ struct bzip2_ctx {
 	/* huffman groups selectors */
 	uint8_t selector[BZIP2_NSELECTORS];
 	uint8_t selector_mtf[BZIP2_NSELECTORS];
-	int32_t ngroups;
-	int32_t nselectors;
 
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
