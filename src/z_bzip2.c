@@ -73,7 +73,7 @@
 	((HUF_WEIGHT_OF(a) + HUF_WEIGHT_OF(b)) \
 	| (1 + HUF_MAX(HUF_DEPTH_OF(a), HUF_DEPTH_OF(b))))
 #define HUF_UPHEAP(heap, weight, k) \
-	{ \
+	do { \
 		int32_t ___tmp_k = k; \
 		int32_t ___tmp_v = heap[___tmp_k]; \
 		while (weight[___tmp_v] < weight[heap[___tmp_k >> 1]]) { \
@@ -83,7 +83,7 @@
 		heap[___tmp_k] = ___tmp_v; \
 	} while (0)
 #define HUF_DOWNHEAP(heap, weight, n, k) \
-	{ \
+	do { \
 		int32_t ___tmp_n = n; \
 		int32_t ___tmp_k = k; \
 		int32_t ___tmp_v = heap[___tmp_k]; \
@@ -414,7 +414,7 @@ static void _blocksort(struct bzip2_ctx *ctx)
 
 /* @func: _gen_mtfval (static)
  * #desc:
- *    generate move-to-front coding values.
+ *    generate move-to-front coding value.
  *
  * #1: ctx [in/out] bzip2 struct context
  */
@@ -574,7 +574,7 @@ static void _gen_lens(uint8_t *lens, const uint32_t *freq,
  * #desc:
  *    generate codes based on length.
  *
- * #1: codes      [out] codes symbol
+ * #1: codes      [out] output codes
  * #2: lens       [in]  codes length
  * #3: alpha_size [in]  alpha size
  * #4: min_len    [in]  min length
@@ -628,13 +628,12 @@ static void _send_block(struct bzip2_ctx *ctx)
 
 	int32_t rem_freq = mtf_n;
 	gs = 0;
-
 	for (int32_t k = ngroups; k > 0; k--) {
 		int32_t t = rem_freq / k;
 		int32_t a = 0;
-		ge = gs - 1;
+		ge = gs;
 
-		while (a < t && ge < (alpha_size - 1)) {
+		while (a < t && ge < alpha_size) {
 			ge++;
 			a += ctx->mtf_freq[ge];
 		}
@@ -646,14 +645,14 @@ static void _send_block(struct bzip2_ctx *ctx)
 		}
 
 		for (int32_t j = 0; j < alpha_size; j++) {
-			if (j >= gs && j <= ge) {
+			if (j > gs && j < ge) {
 				ctx->huf_len[k - 1][j] = 0;
 			} else {
 				ctx->huf_len[k - 1][j] = 15;
 			}
 		}
 
-		gs = ge + 1;
+		gs = ge;
 		rem_freq -= a;
 	}
 
@@ -666,14 +665,14 @@ static void _send_block(struct bzip2_ctx *ctx)
 		nselectors = 0;
 		gs = 0;
 		while (gs < mtf_n) {
-			ge = gs + 50 - 1;
-			if (ge >= mtf_n)
-				ge = mtf_n - 1;
+			ge = gs + 50;
+			if (ge > mtf_n)
+				ge = mtf_n;
 
 			for (int32_t i = 0; i < 6; i++)
 				cost[i] = 0;
 
-			for (int32_t i = gs; i <= ge; i++) {
+			for (int32_t i = gs; i < ge; i++) {
 				uint16_t v = mtf_v[i];
 				for (int32_t j = 0; j < ngroups; j++)
 					cost[j] += ctx->huf_len[j][v];
@@ -691,9 +690,9 @@ static void _send_block(struct bzip2_ctx *ctx)
 			ctx->selector[nselectors] = bt;
 			nselectors++;
 
-			for (int32_t i = gs; i <= ge; i++)
+			for (int32_t i = gs; i < ge; i++)
 				ctx->huf_rfreq[bt][mtf_v[i]]++;
-			gs = ge + 1;
+			gs = ge;
 		}
 
 		for (int32_t i = 0; i < ngroups; i++) {
@@ -716,8 +715,9 @@ static void _send_block(struct bzip2_ctx *ctx)
 			alpha_size, min_len, max_len);
 	}
 
-	/* mtf coding values of the generate selector */
+	/* generate mtf coding value for selector */
 	uint8_t tab[BZIP2_NGROUPS], pos, c;
+
 	for (int32_t i = 0; i < ngroups; i++)
 		tab[i] = i;
 
@@ -734,6 +734,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 
 	/* send the characters in use */
 	uint8_t inuse16[16];
+
 	for (int32_t i = 0; i < 16; i++) {
 		inuse16[i] = 0;
 		for (int32_t j = 0; j < 16; j++) {
@@ -756,7 +757,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 	SEND_BITS(ctx, ngroups, 3);
 	SEND_BITS(ctx, nselectors, 15);
 
-	/* send the selector mtf values */
+	/* send the selector mtf value */
 	for (int32_t i = 0; i < nselectors; i++) {
 		for (int32_t j = 0; j < ctx->selector_mtf[i]; j++)
 			SEND_BITS(ctx, 1, 1);
@@ -767,6 +768,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 	for (int32_t i = 0; i < ngroups; i++) {
 		int32_t curr = ctx->huf_len[i][0];
 		SEND_BITS(ctx, curr, 5);
+
 		for (int32_t j = 0; j < alpha_size; j++) {
 			while (curr < ctx->huf_len[i][j]) {
 				SEND_BITS(ctx, 2, 2);
@@ -783,21 +785,18 @@ static void _send_block(struct bzip2_ctx *ctx)
 	/* send huffman coding block */
 	int32_t selctr = 0;
 	gs = 0;
-	while (1) {
-		if (gs >= mtf_n)
-			break;
+	while (gs < mtf_n) {
+		ge = gs + 50;
+		if (ge > mtf_n)
+			ge = mtf_n;
 
-		ge = gs + 50 - 1;
-		if (ge >= mtf_n)
-			ge = mtf_n - 1;
-
-		for (int32_t i = gs; i <= ge; i++) {
+		for (int32_t i = gs; i < ge; i++) {
 			SEND_BITS(ctx,
 				ctx->huf_code[ctx->selector[selctr]][mtf_v[i]],
 				ctx->huf_len[ctx->selector[selctr]][mtf_v[i]]);
 		}
 
-		gs = ge + 1;
+		gs = ge;
 		selctr++;
 	}
 }
@@ -944,6 +943,8 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 		_blocksort(ctx);
 		_gen_mtfval(ctx);
 
+		ctx->block_count++; /* block counter */
+
 		SEND_BYTE(ctx, 0x31);
 		SEND_BYTE(ctx, 0x41);
 		SEND_BYTE(ctx, 0x59);
@@ -966,6 +967,8 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 
 	/* end */
 	if (flush && !ctx->s_len) {
+		ctx->block_count++; /* block counter */
+
 		SEND_BYTE(ctx, 0x17);
 		SEND_BYTE(ctx, 0x72);
 		SEND_BYTE(ctx, 0x45);
@@ -1003,6 +1006,8 @@ int32_t conch_bzip2_init(struct bzip2_ctx *ctx, int32_t lev)
 	/* crc */
 	ctx->combined_crc = 0;
 	ctx->crc_t = conch_crc32_table(CRC32_DEFAULT_MSB_TYPE);
+
+	ctx->block_count = 0;
 
 	BITS_ADD_INIT(&ctx->bits_ctx);
 	ctx->lev = lev;

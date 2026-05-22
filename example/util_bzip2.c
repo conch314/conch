@@ -85,7 +85,8 @@ static int32_t _compress(FILE *rfp, FILE *wfp, int32_t lev, int32_t is_v)
 	} while (r);
 
 	if (is_v) {
-		fprintf(stderr, "%zu (%zuK) / %zu (%zuK) = %.2f%%\n",
+		fprintf(stderr, "%llu block, %zu (%zuK) / %zu (%zuK) = %.2f%%\n",
+			BZIP2_COUNT(&ctx),
 			send_len, (send_len / 1024),
 			total_len, (total_len / 1024),
 			(((double)total_len - send_len) / total_len) * 100);

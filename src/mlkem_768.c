@@ -269,12 +269,13 @@ static void _poly_compress_du(const struct poly *a, uint8_t *r)
 {
 	uint16_t t[4];
 	uint64_t u;
+	int16_t d;
 
 	for (int32_t i = 0; i < MLKEM_N; i += 4) {
 		for (int32_t j = 0; j < 4; j++) {
-				t[j] = a->coeffs[i + j];
-				t[j] += ((int16_t)t[j] >> 15) & MLKEM_Q;
-				u = t[j];
+				d = a->coeffs[i + j];
+				d += (d >> 15) & MLKEM_Q;
+				u = d;
 				/* ((u << 10) + MLKEM_Q / 2) / MLKEM_Q */
 				u <<= 10;
 				u += MLKEM_Q / 2;
@@ -283,11 +284,11 @@ static void _poly_compress_du(const struct poly *a, uint8_t *r)
 				t[j] = u & 0x3ff;
 		}
 
-		r[0] = t[0];
-		r[1] = t[0] >> 8 | t[1] << 2;
-		r[2] = t[1] >> 6 | t[2] << 4;
-		r[3] = t[2] >> 4 | t[3] << 6;
-		r[4] = t[3] >> 2;
+		r[0] = (uint8_t)t[0];
+		r[1] = (uint8_t)(t[0] >> 8 | t[1] << 2);
+		r[2] = (uint8_t)(t[1] >> 6 | t[2] << 4);
+		r[3] = (uint8_t)(t[2] >> 4 | t[3] << 6);
+		r[4] = (uint8_t)(t[3] >> 2);
 		r += 5;
 	}
 }
@@ -327,25 +328,26 @@ static void _poly_decompress_du(const uint8_t *a, struct poly *r)
 static void _poly_compress_dv(const struct poly *a, uint8_t *r)
 {
 	uint8_t t[8];
-	int16_t d;
 	uint64_t u;
+	int16_t d;
 
 	for (int32_t i = 0; i < MLKEM_N; i += 8) {
 		for (int32_t j = 0; j < 8; j++) {
 			d = a->coeffs[i + j];
 			d += (d >> 15) & MLKEM_Q;
+			u = d;
 			/* ((u << 4) + KYBER_Q / 2) / KYBER_Q */
-			u = d << 4;
+			u <<= 4;
 			u += MLKEM_Q / 2;
 			u *= 80635;
 			u >>= 28;
 			t[j] = u & 0xf;
 		}
 
-		r[0] = t[0] | t[1] << 4;
-		r[1] = t[2] | t[3] << 4;
-		r[2] = t[4] | t[5] << 4;
-		r[3] = t[6] | t[7] << 4;
+		r[0] = (uint8_t)(t[0] | t[1] << 4);
+		r[1] = (uint8_t)(t[2] | t[3] << 4);
+		r[2] = (uint8_t)(t[4] | t[5] << 4);
+		r[3] = (uint8_t)(t[6] | t[7] << 4);
 		r += 4;
 	}
 }
@@ -376,16 +378,20 @@ static void _poly_decompress_dv(const uint8_t *a, struct poly *r)
 static void _poly_tobytes(const struct poly *a, uint8_t *r)
 {
 	uint16_t t0, t1;
+	int16_t d;
 
 	for (int32_t i = 0; i < MLKEM_N; i += 2) {
-		t0 = a->coeffs[i];
-		t0 += ((int16_t)t0 >> 15) & MLKEM_Q;
-		t1 = a->coeffs[i + 1];
-		t1 += ((int16_t)t1 >> 15) & MLKEM_Q;
+		d = a->coeffs[i];
+		d += (d >> 15) & MLKEM_Q;
+		t0 = d;
 
-		r[0] = t0;
-		r[1] = t0 >> 8 | t1 << 4;
-		r[2] = t1 >> 4;
+		d = a->coeffs[i + 1];
+		d += (d >> 15) & MLKEM_Q;
+		t1 = d;
+
+		r[0] = (uint8_t)t0;
+		r[1] = (uint8_t)(t0 >> 8 | t1 << 4);
+		r[2] = (uint8_t)(t1 >> 4);
 		r += 3;
 	}
 }
@@ -420,19 +426,22 @@ static void _poly_frombytes(struct poly *r, const uint8_t *a)
  */
 static void _poly_tomsg(const struct poly *a, uint8_t *r)
 {
-	uint64_t t;
+	int16_t d;
+	uint64_t u;
 
 	for (int32_t i = 0; i < MLKEM_N; i += 8) {
 		*r = 0;
 		for (int32_t j = 0; j < 8; j++) {
-			t = a->coeffs[i + j];
-			/* ((t << 1) + MLKEM_Q / 2) / MLKEM_Q */
-			t <<= 1;
-			t += MLKEM_Q / 2;
-			t *= 80635;
-			t >>= 28;
-			t &= 1;
-			*r |= t << j;
+			d = a->coeffs[i + j];
+			d += (d >> 15) & MLKEM_Q;
+			u = d;
+			/* ((u << 1) + MLKEM_Q / 2) / MLKEM_Q */
+			u <<= 1;
+			u += MLKEM_Q / 2;
+			u *= 80635;
+			u >>= 28;
+			u &= 1;
+			*r |= u << j;
 		}
 		r++;
 	}

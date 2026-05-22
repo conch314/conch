@@ -405,6 +405,7 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 				BITS_DUMP(ctx, &v, 3);
 				ctx->last = v & 1;
 				ctx->state = (v >> 1) + 1;
+				ctx->block_count++; /* block counter */
 				break;
 			case 1:
 				BITS_SKIP(ctx);
@@ -670,6 +671,8 @@ void conch_inflate_init(struct inflate_ctx *ctx)
 	ctx->desc_dsym.sym = ctx->d_sym;
 	ctx->desc_blsym.sym = ctx->bl_sym;
 	ctx->desc_blsym.elems = INFLATE_BL_CODES;
+
+	ctx->block_count = 0;
 
 	BITS_GET_INIT(&ctx->bits_ctx);
 	ctx->last = 0;

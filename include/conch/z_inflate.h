@@ -195,6 +195,8 @@ struct inflate_ctx {
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
 
+	uint64_t block_count; /* block counter */
+
 	uint32_t t_len;
 	uint32_t t_dist;
 	int32_t t_i;
@@ -213,6 +215,7 @@ struct inflate_ctx {
 
 #define INFLATE_BUF(x) ((x)->buf)
 #define INFLATE_LEN(x) ((x)->len)
+#define INFLATE_COUNT(x) ((x)->block_count)
 
 /* inflate tail offset of input buffer */
 #define INFLATE_OFFSET(x, n) \

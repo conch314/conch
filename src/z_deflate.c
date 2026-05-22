@@ -907,6 +907,8 @@ static void _flush_block(struct deflate_ctx *ctx, int32_t flush)
 {
 	int32_t opt_slen, opt_dlen, code_max;
 
+	ctx->block_count++; /* block counter */
+
 	if (ctx->lev < 2) { /* level-1 static */
 		SEND_BITS(ctx, 0x01 & flush, 1);
 		SEND_BITS(ctx, 0x01, 2);
@@ -1424,6 +1426,8 @@ static int32_t _deflate_stored(struct deflate_ctx *ctx, const uint8_t *s,
 
 		/* flush block > (DEFLATE_WSIZE - DEFLATE_LSIZE) */
 		if (ctx->start > (DEFLATE_WSIZE - DEFLATE_LSIZE)) {
+			ctx->block_count++; /* block counter */
+
 			SEND_BITS(ctx, 0x00, 1);
 			SEND_BITS(ctx, 0x00, 2);
 			SEND_SKIP(ctx);
@@ -1446,6 +1450,8 @@ static int32_t _deflate_stored(struct deflate_ctx *ctx, const uint8_t *s,
 
 	/* end */
 	if (flush && !ctx->lsize) {
+		ctx->block_count++; /* block counter */
+
 		SEND_BITS(ctx, 0x01, 1);
 		SEND_BITS(ctx, 0x00, 2);
 		SEND_SKIP(ctx);
@@ -1504,6 +1510,8 @@ int32_t conch_deflate_init(struct deflate_ctx *ctx, int32_t lev)
 	ctx->desc_bltree.tree = ctx->dyn_bltree;
 	ctx->desc_bltree.elems = DEFLATE_BL_CODES;
 	ctx->desc_bltree.bits_max = DEFLATE_BL_BITS_MAX;
+
+	ctx->block_count = 0;
 
 	BITS_ADD_INIT(&ctx->bits_ctx);
 	ctx->lev = lev;
