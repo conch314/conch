@@ -179,7 +179,7 @@ e:
 		| (uint32_t)buf[3] << 24;
 
 	if (is_v) {
-		fprintf(stderr, "%llu block, %zu (%zuK) / %zu (%zuK) = %.2f%%"
+		fprintf(stderr, "%u block, %zu (%zuK) / %zu (%zuK) = %.2f%%"
 				" (%08x %08x)\n",
 			INFLATE_COUNT(&ctx),
 			total_len, (total_len / 1024),

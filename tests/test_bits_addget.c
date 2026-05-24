@@ -135,6 +135,11 @@ void test_bits_get(void)
 	printf("skip (7) unob (25) => %u %u\n", 32 - r, r);
 
 	BITS_GET_SKIP(&ctx);
+
+	conch_bits_getfill(&ctx, (uint8_t *)"\x31\x41", 2);
+
+	conch_bits_get(&ctx, &r, 16, 0);
+	printf("0x%04x\n", r);
 }
 
 void test_bits_beget(void)
@@ -175,6 +180,11 @@ void test_bits_beget(void)
 	printf("skip (7) unob (25) => %u %u\n", 32 - r, r);
 
 	BITS_GET_SKIP(&ctx);
+
+	conch_bits_getfill(&ctx, (uint8_t *)"\x31\x41", 2);
+
+	conch_bits_beget(&ctx, &r, 16, 0);
+	printf("0x%04x\n", r);
 }
 
 int main(void)

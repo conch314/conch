@@ -672,9 +672,8 @@ void conch_inflate_init(struct inflate_ctx *ctx)
 	ctx->desc_blsym.sym = ctx->bl_sym;
 	ctx->desc_blsym.elems = INFLATE_BL_CODES;
 
-	ctx->block_count = 0;
-
 	BITS_GET_INIT(&ctx->bits_ctx);
+	ctx->block_count = 0;
 	ctx->last = 0;
 	ctx->state = 0;
 	ctx->flush = 0;

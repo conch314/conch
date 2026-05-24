@@ -195,14 +195,13 @@ struct inflate_ctx {
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
 
-	uint64_t block_count; /* block counter */
-
 	uint32_t t_len;
 	uint32_t t_dist;
 	int32_t t_i;
 	int32_t t_j;
 	int32_t t_k;
 
+	uint32_t block_count; /* block counter */
 	int32_t last;
 	int32_t state;
 	int32_t flush;

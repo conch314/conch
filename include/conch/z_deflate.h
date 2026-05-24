@@ -252,9 +252,8 @@ struct deflate_ctx {
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
 
-	uint64_t block_count; /* block counter */
-
 	struct bits_add_ctx bits_ctx;
+	uint32_t block_count; /* block counter */
 	int32_t lev;
 	int32_t flush;
 

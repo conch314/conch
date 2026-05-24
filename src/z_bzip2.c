@@ -554,7 +554,7 @@ static void _gen_lens(uint8_t *lens, const uint32_t *freq,
 			for (m = 0; parent[n] >= 0; m++)
 				n = parent[n];
 
-			lens[i - 1] = m;
+			lens[i - 1] = (uint8_t)m;
 			if (m > max_len)
 				too_long = 1;
 		}
@@ -646,9 +646,9 @@ static void _send_block(struct bzip2_ctx *ctx)
 
 		for (int32_t j = 0; j < alpha_size; j++) {
 			if (j > gs && j < ge) {
-				ctx->huf_len[k - 1][j] = 0;
+				ctx->huf_len[k - 1][j] = BZIP2_LESSER_COST;
 			} else {
-				ctx->huf_len[k - 1][j] = 15;
+				ctx->huf_len[k - 1][j] = BZIP2_GREATER_COST;
 			}
 		}
 
@@ -656,7 +656,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 		rem_freq -= a;
 	}
 
-	for (int32_t k = 0; k < 4; k++) {
+	for (int32_t k = 0; k < BZIP2_ITERS; k++) {
 		for (int32_t i = 0; i < ngroups; i++) {
 			for (int32_t j = 0; j < alpha_size; j++)
 				ctx->huf_rfreq[i][j] = 0;
@@ -665,11 +665,11 @@ static void _send_block(struct bzip2_ctx *ctx)
 		nselectors = 0;
 		gs = 0;
 		while (gs < mtf_n) {
-			ge = gs + 50;
+			ge = gs + BZIP2_SGROUPS_SIZE;
 			if (ge > mtf_n)
 				ge = mtf_n;
 
-			for (int32_t i = 0; i < 6; i++)
+			for (int32_t i = 0; i < ngroups; i++)
 				cost[i] = 0;
 
 			for (int32_t i = gs; i < ge; i++) {
@@ -719,7 +719,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 	uint8_t tab[BZIP2_NGROUPS], pos, c;
 
 	for (int32_t i = 0; i < ngroups; i++)
-		tab[i] = i;
+		tab[i] = (uint8_t)i;
 
 	for (int32_t i = 0; i < nselectors; i++) {
 		c = ctx->selector[i];
@@ -786,14 +786,15 @@ static void _send_block(struct bzip2_ctx *ctx)
 	int32_t selctr = 0;
 	gs = 0;
 	while (gs < mtf_n) {
-		ge = gs + 50;
+		ge = gs + BZIP2_SGROUPS_SIZE;
 		if (ge > mtf_n)
 			ge = mtf_n;
 
 		for (int32_t i = gs; i < ge; i++) {
+			uint16_t v = mtf_v[i];
 			SEND_BITS(ctx,
-				ctx->huf_code[ctx->selector[selctr]][mtf_v[i]],
-				ctx->huf_len[ctx->selector[selctr]][mtf_v[i]]);
+				ctx->huf_code[ctx->selector[selctr]][v],
+				ctx->huf_len[ctx->selector[selctr]][v]);
 		}
 
 		gs = ge;
@@ -1007,10 +1008,8 @@ int32_t conch_bzip2_init(struct bzip2_ctx *ctx, int32_t lev)
 	ctx->combined_crc = 0;
 	ctx->crc_t = conch_crc32_table(CRC32_DEFAULT_MSB_TYPE);
 
-	ctx->block_count = 0;
-
 	BITS_ADD_INIT(&ctx->bits_ctx);
-	ctx->lev = lev;
+	ctx->block_count = 0;
 	ctx->flush = 0;
 	ctx->len = 0;
 

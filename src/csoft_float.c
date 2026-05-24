@@ -79,8 +79,8 @@
  *                                    ^
  *                                 hidden bit
  * sign:
- *   0 => positive
- *   1 => negative
+ *   0           => positive
+ *   1           => negative
  *
  * exponent of float:
  *   0-255       => 127 bias, E-e

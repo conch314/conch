@@ -522,7 +522,7 @@ static void _gen_bitlen(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
 			overflow++;
 		}
 
-		tree[n].dl.len = len;
+		tree[n].dl.len = (uint16_t)len;
 		if (n > code_max) /* parent node */
 			continue;
 
@@ -550,7 +550,7 @@ static void _gen_bitlen(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
 			if (m > code_max)
 				continue;
 			if (tree[m].dl.len != i)
-				tree[m].dl.len = i;
+				tree[m].dl.len = (uint16_t)i;
 		}
 	}
 }
@@ -646,7 +646,7 @@ static void _build_tree(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
 
 		/* parent node */
 		tree[node].fc.freq = tree[n].fc.freq + tree[m].fc.freq;
-		tree[n].dl.dad = tree[m].dl.dad = node;
+		tree[n].dl.dad = tree[m].dl.dad = (uint16_t)node;
 		ctx->depth[node] = MAX(ctx->depth[n], ctx->depth[m]) + 1;
 
 		/* insert node */
@@ -1511,9 +1511,8 @@ int32_t conch_deflate_init(struct deflate_ctx *ctx, int32_t lev)
 	ctx->desc_bltree.elems = DEFLATE_BL_CODES;
 	ctx->desc_bltree.bits_max = DEFLATE_BL_BITS_MAX;
 
-	ctx->block_count = 0;
-
 	BITS_ADD_INIT(&ctx->bits_ctx);
+	ctx->block_count = 0;
 	ctx->lev = lev;
 	ctx->flush = 0;
 	ctx->len = 0;
