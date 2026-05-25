@@ -105,7 +105,6 @@
 		heap[___tmp_k] = ___tmp_v; \
 	} while (0)
 
-#define SEND_BYTE(s, x) _send_bits(s, x, 8)
 #define SEND_BITS(s, x, n) _send_bits(s, x, n)
 #define SEND_FINISH(s) _send_bits_finish(s)
 
@@ -392,7 +391,7 @@ static void _fallback_sort(const uint8_t *in, uint32_t len, uint32_t *sa,
 
 /* @func: _blocksort (static)
  * #desc:
- *    block sorting function.
+ *    input block sorting function for burrows–wheeler transform.
  *
  * #1: ctx [in/out] bzip2 struct context
  */
@@ -414,7 +413,7 @@ static void _blocksort(struct bzip2_ctx *ctx)
 
 /* @func: _gen_mtfval (static)
  * #desc:
- *    generate move-to-front coding value.
+ *    generate move-to-front coding value for the input block.
  *
  * #1: ctx [in/out] bzip2 struct context
  */
@@ -576,7 +575,7 @@ static void _gen_lens(uint8_t *lens, const uint32_t *freq,
  *
  * #1: codes      [out] output codes
  * #2: lens       [in]  codes length
- * #3: alpha_size [in]  alpha size
+ * #3: alpha_size [in]  alpha number
  * #4: min_len    [in]  min length
  * #5: max_len    [in]  max length
  */
@@ -595,41 +594,16 @@ static void _gen_codes(uint32_t *codes, const uint8_t *lens,
 	}
 }
 
-/* @func: _gen_selector_mtfval
+/* @func: _gen_selector (static)
  * #desc:
- *    generate mtf coding value for selector.
+ *    generate selectors and huffman codes for move-to-front coding value.
  *
  * #1: ctx [in/out] bzip2 struct context
  */
-static void _gen_selector_mtfval(struct bzip2_ctx *ctx)
-{
-	uint8_t tab[BZIP2_NGROUPS], pos, c;
-
-	for (int32_t i = 0; i < ctx->ngroups; i++)
-		tab[i] = (uint8_t)i;
-
-	for (int32_t i = 0; i < ctx->nselectors; i++) {
-		c = ctx->selector[i];
-
-		for (pos = 0; tab[pos] != c; pos++);
-		ctx->selector_mtf[i] = pos;
-
-		for (; pos > 0; pos--) /* move */
-			tab[pos] = tab[pos - 1];
-		tab[0] = c;
-	}
-}
-
-/* @func: _send_block (static)
- * #desc:
- *    send compressed data block.
- *
- * #1: ctx [in/out] bzip2 struct context
- */
-static void _send_block(struct bzip2_ctx *ctx)
+static void _gen_selector(struct bzip2_ctx *ctx)
 {
 	int32_t cost[BZIP2_NGROUPS];
-	int32_t ngroups = 1, nselectors, ge, gs;
+	int32_t ngroups = 1, nselectors = 0, ge, gs;
 	int32_t alpha_size = ctx->mtf_e + 1;
 	uint16_t *mtf_v = ctx->mtf_v;
 	int32_t mtf_n = ctx->mtf_n;
@@ -671,9 +645,9 @@ static void _send_block(struct bzip2_ctx *ctx)
 
 		for (int32_t j = 0; j < alpha_size; j++) {
 			if (j > gs && j < ge) {
-				ctx->huf_len[k - 1][j] = BZIP2_LESSER_COST;
+				ctx->huf_len[k - 1][j] = 0;
 			} else {
-				ctx->huf_len[k - 1][j] = BZIP2_GREATER_COST;
+				ctx->huf_len[k - 1][j] = 15;
 			}
 		}
 
@@ -712,8 +686,7 @@ static void _send_block(struct bzip2_ctx *ctx)
 				}
 			}
 
-			ctx->selector[nselectors] = bt;
-			nselectors++;
+			ctx->selector[nselectors++] = bt;
 
 			for (int32_t i = gs; i < ge; i++)
 				ctx->huf_rfreq[bt][mtf_v[i]]++;
@@ -742,6 +715,46 @@ static void _send_block(struct bzip2_ctx *ctx)
 
 	ctx->ngroups = ngroups;
 	ctx->nselectors = nselectors;
+}
+
+/* @func: _gen_selector_mtfval
+ * #desc:
+ *    generate mtf coding value for selector.
+ *
+ * #1: ctx [in/out] bzip2 struct context
+ */
+static void _gen_selector_mtfval(struct bzip2_ctx *ctx)
+{
+	uint8_t tab[BZIP2_NGROUPS], pos, c;
+
+	for (int32_t i = 0; i < ctx->ngroups; i++)
+		tab[i] = (uint8_t)i;
+
+	for (int32_t i = 0; i < ctx->nselectors; i++) {
+		c = ctx->selector[i];
+
+		for (pos = 0; tab[pos] != c; pos++);
+		ctx->selector_mtf[i] = pos;
+
+		for (; pos > 0; pos--) /* move */
+			tab[pos] = tab[pos - 1];
+		tab[0] = c;
+	}
+}
+
+/* @func: _send_block (static)
+ * #desc:
+ *    send compressed data block.
+ *
+ * #1: ctx [in/out] bzip2 struct context
+ */
+static void _send_block(struct bzip2_ctx *ctx)
+{
+	int32_t ngroups = ctx->ngroups;
+	int32_t nselectors = ctx->nselectors;
+	int32_t ge, gs, alpha_size = ctx->mtf_e + 1;
+	uint16_t *mtf_v = ctx->mtf_v;
+	int32_t mtf_n = ctx->mtf_n;
 
 	_gen_selector_mtfval(ctx);
 
@@ -831,13 +844,13 @@ static void _init_block(struct bzip2_ctx *ctx)
 	conch_memset(ctx->inuse, 0, sizeof(ctx->inuse));
 }
 
-/* @func: _add_pair_to_block (static)
+/* @func: _add_to_block (static)
  * #desc:
- *    add the run-length encoding or characters to the block.
+ *    add the run-length encoding and characters to the block.
  *
  * #1: ctx [in/out] bzip2 struct context
  */
-static void _add_pair_to_block(struct bzip2_ctx *ctx)
+static void _add_to_block(struct bzip2_ctx *ctx)
 {
 	uint32_t c = ctx->rle_inchr;
 	ctx->inuse[c] = 1;
@@ -863,18 +876,6 @@ static void _add_pair_to_block(struct bzip2_ctx *ctx)
 	}
 }
 
-/* @func: _input_block_flush (static)
- * #desc:
- *    input block processing finish.
- *
- * #1: ctx [in/out] bzip2 struct context
- */
-static void _input_block_flush(struct bzip2_ctx *ctx)
-{
-	if (ctx->rle_inlen && ctx->rle_inchr < 256)
-		_add_pair_to_block(ctx);
-}
-
 /* @func: _input_block (static)
  * #desc:
  *    input block run-length processing.
@@ -893,7 +894,7 @@ static uint32_t _input_block(struct bzip2_ctx *ctx, const uint8_t *s,
 
 		if (c != ctx->rle_inchr || ctx->rle_inlen == 255) {
 			if (ctx->rle_inchr < 256)
-				_add_pair_to_block(ctx);
+				_add_to_block(ctx);
 
 			ctx->rle_inchr = c;
 			ctx->rle_inlen = 1;
@@ -903,6 +904,18 @@ static uint32_t _input_block(struct bzip2_ctx *ctx, const uint8_t *s,
 	}
 
 	return len;
+}
+
+/* @func: _input_block_flush (static)
+ * #desc:
+ *    input block run-length processing finish.
+ *
+ * #1: ctx [in/out] bzip2 struct context
+ */
+static void _input_block_flush(struct bzip2_ctx *ctx)
+{
+	if (ctx->rle_inlen && ctx->rle_inchr < 256)
+		_add_to_block(ctx);
 }
 
 /* @func: _bzip2_block (static)
@@ -954,21 +967,15 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 			| (ctx->combined_crc >> 31);
 		ctx->combined_crc ^= ctx->block_crc;
 
-		_blocksort(ctx);
-		_gen_mtfval(ctx);
-
 		ctx->block_count++; /* block counter */
 
-		SEND_BYTE(ctx, 0x31);
-		SEND_BYTE(ctx, 0x41);
-		SEND_BYTE(ctx, 0x59);
-		SEND_BYTE(ctx, 0x26);
-		SEND_BYTE(ctx, 0x53);
-		SEND_BYTE(ctx, 0x59);
-		SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 24));
-		SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 16));
-		SEND_BYTE(ctx, (uint8_t)(ctx->block_crc >> 8));
-		SEND_BYTE(ctx, (uint8_t)ctx->block_crc);
+		_blocksort(ctx);
+		_gen_mtfval(ctx);
+		_gen_selector(ctx);
+
+		SEND_BITS(ctx, 0x3141, 16);
+		SEND_BITS(ctx, 0x59265359, 32);
+		SEND_BITS(ctx, ctx->block_crc, 32);
 		SEND_BITS(ctx, 0, 1);
 		SEND_BITS(ctx, ctx->orig_index, 24);
 
@@ -983,18 +990,11 @@ static int32_t _bzip2_block(struct bzip2_ctx *ctx, const uint8_t *s,
 	if (flush && !ctx->s_len) {
 		ctx->block_count++; /* block counter */
 
-		SEND_BYTE(ctx, 0x17);
-		SEND_BYTE(ctx, 0x72);
-		SEND_BYTE(ctx, 0x45);
-		SEND_BYTE(ctx, 0x38);
-		SEND_BYTE(ctx, 0x50);
-		SEND_BYTE(ctx, 0x90);
-		SEND_BYTE(ctx, (uint8_t)(ctx->combined_crc >> 24));
-		SEND_BYTE(ctx, (uint8_t)(ctx->combined_crc >> 16));
-		SEND_BYTE(ctx, (uint8_t)(ctx->combined_crc >> 8));
-		SEND_BYTE(ctx, (uint8_t)ctx->combined_crc);
-
+		SEND_BITS(ctx, 0x1772, 16);
+		SEND_BITS(ctx, 0x45385090, 32);
+		SEND_BITS(ctx, ctx->combined_crc, 32);
 		SEND_FINISH(ctx);
+
 		return BZIP2_IS_END;
 	}
 

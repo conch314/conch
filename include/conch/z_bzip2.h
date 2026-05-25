@@ -35,10 +35,6 @@
 #define BZIP2_ALPHA_SIZE 258
 /* max code length */
 #define BZIP2_CODE_LEN_MAX 23
-/* code cost of lesser */
-#define BZIP2_LESSER_COST 0
-/* code cost of greater */
-#define BZIP2_GREATER_COST 15
 
 /* number of the iterations */
 #define BZIP2_ITERS 4
