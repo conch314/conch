@@ -93,6 +93,8 @@ struct bzip2_ctx {
 	/* huffman groups selectors */
 	uint8_t selector[BZIP2_NSELECTORS];
 	uint8_t selector_mtf[BZIP2_NSELECTORS];
+	int32_t ngroups;
+	int32_t nselectors;
 
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */

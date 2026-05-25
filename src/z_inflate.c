@@ -248,7 +248,7 @@ static void _bits_skip(struct inflate_ctx *ctx)
 
 /* @func: _build_sym (static)
  * #desc:
- *    generate bit-length based on symbol.
+ *    generate symbol based on bit-length.
  *
  * #1: desc [in/out] inflate symbol description
  * #2: lens [in]     bit-length of the codes

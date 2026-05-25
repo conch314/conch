@@ -595,6 +595,31 @@ static void _gen_codes(uint32_t *codes, const uint8_t *lens,
 	}
 }
 
+/* @func: _gen_selector_mtfval
+ * #desc:
+ *    generate mtf coding value for selector.
+ *
+ * #1: ctx [in/out] bzip2 struct context
+ */
+static void _gen_selector_mtfval(struct bzip2_ctx *ctx)
+{
+	uint8_t tab[BZIP2_NGROUPS], pos, c;
+
+	for (int32_t i = 0; i < ctx->ngroups; i++)
+		tab[i] = (uint8_t)i;
+
+	for (int32_t i = 0; i < ctx->nselectors; i++) {
+		c = ctx->selector[i];
+
+		for (pos = 0; tab[pos] != c; pos++);
+		ctx->selector_mtf[i] = pos;
+
+		for (; pos > 0; pos--) /* move */
+			tab[pos] = tab[pos - 1];
+		tab[0] = c;
+	}
+}
+
 /* @func: _send_block (static)
  * #desc:
  *    send compressed data block.
@@ -715,22 +740,10 @@ static void _send_block(struct bzip2_ctx *ctx)
 			alpha_size, min_len, max_len);
 	}
 
-	/* generate mtf coding value for selector */
-	uint8_t tab[BZIP2_NGROUPS], pos, c;
+	ctx->ngroups = ngroups;
+	ctx->nselectors = nselectors;
 
-	for (int32_t i = 0; i < ngroups; i++)
-		tab[i] = (uint8_t)i;
-
-	for (int32_t i = 0; i < nselectors; i++) {
-		c = ctx->selector[i];
-
-		for (pos = 0; tab[pos] != c; pos++);
-		ctx->selector_mtf[i] = pos;
-
-		for (; pos > 0; pos--) /* move */
-			tab[pos] = tab[pos - 1];
-		tab[0] = c;
-	}
+	_gen_selector_mtfval(ctx);
 
 	/* send the characters in use */
 	uint8_t inuse16[16];

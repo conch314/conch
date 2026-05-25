@@ -153,6 +153,7 @@
 #define INFLATE_IS_FLUSH 1
 /* flush buffer and end */
 #define INFLATE_IS_END 2
+
 /* data incomplete */
 #define INFLATE_ERR_INCOMP -1
 /* literal/length codes error */

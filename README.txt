@@ -51,6 +51,7 @@ Includes
   Deflate
   Inflate
   Bzip2
+  UnBzip2
   RSA (2048/3072/4096)
   Curve25519
   Curve448
