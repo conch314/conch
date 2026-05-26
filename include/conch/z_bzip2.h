@@ -65,7 +65,7 @@ struct bzip2_ctx {
 	uint32_t combined_crc;
 	const uint32_t *crc_t;
 
-	/* input run-length */
+	/* input run-length encoding */
 	uint32_t rle_inchr; /* repeat character */
 	uint32_t rle_inlen; /* repeat length */
 	uint8_t inuse[256]; /* characters in use */

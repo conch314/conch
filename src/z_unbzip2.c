@@ -76,7 +76,7 @@ static int32_t _bits_dump(struct unbzip2_ctx *ctx, uint32_t *v, uint32_t len)
 	return 0;
 }
 
-/* @func: _bwt_inverse_lf_mapping (static)
+/* @func: _bwt_inverse (static)
  * #desc:
  *    inverse burrows–wheeler transform.
  *
@@ -86,8 +86,8 @@ static int32_t _bits_dump(struct unbzip2_ctx *ctx, uint32_t *v, uint32_t len)
  * #4: index [in]  primary index
  * #5: rank  [in]  rank buffer
  */
-static void _bwt_inverse_lf_mapping(uint8_t *out, const uint8_t *in,
-		uint32_t len, uint32_t index, uint32_t *rank)
+static void _bwt_inverse(uint8_t *out, const uint8_t *in, uint32_t len,
+		uint32_t index, uint32_t *rank)
 {
 	uint32_t count[256], occ[256];
 	uint32_t c, n = 0;
@@ -149,6 +149,7 @@ static uint32_t _decode_mtfval(uint8_t *out, uint16_t *in, uint32_t len,
 
 	for (uint32_t i = 0; i < len; i++) {
 		pos = in[i];
+
 		if (pos < 2) { /* zero rle */
 			n = 0;
 			e = 1;
@@ -182,10 +183,7 @@ static uint32_t _decode_mtfval(uint8_t *out, uint16_t *in, uint32_t len,
  * #desc:
  *    decoding mtf value for selector.
  *
- * #1: out   [out] output buffer
- * #2: in    [in]  input buffer
- * #3: len   [in]  input length
- * #4: inuse [in]  characters in use
+ * #1: ctx [in/out] unbzip2 struct context
  */
 static void _decode_selector_mtfval(struct unbzip2_ctx *ctx)
 {
@@ -243,7 +241,7 @@ static void _gen_decode_tables(int32_t *limit, int32_t *base, int32_t *perm,
 
 /* @func: _build_symbol (static)
  * #desc:
- *    generate symbol based on bit-length.
+ *    build symbol description based on length.
  *
  * #1: ctx        [in/out] unbzip2 struct context
  * #2: alpha_size [in]     alpha size
@@ -273,7 +271,7 @@ static void _build_symbol(struct unbzip2_ctx *ctx, int32_t alpha_size)
 
 /* @func: _add_to_buffer
  * #desc:
- *    add the run-length decoding or characters to the buffer.
+ *    add the run-length decoding and characters to the buffer.
  *
  * #1: ctx [in/out] unbzip2 struct context
  * #2: len [in]     run-length encoding length
@@ -300,6 +298,52 @@ static void _add_to_buffer(struct unbzip2_ctx *ctx, uint32_t len)
 				ctx->buf[ctx->len++] = (uint8_t)c;
 			break;
 	}
+}
+
+/* @func: _input_block_flush (static)
+ * #desc:
+ *    input block run-length processing finish.
+ *
+ * #1: ctx [in/out] unbzip2 struct context
+ */
+static void _input_block_flush(struct unbzip2_ctx *ctx)
+{
+	if (ctx->rle_inlen && ctx->rle_inchr < 256)
+		_add_to_buffer(ctx, 0);
+}
+
+/* @func: _input_block (static)
+ * #desc:
+ *    input block run-length processing.
+ *
+ * #1: ctx [in/out] unbzip2 struct context
+ * #2: s   [in]     input buffer
+ * #3: len [in]     input length
+ * #r:     [ret]    return the remaining length
+ */
+static uint32_t _input_block(struct unbzip2_ctx *ctx, const uint8_t *s,
+		uint32_t len)
+{
+	while (len && ctx->len < (UNBZIP2_BLOCKSIZE_MAX - 512)) {
+		uint32_t c = *s++;
+		len--;
+
+		if (ctx->rle_inlen == 4) {
+			_add_to_buffer(ctx, c);
+			ctx->rle_inchr = 256;
+			ctx->rle_inlen = 0;
+		} else if (c != ctx->rle_inchr) {
+			if (ctx->rle_inchr < 256)
+				_add_to_buffer(ctx, 0);
+
+			ctx->rle_inchr = c;
+			ctx->rle_inlen = 1;
+		} else {
+			ctx->rle_inlen++;
+		}
+	}
+
+	return len;
 }
 
 /* @func: _unbzip2_block (static)
@@ -338,6 +382,7 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				} else {
 					return UNBZIP2_ERR_HEAD;
 				}
+
 				ctx->block_count++; /* block counter */
 				break;
 			case 1:
@@ -543,44 +588,34 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 			case 18: /* decoding mtf and inverse bwt */
 				ctx->block_len = _decode_mtfval(ctx->buf,
 					ctx->mtf_v, ctx->mtf_n - 1, ctx->inuse);
-				_bwt_inverse_lf_mapping(ctx->block,
-					ctx->buf, ctx->block_len,
+				_bwt_inverse(ctx->block, ctx->buf, ctx->block_len,
 					ctx->orig_index, ctx->rank_tmp);
 
-				ctx->t_n = 0;
+				ctx->t_len = 0;
 				ctx->rle_inchr = 256;
 				ctx->rle_inlen = 0;
 				ctx->state = 19;
-			case 19: /* input rle */
-				if (ctx->len > (UNBZIP2_BLOCKSIZE_MAX - 512)) {
-					ctx->flush = 1;
+			case 19: /* input block */
+				if (ctx->len >= (UNBZIP2_BLOCKSIZE_MAX - 512)) {
 					ctx->block_crc = conch_crc32_msb(ctx->crc_t,
 						ctx->block_crc, ctx->buf, ctx->len);
+
+					ctx->flush = 1;
 					return UNBZIP2_IS_FLUSH;
 				}
-				if (ctx->t_n == ctx->block_len) { /* end-block */
-					if (ctx->rle_inlen && ctx->rle_inchr < 256)
-						_add_to_buffer(ctx, 0);
-					ctx->state = 20;
-					ctx->flush = 1;
+				if (ctx->t_len == ctx->block_len) { /* end-block */
+					_input_block_flush(ctx);
 					ctx->block_crc = conch_crc32_msb(ctx->crc_t,
 						ctx->block_crc, ctx->buf, ctx->len);
+
+					ctx->state = 20;
+					ctx->flush = 1;
 					return UNBZIP2_IS_FLUSH;
 				}
 
-				v = ctx->block[ctx->t_n++];
-				if (ctx->rle_inlen == 4) {
-					_add_to_buffer(ctx, v);
-					ctx->rle_inchr = 256;
-					ctx->rle_inlen = 0;
-				} else if (v != ctx->rle_inchr) {
-					if (ctx->rle_inchr < 256)
-						_add_to_buffer(ctx, 0);
-					ctx->rle_inchr = v;
-					ctx->rle_inlen = 1;
-				} else {
-					ctx->rle_inlen++;
-				}
+				v = ctx->block_len - ctx->t_len;
+				t = _input_block(ctx, ctx->block + ctx->t_len, v);
+				ctx->t_len += v - t;
 
 				break;
 			case 20: /* end-block */

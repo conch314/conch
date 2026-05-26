@@ -1,6 +1,6 @@
 /* @file: z_unbzip2.h
  * #desc:
- *    The definitions of.
+ *    The definitions of bzip2 decompression.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.
@@ -71,28 +71,32 @@
 #define UNBZIP2_ERR_HUFFMAN_CODE -10
 
 struct unbzip2_ctx {
-	uint8_t block[UNBZIP2_BLOCKSIZE_MAX];
-	uint32_t block_max;
-	uint32_t block_len;
+	uint8_t block[UNBZIP2_BLOCKSIZE_MAX]; /* input block (after rle) */
+	uint32_t block_max; /* max block length */
+	uint32_t block_len; /* block length */
 
+	/* crc */
 	uint32_t block_crc;
 	uint32_t combined_crc;
 	uint32_t block_head_crc;
 	const uint32_t *crc_t;
 
-	/* input run-length */
+	/* input run-length decoding */
 	uint32_t rle_inchr; /* repeat character */
 	uint32_t rle_inlen; /* repeat length */
 	uint8_t inuse[256]; /* characters in use */
 	uint8_t inuse16[16];
 
+	/* move-to-front */
 	uint16_t *mtf_v; /* mtf value */
-	uint16_t mtf_e;  /* end-block of the mtf value */
+	uint16_t mtf_e;  /* end-block value */
 	uint32_t mtf_n;  /* number of the mtf value */
 
+	/* inverse burrows–wheeler transform */
 	uint32_t rank_tmp[UNBZIP2_BLOCKSIZE_MAX]; /* temporary buffer */
-	uint32_t orig_index;
+	uint32_t orig_index; /* primary index */
 
+	/* huffman decoding */
 	uint8_t huf_len[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
 	int32_t huf_code[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
 	int32_t huf_limit[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
@@ -100,6 +104,7 @@ struct unbzip2_ctx {
 	int32_t huf_perm[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
 	int32_t huf_min[UNBZIP2_NGROUPS];
 
+	/* huffman groups selectors */
 	uint8_t selector[UNBZIP2_NSELECTORS];
 	uint8_t selector_mtf[UNBZIP2_NSELECTORS];
 	int32_t ngroups;
@@ -109,6 +114,7 @@ struct unbzip2_ctx {
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
 
+	uint32_t t_len;
 	int32_t t_i;
 	int32_t t_j;
 	int32_t t_k;

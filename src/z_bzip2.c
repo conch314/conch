@@ -876,6 +876,18 @@ static void _add_to_block(struct bzip2_ctx *ctx)
 	}
 }
 
+/* @func: _input_block_flush (static)
+ * #desc:
+ *    input block run-length processing finish.
+ *
+ * #1: ctx [in/out] bzip2 struct context
+ */
+static void _input_block_flush(struct bzip2_ctx *ctx)
+{
+	if (ctx->rle_inlen && ctx->rle_inchr < 256)
+		_add_to_block(ctx);
+}
+
 /* @func: _input_block (static)
  * #desc:
  *    input block run-length processing.
@@ -904,18 +916,6 @@ static uint32_t _input_block(struct bzip2_ctx *ctx, const uint8_t *s,
 	}
 
 	return len;
-}
-
-/* @func: _input_block_flush (static)
- * #desc:
- *    input block run-length processing finish.
- *
- * #1: ctx [in/out] bzip2 struct context
- */
-static void _input_block_flush(struct bzip2_ctx *ctx)
-{
-	if (ctx->rle_inlen && ctx->rle_inchr < 256)
-		_add_to_block(ctx);
 }
 
 /* @func: _bzip2_block (static)
