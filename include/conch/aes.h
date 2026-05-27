@@ -46,6 +46,7 @@
 
 struct aes_ctx {
 	uint8_t keyexp[AES_KEYEXP_LEN];
+	uint8_t dec_keyexp[AES_KEYEXP_LEN];
 	uint16_t keylen;
 	uint16_t rounds;
 };

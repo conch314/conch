@@ -518,7 +518,6 @@ static void _aes_invmixcolumns(uint8_t *state)
  */
 static void _aes_keyexp(struct aes_ctx *ctx, const uint8_t *key)
 {
-	conch_memset(ctx->keyexp, 0, AES_KEYEXP_LEN);
 	conch_memcpy(ctx->keyexp, key, ctx->keylen);
 
 	uint8_t tmp[4];

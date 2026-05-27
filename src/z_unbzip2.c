@@ -244,7 +244,7 @@ static void _gen_decode_tables(int32_t *limit, int32_t *base, int32_t *perm,
  *    build symbol description based on length.
  *
  * #1: ctx        [in/out] unbzip2 struct context
- * #2: alpha_size [in]     alpha size
+ * #2: alpha_size [in]     alpha number
  */
 static void _build_symbol(struct unbzip2_ctx *ctx, int32_t alpha_size)
 {
