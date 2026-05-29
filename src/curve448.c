@@ -1222,6 +1222,8 @@ void conch_eddsa_ed448_nonce_key(const uint8_t *inpri, uint8_t *pri,
 	_pri[0] &= ~0x03U;
 	_pri[13] |= 0x80000000;
 
+	_pri[14] = 0; /* mask */
+
 	conch_memcpy(pri, _pri, EDDSA_ED448_PRI_LEN);
 }
 
@@ -1291,6 +1293,7 @@ void conch_eddsa_ed448_sign(const uint8_t *pri,
 	_sc448_mul(s, h, _pri);
 	_sc448_add(s, s, r);
 	_sc448_mod(s);
+
 	s[14] = 0; /* mask */
 
 	conch_memcpy(sign, R, EDDSA_ED448_LEN);
