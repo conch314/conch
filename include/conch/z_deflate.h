@@ -202,7 +202,7 @@ struct deflate_tree_desc {
 	struct deflate_ctdata *tree;        /* dynamic tree */
 	int32_t elems;    /* codes number (static) */
 	int32_t bits_max; /* max codes bits (static) */
-	int32_t code_max; /* codes of max */
+	int32_t code_max; /* code of max */
 	int32_t opt_slen; /* static coding length */
 	int32_t opt_dlen; /* dynamic coding length */
 };

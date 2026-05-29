@@ -204,8 +204,20 @@ static void _decode_selector_mtfval(struct unbzip2_ctx *ctx)
 	}
 }
 
-static void _gen_decode_tables(int32_t *limit, int32_t *base, int32_t *perm,
-		uint8_t *length, int32_t minlen, int32_t maxlen,
+/* @func: _gen_decode_symbol (static)
+ * #desc:
+ *    generate decoding symbol based on length.
+ *
+ * #1: limit      [out] limit length
+ * #2: base       [out] base offset
+ * #3: perm       [out] codes symbol
+ * #4: length     [in]  codes length
+ * #5: minlen     [in]  min length
+ * #6: maxlen     [in]  max length
+ * #7: alpha_size [in]  alpha number
+ */
+static void _gen_decode_symbol(int32_t *limit, int32_t *base, int32_t *perm,
+		const uint8_t *length, int32_t minlen, int32_t maxlen,
 		int32_t alpha_size)
 {
 	int32_t p = 0;
@@ -259,7 +271,7 @@ static void _build_symbol(struct unbzip2_ctx *ctx, int32_t alpha_size)
 		}
 
 		ctx->huf_min[i] = min_len;
-		_gen_decode_tables(ctx->huf_limit[i],
+		_gen_decode_symbol(ctx->huf_limit[i],
 				ctx->huf_base[i],
 				ctx->huf_perm[i],
 				ctx->huf_len[i],

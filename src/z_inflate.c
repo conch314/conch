@@ -217,12 +217,12 @@ static int32_t _build_sym(struct inflate_sym_desc *desc, const uint8_t *lens)
 
 /* @func: _decode_sym (static)
  * #desc:
- *    decoding the symbol codes.
+ *    decoding the symbol code.
  *
  * #1: desc [in/out] inflate symbol description
  * #2: v    [in]     input bits
  * #3: len  [in/out] input length and return the length used
- * #r:      [ret]    -1: decode error, >=0: symbol codes
+ * #r:      [ret]    -1: decode error, >=0: symbol code
  */
 static int32_t _decode_sym(const struct inflate_sym_desc *desc, uint32_t v,
 		uint32_t *len)
