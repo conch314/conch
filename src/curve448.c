@@ -674,8 +674,8 @@ static void _sc448_digest(const uint8_t dig[114], uint32_t r[14])
  * #3: b [in]  subtract
  * #r:   [ret] overflow
  */
-static uint32_t _np448_sub(uint32_t r[8],
-		const uint32_t a[8], const uint32_t b[8])
+static uint32_t _np448_sub(uint32_t r[14],
+		const uint32_t a[14], const uint32_t b[14])
 {
 	uint32_t carry = 0;
 	uint64_t tmp = 0;
