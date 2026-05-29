@@ -973,6 +973,39 @@ static int32_t _ed448_point_equal(const struct ed448_point *xyz1,
 	return r;
 }
 
+/* @func: _ed448_check_point (static)
+ * #desc:
+ *    curve point legality check.
+ *
+ * #1: xyz1 [in]  curve point
+ * #r:      [ret] 0: no error, -1: error
+ */
+static int32_t _ed448_check_point(const struct ed448_point *xyz1)
+{
+	uint32_t a[14], b[14], t1[14], t2[14];
+	/*
+	 * if ((y * y) + (x * x)) != (1 + (d * (x * x) * (y * y)))
+	 *   return -1;
+	 * return 0;
+	 */
+
+	/* t1 = (y * y) + (x * x) */
+	_fp448_mul(a, xyz1->y, xyz1->y);
+	_fp448_mul(b, xyz1->x, xyz1->x);
+	_fp448_add(t1, a, b);
+	_fp448_mod(t1);
+
+	/* t2 = 1 + (d * a * b) */
+	_fp448_mul(t2, a, b);
+	_fp448_mul(t2, t2, _ed448_d);
+	_fp448_add(t2, t2, _ed448_one);
+	_fp448_mod(t2);
+
+	_fp448_sub(t1, t1, t2);
+
+	return _fp448_iszero(t1) - 1;
+}
+
 /* @func: _ed448_point_recover_x (static)
  * #desc:
  *    calculate the corresponding curve point x.
@@ -980,8 +1013,9 @@ static int32_t _ed448_point_equal(const struct ed448_point *xyz1,
  * #1: y    [in]  curve point y
  * #2: sign [in]  sign of x
  * #3: r    [out] curve point x
+ * #r:      [ret] 0: success, -1: fail
  */
-static void _ed448_point_recover_x(const uint32_t y[14], uint32_t sign,
+static int32_t _ed448_point_recover_x(const uint32_t y[14], uint32_t sign,
 		uint32_t r[14])
 {
 	uint32_t x1[14], x2[14], y2[14], x[14];
@@ -989,14 +1023,20 @@ static void _ed448_point_recover_x(const uint32_t y[14], uint32_t sign,
 	 * y2 = y ^ 2
 	 * x1 = y2 - 1
 	 * x2 = (d * y2) - 1
-	 * x2 = (x1 * inv(x2, p)) % p
-	 * x = modpow(x2, (p + 1) / 4, p)
+	 * x1 = (x1 * inv(x2, p)) % p
+	 * x = modpow(x1, (p + 1) / 4, p)
+	 * if (((x ^ 2) % p) - x1)
+	 *   return -1
+	 * if (x == 0 && (x & 1) != sign)
+	 *   return -1
 	 * if ((x & 1) != sign)
 	 *   x = p - x
+	 * return 0
 	 */
 
 	/* y2 = y ^ 2 */
 	_fp448_mul(y2, y, y);
+
 	/* x1 = y2 - 1 */
 	_fp448_sub(x1, y2, _ed448_one);
 
@@ -1004,14 +1044,27 @@ static void _ed448_point_recover_x(const uint32_t y[14], uint32_t sign,
 	_fp448_mul(x2, y2, _ed448_d);
 	_fp448_sub(x2, x2, _ed448_one);
 
-	/* x2 = (x1 * inv(x2)) % p */
+	/* x1 = (x1 * inv(x2)) % p */
 	_fp448_inv(x2, x2);
-	_fp448_mul(x2, x2, x1);
-	_fp448_mod(x2);
+	_fp448_mul(x1, x1, x2);
+	_fp448_mod(x1);
 
-	/* x = modpow(x2, (p + 1) / 4, p) % p */
-	_fp448_pow(x, x2, _ed448_p14);
+	/* x = modpow(x1, (p + 1) / 4, p) % p */
+	_fp448_pow(x, x1, _ed448_p14);
 	_fp448_mod(x);
+
+	/* y2 = ((x ^ 2) % p) - x1 */
+	_fp448_mul(y2, x, x);
+	_fp448_mod(y2);
+	_fp448_sub(y2, y2, x1);
+
+	/* if y2 != 0 : fail, no square root */
+	if (!_fp448_iszero(y2))
+		return -1;
+
+	/* if x == 0 && (x & 1) != sign : fail */
+	if (_fp448_iszero(x) & ((x[0] & 1) ^ (sign & 1)))
+		return -1;
 
 	/* x1 = p - x */
 	_fp448_sub(x1, _fp448_p, x);
@@ -1021,6 +1074,8 @@ static void _ed448_point_recover_x(const uint32_t y[14], uint32_t sign,
 	/* r = x */
 	for (int32_t i = 0; i < 14; i++)
 		r[i] = x[i];
+
+	return 0;
 }
 
 /* @func: _ed448_point_compress (static)
@@ -1061,8 +1116,9 @@ static void _ed448_point_compress(const struct ed448_point *xyz1,
  *
  * #1: k    [in]  compress point
  * #2: xyz1 [out] curve point
+ * #r:      [ret] 0: success, -1: fail
  */
-static void _ed448_point_decompress(const uint32_t k[15],
+static int32_t _ed448_point_decompress(const uint32_t k[15],
 		struct ed448_point *xyz1)
 {
 	/*
@@ -1076,12 +1132,15 @@ static void _ed448_point_decompress(const uint32_t k[15],
 		xyz1->y[i] = k[i];
 
 	/* x1 = rec_x(y1, (k >> 455) & 1) */
-	_ed448_point_recover_x(xyz1->y, (k[14] >> 7) & 1, xyz1->x);
+	if (_ed448_point_recover_x(xyz1->y, (k[14] >> 7) & 1, xyz1->x))
+		return -1;
 
 	/* z1 = 1 */
 	for (int32_t i = 0; i < 14; i++)
 		xyz1->z[i] = 0;
 	xyz1->z[0] = 1;
+
+	return _ed448_check_point(xyz1);
 }
 
 /* @func: conch_ecdh_x448_public_key
@@ -1200,8 +1259,7 @@ void conch_eddsa_ed448_public_key(const uint8_t *pri, uint8_t *pub)
 void conch_eddsa_ed448_sign(const uint8_t *pri,
 		const uint8_t *msg, uint32_t len, uint8_t *sign)
 {
-	uint32_t _pri[15], _pub[15], _ran[15], r[15], rs[15],
-		h[15], s[15];
+	uint32_t _pri[15], _pub[15], _ran[15], r[14], R[15], h[14], s[15];
 	struct ed448_point xyz1;
 	SHA3_NEW(sha_ctx);
 
@@ -1217,14 +1275,14 @@ void conch_eddsa_ed448_sign(const uint8_t *pri,
 	_sc448_digest(&(SHA3_STATE(&sha_ctx, 0)), r);
 	_sc448_mod(r);
 
-	/* rs = compress(scalar(r, base)) */
+	/* R = compress(scalar(r, base)) */
 	_ed448_scalar_mul(r, &_ed448_base, &xyz1);
-	_ed448_point_compress(&xyz1, rs);
+	_ed448_point_compress(&xyz1, R);
 
-	/* h = sha(ctx + rs + _pub + msg) % q */
+	/* h = sha(ctx + R + _pub + msg) % q */
 	conch_sha3_init(&sha_ctx, SHA3_SHAKE256_TYPE, 114);
 	conch_sha3_process(&sha_ctx, _ed448_ctx, ED448_CTX_LEN);
-	conch_sha3_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED448_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)R, EDDSA_ED448_LEN);
 	conch_sha3_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED448_PUB_LEN);
 	conch_sha3_process(&sha_ctx, msg, len);
 	conch_sha3_finish(&sha_ctx);
@@ -1236,7 +1294,7 @@ void conch_eddsa_ed448_sign(const uint8_t *pri,
 	_sc448_mod(s);
 	s[14] = 0; /* mask */
 
-	conch_memcpy(sign, rs, EDDSA_ED448_LEN);
+	conch_memcpy(sign, R, EDDSA_ED448_LEN);
 	conch_memcpy(sign + EDDSA_ED448_LEN, s, EDDSA_ED448_LEN);
 }
 
@@ -1253,43 +1311,50 @@ void conch_eddsa_ed448_sign(const uint8_t *pri,
 int32_t conch_eddsa_ed448_verify(const uint8_t *pub,
 		const uint8_t *sign, const uint8_t *msg, uint32_t len)
 {
-	uint32_t _pub[15], rs[15], s[15], h[15];
-	struct ed448_point xyz1, xyz2, xyz3;
+	uint32_t _pub[15], r[15], s[15], h[14];
+	struct ed448_point xyz1, xyz2, R, A;
 	SHA3_NEW(sha_ctx);
 
 	conch_memcpy(_pub, pub, EDDSA_ED448_PUB_LEN);
-	conch_memcpy(rs, sign, EDDSA_ED448_LEN);
+	conch_memcpy(r, sign, EDDSA_ED448_LEN);
 	conch_memcpy(s, sign + EDDSA_ED448_LEN, EDDSA_ED448_LEN);
 
-	if (_fp448_iszero(_pub) || _fp448_iszero(rs))
+	if (_fp448_iszero(s))
 		return -1;
-	if (_np448_sub(h, _sc448_q, s))
-		return -1;
-	if (_fp448_iszero(h))
+	if (_np448_sub(h, _sc448_q, s) || _fp448_iszero(h))
 		return -1;
 
-	/* xyz1 = decompress(_pub) */
-	_ed448_point_decompress(_pub, &xyz1);
-	/* xyz2 = decompress(rs) */
-	_ed448_point_decompress(rs, &xyz2);
+	/* A = decompress(_pub) */
+	if (_ed448_point_decompress(_pub, &A))
+		return -1;
+	/* R = decompress(rs) */
+	if (_ed448_point_decompress(r, &R))
+		return -1;
 
 	/* h = sha(ctx + rs + _pub + msg) % q */
 	conch_sha3_init(&sha_ctx, SHA3_SHAKE256_TYPE, 114);
 	conch_sha3_process(&sha_ctx, _ed448_ctx, ED448_CTX_LEN);
-	conch_sha3_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED448_LEN);
+	conch_sha3_process(&sha_ctx, (uint8_t *)r, EDDSA_ED448_LEN);
 	conch_sha3_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED448_PUB_LEN);
 	conch_sha3_process(&sha_ctx, msg, len);
 	conch_sha3_finish(&sha_ctx);
 	_sc448_digest(&(SHA3_STATE(&sha_ctx, 0)), h);
 	_sc448_mod(h);
 
-	/* xyz3 = scalar(h, xyz1) */
-	_ed448_scalar_mul(h, &xyz1, &xyz3);
-	/* xyz3 = add(xyz2, xyz3) */
-	_ed448_point_add(&xyz2, &xyz3, &xyz3);
+	/* xyz1 = scalar(h, A) */
+	_ed448_scalar_mul(h, &A, &xyz1);
+	/* xyz1 = add(R, xyz1) */
+	_ed448_point_add(&R, &xyz1, &xyz1);
 
 	/* xyz2 = scalar(s, base) */
 	_ed448_scalar_mul(s, &_ed448_base, &xyz2);
 
-	return _ed448_point_equal(&xyz3, &xyz2) - 1;
+	/* NOTE: cofactor clearing [4]R + [h*4]A == [s*4]B */
+
+	for (int32_t i = 0; i < 2; i++) { /* 4-torsion subgroup, 2^log2(4) */
+		_ed448_point_double(&xyz1, &xyz1);
+		_ed448_point_double(&xyz2, &xyz2);
+	}
+
+	return _ed448_point_equal(&xyz1, &xyz2) - 1;
 }

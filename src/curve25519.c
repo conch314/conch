@@ -1101,6 +1101,39 @@ static int32_t _ed25519_point_equal(const struct ed25519_point *xyz1,
 	return r;
 }
 
+/* @func: _ed25519_check_point (static)
+ * #desc:
+ *    curve point legality check.
+ *
+ * #1: xyz1 [in]  curve point
+ * #r:      [ret] 0: no error, -1: error
+ */
+static int32_t _ed25519_check_point(const struct ed25519_point *xyz1)
+{
+	uint32_t a[8], b[8], t1[8], t2[8];
+	/*
+	 * if ((y * y) - (x * x)) != (1 + (d * (x * x) * (y * y)))
+	 *   return -1;
+	 * return 0;
+	 */
+
+	/* t1 = (y * y) - (x * x) */
+	_fp25519_mul(a, xyz1->y, xyz1->y);
+	_fp25519_mul(b, xyz1->x, xyz1->x);
+	_fp25519_sub(t1, a, b);
+	_fp25519_mod(t1);
+
+	/* t2 = 1 + (d * a * b) */
+	_fp25519_mul(t2, a, b);
+	_fp25519_mul(t2, t2, _ed25519_d);
+	_fp25519_add(t2, t2, _ed25519_one);
+	_fp25519_mod(t2);
+
+	_fp25519_sub(t1, t1, t2);
+
+	return _fp25519_iszero(t1) - 1;
+}
+
 /* @func: _ed25519_point_recover_x (static)
  * #desc:
  *    calculate the corresponding curve point x.
@@ -1108,25 +1141,32 @@ static int32_t _ed25519_point_equal(const struct ed25519_point *xyz1,
  * #1: y    [in]  curve point y
  * #2: sign [in]  sign of x
  * #3: r    [out] curve point x
+ * #r:      [ret] 0: success, -1: fail
  */
-static void _ed25519_point_recover_x(const uint32_t y[8], uint32_t sign,
+static int32_t _ed25519_point_recover_x(const uint32_t y[8], uint32_t sign,
 		uint32_t r[8])
 {
-	uint32_t x1[8], x2[8], y2[8], x[8], t1[8], iszero = 0;
+	uint32_t x1[8], x2[8], y2[8], x[8];
 	/*
 	 * y2 = y ^ 2
-	 * x1 = y2 - 1
+	 * x1 = y2 - 1;
 	 * x2 = (d * y2) + 1
-	 * x2 = (x1 * inv(x2, p)) % p
-	 * x = modpow(x2, (p + 3) / 8, p)
-	 * if ((x ^ 2) - x2)
+	 * x1 = (x1 * inv(x2, p)) % p
+	 * x = modpow(x1, (p + 3) / 8, p)
+	 * if (((x ^ 2) % p) - x1)
 	 *   x = x * modpow(2, (p - 1) / 4, p)
+	 * if (((x ^ 2) % p) - x1)
+	 *   return -1
+	 * if (x == 0 && (x & 1) != sign)
+	 *   return -1
 	 * if ((x & 1) != sign)
 	 *   x = p - x
+	 * return 0
 	 */
 
 	/* y2 = y ^ 2 */
 	_fp25519_mul(y2, y, y);
+
 	/* x1 = y2 - 1 */
 	_fp25519_sub(x1, y2, _ed25519_one);
 
@@ -1134,26 +1174,38 @@ static void _ed25519_point_recover_x(const uint32_t y[8], uint32_t sign,
 	_fp25519_mul(x2, y2, _ed25519_d);
 	_fp25519_add(x2, x2, _ed25519_one);
 
-	/* x2 = (x1 * inv(x2)) % p */
+	/* x1 = (x1 * inv(x2)) % p */
 	_fp25519_inv(x2, x2);
-	_fp25519_mul(x2, x2, x1);
-	_fp25519_mod(x2);
+	_fp25519_mul(x1, x1, x2);
+	_fp25519_mod(x1);
 
-	/* x = modpow(x2, (p + 3) / 8, p) % p */
-	_fp25519_pow(x, x2, _ed25519_p38);
+	/* x = modpow(x1, (p + 3) / 8, p) % p */
+	_fp25519_pow(x, x1, _ed25519_p38);
 	_fp25519_mod(x);
 
-	/* t1 = ((x ^ 2) % p) - x2 */
-	_fp25519_mul(t1, x, x);
-	_fp25519_mod(t1);
-	_fp25519_sub(t1, t1, x2);
-	iszero = _fp25519_iszero(t1);
+	/* y2 = ((x ^ 2) % p) - x1 */
+	_fp25519_mul(y2, x, x);
+	_fp25519_mod(y2);
+	_fp25519_sub(y2, y2, x1);
 
 	/* x2 = (x * modpow(2, (p - 1) / 4, p)) % p */
 	_fp25519_mul(x2, x, _ed25519_p14);
 	_fp25519_mod(x2);
-	/* x = if t1 != 0 : swap x2 */
-	_fp25519_swap(x, x2, ~iszero);
+	/* x = if y2 != 0 : swap x2 */
+	_fp25519_swap(x, x2, ~_fp25519_iszero(y2));
+
+	/* y2 = ((x ^ 2) % p) - x1 */
+	_fp25519_mul(y2, x, x);
+	_fp25519_mod(y2);
+	_fp25519_sub(y2, y2, x1);
+
+	/* if y2 != 0 : fail, no square root */
+	if (!_fp25519_iszero(y2))
+		return -1;
+
+	/* if x == 0 && (x & 1) != sign : fail */
+	if (_fp25519_iszero(x) & ((x[0] & 1) ^ (sign & 1)))
+		return -1;
 
 	/* x1 = p - x */
 	_fp25519_sub(x1, _fp25519_p, x);
@@ -1163,6 +1215,8 @@ static void _ed25519_point_recover_x(const uint32_t y[8], uint32_t sign,
 	/* r = x */
 	for (int32_t i = 0; i < 8; i++)
 		r[i] = x[i];
+
+	return 0;
 }
 
 /* @func: _ed25519_point_compress (static)
@@ -1203,8 +1257,9 @@ static void _ed25519_point_compress(const struct ed25519_point *xyz1,
  *
  * #1: k    [in]  compress point
  * #2: xyz1 [out] curve point
+ * #r:      [ret] 0: success, -1: fail
  */
-static void _ed25519_point_decompress(const uint32_t k[8],
+static int32_t _ed25519_point_decompress(const uint32_t k[8],
 		struct ed25519_point *xyz1)
 {
 	/*
@@ -1217,10 +1272,11 @@ static void _ed25519_point_decompress(const uint32_t k[8],
 	/* y1 = k & ((1 << 255) - 1) */
 	for (int32_t i = 0; i < 8; i++)
 		xyz1->y[i] = k[i];
-	xyz1->y[7] &= 0x7fffffff; /* mask high-bit */
+	xyz1->y[7] &= 0x7fffffff; /* mask */
 
 	/* x1 = rec_x(y1, k >> 255) */
-	_ed25519_point_recover_x(xyz1->y, k[7] >> 31, xyz1->x);
+	if (_ed25519_point_recover_x(xyz1->y, k[7] >> 31, xyz1->x))
+		return -1;
 
 	/* t1 = x1 * y1 */
 	_fp25519_mul(xyz1->t, xyz1->x, xyz1->y);
@@ -1229,6 +1285,8 @@ static void _ed25519_point_decompress(const uint32_t k[8],
 	for (int32_t i = 0; i < 8; i++)
 		xyz1->z[i] = 0;
 	xyz1->z[0] = 1;
+
+	return _ed25519_check_point(xyz1);
 }
 
 /* @func: conch_ecdh_x25519_public_key
@@ -1353,7 +1411,7 @@ void conch_eddsa_ed25519_public_key(const uint8_t *pri, uint8_t *pub)
 void conch_eddsa_ed25519_sign(const uint8_t *pri,
 		const uint8_t *msg, uint32_t len, uint8_t *sign)
 {
-	uint32_t _pri[8], _pub[8], _ran[8], r[8], rs[8], h[8], s[8];
+	uint32_t _pri[8], _pub[8], _ran[8], r[8], R[8], h[8], s[8];
 	struct ed25519_point xyz1;
 	SHA512_NEW(sha_ctx);
 
@@ -1368,13 +1426,13 @@ void conch_eddsa_ed25519_sign(const uint8_t *pri,
 	_sc25519_digest(&(SHA512_STATE(&sha_ctx, 0)), r);
 	_sc25519_mod(r);
 
-	/* rs = compress(scalar(r, base)) */
+	/* R = compress(scalar(r, base)) */
 	_ed25519_scalar_mul(r, &_ed25519_base, &xyz1);
-	_ed25519_point_compress(&xyz1, rs);
+	_ed25519_point_compress(&xyz1, R);
 
-	/* h = sha(rs + _pub + msg) % q */
+	/* h = sha(R + _pub + msg) % q */
 	conch_sha512_init(&sha_ctx);
-	conch_sha512_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED25519_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)R, EDDSA_ED25519_LEN);
 	conch_sha512_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED25519_PUB_LEN);
 	conch_sha512_process(&sha_ctx, msg, len);
 	conch_sha512_finish(&sha_ctx,
@@ -1386,7 +1444,7 @@ void conch_eddsa_ed25519_sign(const uint8_t *pri,
 	_sc25519_add(s, s, r);
 	_sc25519_mod(s);
 
-	conch_memcpy(sign, rs, EDDSA_ED25519_LEN);
+	conch_memcpy(sign, R, EDDSA_ED25519_LEN);
 	conch_memcpy(sign + EDDSA_ED25519_LEN, s, EDDSA_ED25519_LEN);
 }
 
@@ -1403,29 +1461,29 @@ void conch_eddsa_ed25519_sign(const uint8_t *pri,
 int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 		const uint8_t *sign, const uint8_t *msg, uint32_t len)
 {
-	uint32_t _pub[8], rs[8], s[8], h[8];
-	struct ed25519_point xyz1, xyz2, xyz3;
+	uint32_t _pub[8], r[8], s[8], h[8];
+	struct ed25519_point xyz1, xyz2, R, A;
 	SHA512_NEW(sha_ctx);
 
 	conch_memcpy(_pub, pub, EDDSA_ED25519_PUB_LEN);
-	conch_memcpy(rs, sign, EDDSA_ED25519_LEN);
+	conch_memcpy(r, sign, EDDSA_ED25519_LEN);
 	conch_memcpy(s, sign + EDDSA_ED25519_LEN, EDDSA_ED25519_LEN);
 
-	if (_fp25519_iszero(_pub) || _fp25519_iszero(rs))
+	if (_fp25519_iszero(s))
 		return -1;
-	if (_np25519_sub(h, _sc25519_q, s))
-		return -1;
-	if (_fp25519_iszero(h))
+	if (_np25519_sub(h, _sc25519_q, s) || _fp25519_iszero(h))
 		return -1;
 
-	/* xyz1 = decompress(_pub) */
-	_ed25519_point_decompress(_pub, &xyz1);
-	/* xyz2 = decompress(rs) */
-	_ed25519_point_decompress(rs, &xyz2);
+	/* A = decompress(_pub) */
+	if (_ed25519_point_decompress(_pub, &A))
+		return -1;
+	/* R = decompress(r) */
+	if (_ed25519_point_decompress(r, &R))
+		return -1;
 
-	/* h = sha(rs + _pub + msg) % q */
+	/* h = sha(r + _pub + msg) % q */
 	conch_sha512_init(&sha_ctx);
-	conch_sha512_process(&sha_ctx, (uint8_t *)rs, EDDSA_ED25519_LEN);
+	conch_sha512_process(&sha_ctx, (uint8_t *)r, EDDSA_ED25519_LEN);
 	conch_sha512_process(&sha_ctx, (uint8_t *)_pub, EDDSA_ED25519_PUB_LEN);
 	conch_sha512_process(&sha_ctx, msg, len);
 	conch_sha512_finish(&sha_ctx,
@@ -1433,13 +1491,20 @@ int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 	_sc25519_digest(&(SHA512_STATE(&sha_ctx, 0)), h);
 	_sc25519_mod(h);
 
-	/* xyz3 = scalar(h, xyz1) */
-	_ed25519_scalar_mul(h, &xyz1, &xyz3);
-	/* xyz3 = add(xyz2, xyz3) */
-	_ed25519_point_add(&xyz2, &xyz3, &xyz3);
+	/* xyz1 = scalar(h, A) */
+	_ed25519_scalar_mul(h, &A, &xyz1);
+	/* xyz1 = add(R, xyz1) */
+	_ed25519_point_add(&R, &xyz1, &xyz1);
 
 	/* xyz2 = scalar(s, base) */
 	_ed25519_scalar_mul(s, &_ed25519_base, &xyz2);
 
-	return _ed25519_point_equal(&xyz3, &xyz2) - 1;
+	/* NOTE: cofactor clearing [8]R + [h*8]A == [s*8]B */
+
+	for (int32_t i = 0; i < 3; i++) { /* 8-torsion subgroup, 2^log2(8) */
+		_ed25519_point_double(&xyz1, &xyz1);
+		_ed25519_point_double(&xyz2, &xyz2);
+	}
+
+	return _ed25519_point_equal(&xyz1, &xyz2) - 1;
 }
