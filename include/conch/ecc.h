@@ -139,7 +139,7 @@ int32_t conch_ecdh_p256_shared_key(const uint8_t *pri,
 		const uint8_t *pub, uint8_t *key)
 ;
 extern
-void conch_ecdsa_p256_public_key(const uint8_t *pri, uint8_t *pub)
+int32_t conch_ecdsa_p256_public_key(const uint8_t *pri, uint8_t *pub)
 ;
 extern
 int32_t conch_ecdsa_p256_sign(const uint8_t *pri, const uint8_t *ran,
@@ -159,7 +159,7 @@ int32_t conch_ecdh_p384_shared_key(const uint8_t *pri,
 		const uint8_t *pub, uint8_t *key)
 ;
 extern
-void conch_ecdsa_p384_public_key(const uint8_t *pri, uint8_t *pub)
+int32_t conch_ecdsa_p384_public_key(const uint8_t *pri, uint8_t *pub)
 ;
 extern
 int32_t conch_ecdsa_p384_sign(const uint8_t *pri, const uint8_t *ran,
@@ -179,7 +179,7 @@ int32_t conch_ecdh_p521_shared_key(const uint8_t *pri,
 		const uint8_t *pub, uint8_t *key)
 ;
 extern
-void conch_ecdsa_p521_public_key(const uint8_t *pri, uint8_t *pub)
+int32_t conch_ecdsa_p521_public_key(const uint8_t *pri, uint8_t *pub)
 ;
 extern
 int32_t conch_ecdsa_p521_sign(const uint8_t *pri, const uint8_t *ran,

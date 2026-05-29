@@ -1,6 +1,6 @@
 /* @file: nist-p256.c
  * #desc:
- *    The implementations of nist p-256 ecdh and ecdsa.
+ *    The implementations of nist p256 ecdh and ecdsa.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.
@@ -737,7 +737,7 @@ static void _p256_point_to_affine(const struct p256_point *xyz1,
 
 /* @func: _p256_scalar_mul (static)
  * #desc:
- *    p-256 signed binary ladder scalar multiplication.
+ *    p256 signed binary ladder scalar multiplication.
  *
  * #1: k   [in]  input point
  * #2: xy1 [in]  base point
@@ -884,7 +884,7 @@ static void _p256_affine_add(const struct p256_point *xy1,
 
 /* @func: conch_ecdh_p256_public_key
  * #desc:
- *    p-256 public key create function.
+ *    p256 ecdh public key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [out] public key
@@ -910,7 +910,7 @@ int32_t conch_ecdh_p256_public_key(const uint8_t *pri, uint8_t *pub)
 
 /* @func: conch_ecdh_p256_shared_key
  * #desc:
- *    p-256 shared key create function.
+ *    p256 ecdsa shared key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [in]  public key
@@ -942,28 +942,33 @@ int32_t conch_ecdh_p256_shared_key(const uint8_t *pri,
 
 /* @func: conch_ecdsa_p256_public_key
  * #desc:
- *    p-256 public key create function.
+ *    p256 ecdsa public key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [out] public key
+ * #r:     [ret] 0: success, -1: fail
  */
-void conch_ecdsa_p256_public_key(const uint8_t *pri, uint8_t *pub)
+int32_t conch_ecdsa_p256_public_key(const uint8_t *pri, uint8_t *pub)
 {
 	uint32_t _pri[8];
 	struct p256_point xy1;
 
 	conch_memcpy(_pri, pri, ECDSA_P256_PRI_LEN);
+	if (_p256_check_key(_pri))
+		return -1;
 
 	/* xy1 = scalar(_pri, base) */
 	_p256_scalar_mul(_pri, &_p256_base, &xy1);
 
 	conch_memcpy(pub, xy1.x, ECDSA_P256_LEN);
 	conch_memcpy(pub + ECDSA_P256_LEN, xy1.y, ECDSA_P256_LEN);
+
+	return 0;
 }
 
 /* @func: conch_ecdsa_p256_sign
  * #desc:
- *    p-256 signature function.
+ *    p256 ecdsa signature function.
  *
  * #1: pri  [in]  private key
  * #2: ran  [in]  nonce
@@ -1014,7 +1019,7 @@ int32_t conch_ecdsa_p256_sign(const uint8_t *pri, const uint8_t *ran,
 
 /* @func: conch_ecdsa_p256_verify
  * #desc:
- *    p-256 signature verification function.
+ *    p256 ecdsa signature verification function.
  *
  * #1: pub  [in]  public key
  * #2: sign [in]  signature

@@ -1,6 +1,6 @@
 /* @file: nist-p384.c
  * #desc:
- *    The implementations of nist p-384 ecdh and ecdsa.
+ *    The implementations of nist p384 ecdh and ecdsa.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.
@@ -749,7 +749,7 @@ static void _p384_point_to_affine(const struct p384_point *xyz1,
 
 /* @func: _p384_scalar_mul (static)
  * #desc:
- *    p-384 signed binary ladder scalar multiplication.
+ *    p384 signed binary ladder scalar multiplication.
  *
  * #1: k   [in]  input point
  * #2: xy1 [in]  base point
@@ -896,7 +896,7 @@ static void _p384_affine_add(const struct p384_point *xy1,
 
 /* @func: conch_ecdh_p384_public_key
  * #desc:
- *    p-384 public key create function.
+ *    p384 ecdh public key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [out] public key
@@ -922,7 +922,7 @@ int32_t conch_ecdh_p384_public_key(const uint8_t *pri, uint8_t *pub)
 
 /* @func: conch_ecdh_p384_shared_key
  * #desc:
- *    p-384 shared key create function.
+ *    p384 ecdh shared key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [in]  public key
@@ -954,28 +954,33 @@ int32_t conch_ecdh_p384_shared_key(const uint8_t *pri,
 
 /* @func: conch_ecdsa_p384_public_key
  * #desc:
- *    p-384 public key create function.
+ *    p384 ecdsa public key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [out] public key
+ * #r:     [ret] 0: success, -1: fail
  */
-void conch_ecdsa_p384_public_key(const uint8_t *pri, uint8_t *pub)
+int32_t conch_ecdsa_p384_public_key(const uint8_t *pri, uint8_t *pub)
 {
 	uint32_t _pri[12];
 	struct p384_point xy1;
 
 	conch_memcpy(_pri, pri, ECDSA_P384_PRI_LEN);
+	if (_p384_check_key(_pri))
+		return -1;
 
 	/* xy1 = scalar(_pri, base) */
 	_p384_scalar_mul(_pri, &_p384_base, &xy1);
 
 	conch_memcpy(pub, xy1.x, ECDSA_P384_LEN);
 	conch_memcpy(pub + ECDSA_P384_LEN, xy1.y, ECDSA_P384_LEN);
+
+	return 0;
 }
 
 /* @func: conch_ecdsa_p384_sign
  * #desc:
- *    p-384 signature function.
+ *    p384 ecdsa signature function.
  *
  * #1: pri  [in]  private key
  * #2: ran  [in]  nonce
@@ -1026,7 +1031,7 @@ int32_t conch_ecdsa_p384_sign(const uint8_t *pri, const uint8_t *ran,
 
 /* @func: conch_ecdsa_p384_verify
  * #desc:
- *    p-384 signature verification function.
+ *    p384 ecdsa signature verification function.
  *
  * #1: pub  [in]  public key
  * #2: sign [in]  signature

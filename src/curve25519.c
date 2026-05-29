@@ -63,10 +63,10 @@ static const uint32_t _ed25519_p14[8] = {
 	};
 
 /* Q = 2^252 + 27742317777372353535851937790883648493 */
-/* static const uint32_t _sc25519_q[8] = {
+static const uint32_t _sc25519_q[8] = {
 	0x5cf5d3ed, 0x5812631a, 0xa2f79cd6, 0x14def9de,
 	0, 0, 0, 0x10000000
-	}; */
+	};
 
 /*
  * By = 463168356949264781694283940034751631413079938662562256157830336031
@@ -783,6 +783,31 @@ static void _sc25519_digest(const uint8_t dig[64], uint32_t r[8])
 	_sc25519_modw(r, rr, rr[8]);
 }
 
+/* @func: _np25519_sub (static)
+ * #desc:
+ *    nonprime field subtraction.
+ *
+ * #1: r [out] difference
+ * #2: a [in]  minuend
+ * #3: b [in]  subtract
+ * #r:   [ret] overflow
+ */
+static uint32_t _np25519_sub(uint32_t r[8],
+		const uint32_t a[8], const uint32_t b[8])
+{
+	uint32_t carry = 0;
+	uint64_t tmp = 0;
+
+	/* r = a - b */
+	for (int32_t i = 0; i < 8; i++) {
+		tmp = (uint64_t)a[i] - b[i] + (int32_t)carry;
+		r[i] = tmp & 0xffffffff;
+		carry = tmp >> 32;
+	}
+
+	return carry;
+}
+
 /* @func: _x25519_scalar_mul (static)
  * #desc:
  *    x25519 montgomery ladder scalar multiplication.
@@ -1385,6 +1410,13 @@ int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 	conch_memcpy(_pub, pub, EDDSA_ED25519_PUB_LEN);
 	conch_memcpy(rs, sign, EDDSA_ED25519_LEN);
 	conch_memcpy(s, sign + EDDSA_ED25519_LEN, EDDSA_ED25519_LEN);
+
+	if (_fp25519_iszero(_pub) || _fp25519_iszero(rs))
+		return -1;
+	if (_np25519_sub(h, _sc25519_q, s))
+		return -1;
+	if (_fp25519_iszero(h))
+		return -1;
 
 	/* xyz1 = decompress(_pub) */
 	_ed25519_point_decompress(_pub, &xyz1);

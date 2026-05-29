@@ -1,6 +1,6 @@
 /* @file: nist-p521.c
  * #desc:
- *    The implementations of nist p-521 ecdh and ecdsa.
+ *    The implementations of nist p521 ecdh and ecdsa.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.
@@ -767,7 +767,7 @@ static void _p521_point_to_affine(const struct p521_point *xyz1,
 
 /* @func: _p521_scalar_mul (static)
  * #desc:
- *    p-521 signed binary ladder scalar multiplication.
+ *    p521 signed binary ladder scalar multiplication.
  *
  * #1: k   [in]  input point
  * #2: xy1 [in]  base point
@@ -914,7 +914,7 @@ static void _p521_affine_add(const struct p521_point *xy1,
 
 /* @func: conch_ecdh_p521_public_key
  * #desc:
- *    p-521 public key create function.
+ *    p521 ecdh public key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [out] public key
@@ -941,7 +941,7 @@ int32_t conch_ecdh_p521_public_key(const uint8_t *pri, uint8_t *pub)
 
 /* @func: conch_ecdh_p521_shared_key
  * #desc:
- *    p-521 shared key create function.
+ *    p521 ecdh shared key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [in]  public key
@@ -975,29 +975,34 @@ int32_t conch_ecdh_p521_shared_key(const uint8_t *pri,
 
 /* @func: conch_ecdsa_p521_public_key
  * #desc:
- *    p-521 public key create function.
+ *    p521 ecdsa public key create function.
  *
  * #1: pri [in]  private key
  * #2: pub [out] public key
+ * #r:     [ret] 0: success, -1: fail
  */
-void conch_ecdsa_p521_public_key(const uint8_t *pri, uint8_t *pub)
+int32_t conch_ecdsa_p521_public_key(const uint8_t *pri, uint8_t *pub)
 {
 	uint32_t _pri[17];
 	struct p521_point xy1;
 	_pri[16] = 0;
 
 	conch_memcpy(_pri, pri, ECDSA_P521_PRI_LEN);
+	if (_p521_check_key(_pri))
+		return -1;
 
 	/* xy1 = scalar(_pri, base) */
 	_p521_scalar_mul(_pri, &_p521_base, &xy1);
 
 	conch_memcpy(pub, xy1.x, ECDSA_P521_LEN);
 	conch_memcpy(pub + ECDSA_P521_LEN, xy1.y, ECDSA_P521_LEN);
+
+	return 0;
 }
 
 /* @func: conch_ecdsa_p521_sign
  * #desc:
- *    p-521 signature function.
+ *    p521 ecdsa signature function.
  *
  * #1: pri  [in]  private key
  * #2: ran  [in]  nonce
@@ -1050,7 +1055,7 @@ int32_t conch_ecdsa_p521_sign(const uint8_t *pri, const uint8_t *ran,
 
 /* @func: conch_ecdsa_p521_verify
  * #desc:
- *    p-521 signature verification function.
+ *    p521 ecdsa signature verification function.
  *
  * #1: pub  [in]  public key
  * #2: sign [in]  signature

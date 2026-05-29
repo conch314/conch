@@ -62,12 +62,12 @@ static const uint32_t _ed448_p14[14] = {
 	};
 
 /* Q = 2^446 - 0x8335dc163bb124b65129c96fde933d8d723a70aadc873d6d54a7bb0d */
-/* static const uint32_t _sc448_q[14] = {
+static const uint32_t _sc448_q[14] = {
 	0xab5844f3, 0x2378c292, 0x8dc58f55, 0x216cc272,
 	0xaed63690, 0xc44edb49, 0x7cca23e9, 0xffffffff,
 	0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
 	0xffffffff, 0x3fffffff
-	}; */
+	};
 
 /*
  * By = 298819210078481492676017930443930673437544040154080242095928241372
@@ -665,6 +665,31 @@ static void _sc448_digest(const uint8_t dig[114], uint32_t r[14])
 	_sc448_modw(r, rr, rr[14]);
 }
 
+/* @func: _np448_sub (static)
+ * #desc:
+ *    nonprime field subtraction.
+ *
+ * #1: r [out] difference
+ * #2: a [in]  minuend
+ * #3: b [in]  subtract
+ * #r:   [ret] overflow
+ */
+static uint32_t _np448_sub(uint32_t r[8],
+		const uint32_t a[8], const uint32_t b[8])
+{
+	uint32_t carry = 0;
+	uint64_t tmp = 0;
+
+	/* r = a - b */
+	for (int32_t i = 0; i < 14; i++) {
+		tmp = (uint64_t)a[i] - b[i] + (int32_t)carry;
+		r[i] = tmp & 0xffffffff;
+		carry = tmp >> 32;
+	}
+
+	return carry;
+}
+
 /* @func: _x448_scalar_mul (static)
  * #desc:
  *    x448 montgomery ladder scalar multiplication.
@@ -1235,6 +1260,13 @@ int32_t conch_eddsa_ed448_verify(const uint8_t *pub,
 	conch_memcpy(_pub, pub, EDDSA_ED448_PUB_LEN);
 	conch_memcpy(rs, sign, EDDSA_ED448_LEN);
 	conch_memcpy(s, sign + EDDSA_ED448_LEN, EDDSA_ED448_LEN);
+
+	if (_fp448_iszero(_pub) || _fp448_iszero(rs))
+		return -1;
+	if (_np448_sub(h, _sc448_q, s))
+		return -1;
+	if (_fp448_iszero(h))
+		return -1;
 
 	/* xyz1 = decompress(_pub) */
 	_ed448_point_decompress(_pub, &xyz1);

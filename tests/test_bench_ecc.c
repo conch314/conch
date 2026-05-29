@@ -163,7 +163,7 @@ void test_p256(void)
 	uint8_t sign[ECDSA_P256_SIGN_LEN];
 	uint8_t pub[ECDSA_P256_PUB_LEN], key[ECDH_P256_KEY_LEN];
 
-	printf("nist p-256 ecdh\n");
+	printf("nist p256 ecdh\n");
 
 	start = clock();
 	for (int32_t i = 0; i < 500; i++) {
@@ -181,7 +181,7 @@ void test_p256(void)
 	time = (double)(end - start) / CLOCKS_PER_SEC;
 	printf("key time: %.6f (%.2f/s)\n", time / 500, 500 / time);
 
-	printf("nist p-256 ecdsa\n");
+	printf("nist p256 ecdsa\n");
 
 	start = clock();
 	for (int32_t i = 0; i < 500; i++) {
@@ -229,7 +229,7 @@ void test_p384(void)
 	uint8_t sign[ECDSA_P384_SIGN_LEN];
 	uint8_t pub[ECDSA_P384_PUB_LEN], key[ECDH_P384_KEY_LEN];
 
-	printf("nist p-384 ecdh\n");
+	printf("nist p384 ecdh\n");
 
 	start = clock();
 	for (int32_t i = 0; i < 500; i++) {
@@ -247,7 +247,7 @@ void test_p384(void)
 	time = (double)(end - start) / CLOCKS_PER_SEC;
 	printf("key time: %.6f (%.2f/s)\n", time / 500, 500 / time);
 
-	printf("nist p-384 ecdsa\n");
+	printf("nist p384 ecdsa\n");
 
 	start = clock();
 	for (int32_t i = 0; i < 500; i++) {
@@ -295,7 +295,7 @@ void test_p521(void)
 	uint8_t sign[ECDSA_P521_SIGN_LEN];
 	uint8_t pub[ECDSA_P521_PUB_LEN], key[ECDH_P521_KEY_LEN];
 
-	printf("nist p-521 ecdh\n");
+	printf("nist p521 ecdh\n");
 
 	start = clock();
 	for (int32_t i = 0; i < 500; i++) {
@@ -313,7 +313,7 @@ void test_p521(void)
 	time = (double)(end - start) / CLOCKS_PER_SEC;
 	printf("key time: %.6f (%.2f/s)\n", time / 500, 500 / time);
 
-	printf("nist p-521 ecdsa\n");
+	printf("nist p521 ecdsa\n");
 
 	start = clock();
 	for (int32_t i = 0; i < 500; i++) {
