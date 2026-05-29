@@ -162,17 +162,11 @@ static void _fp521_move(uint32_t a[17], const uint32_t b[17], uint32_t bit)
  */
 static uint32_t _fp521_iszero(const uint32_t a[17])
 {
-	uint32_t r = 0;
-	for (int32_t i = 0; i < (17 * 2); i++)
-		r |= ((uint16_t *)a)[i];
+	uint64_t r = 0;
+	for (int32_t i = 0; i < 17; i++)
+		r |= a[i];
 
-	/*
-	 * 0x0000ffff - 1 == 0x0000fffe
-	 *   0x0000fffe >> 31 == 0x00000000
-	 * 0x00000000 - 1 == 0xffffffff
-	 *   0xffffffff >> 31 == 0x00000001
-	 */
-	return ((r - 1) >> 31) & 1;
+	return ((r - 1) >> 32) & 1;
 }
 
 /* @func: _fp521_add (static)

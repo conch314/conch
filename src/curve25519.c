@@ -210,17 +210,11 @@ static void _fp25519_swap(uint32_t a[8], uint32_t b[8], uint32_t bit)
  */
 static uint32_t _fp25519_iszero(const uint32_t a[8])
 {
-	uint32_t r = 0;
-	for (int32_t i = 0; i < (8 * 2); i++)
-		r |= ((uint16_t *)a)[i];
+	uint64_t r = 0;
+	for (int32_t i = 0; i < 8; i++)
+		r |= a[i];
 
-	/*
-	 * 0x0000ffff - 1 == 0x0000fffe
-	 *   0x0000fffe >> 31 == 0x00000000
-	 * 0x00000000 - 1 == 0xffffffff
-	 *   0xffffffff >> 31 == 0x00000001
-	 */
-	return ((r - 1) >> 31) & 1;
+	return ((r - 1) >> 32) & 1;
 }
 
 /* @func: _fp25519_add (static)
@@ -1474,9 +1468,7 @@ int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 	conch_memcpy(r, sign, EDDSA_ED25519_LEN);
 	conch_memcpy(s, sign + EDDSA_ED25519_LEN, EDDSA_ED25519_LEN);
 
-	/* if s > 0 && s < q */
-	if (_fp25519_iszero(s))
-		return -1;
+	/* if s < q */
 	if (_np25519_sub(h, _sc25519_q, s) || _fp25519_iszero(h))
 		return -1;
 
