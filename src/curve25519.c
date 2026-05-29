@@ -1262,6 +1262,7 @@ static void _ed25519_point_compress(const struct ed25519_point *xyz1,
 static int32_t _ed25519_point_decompress(const uint32_t k[8],
 		struct ed25519_point *xyz1)
 {
+	uint32_t t[8];
 	/*
 	 * y1 = k & ((1 << 255) - 1)
 	 * x1 = rec_x(y1, k >> 255)
@@ -1273,6 +1274,10 @@ static int32_t _ed25519_point_decompress(const uint32_t k[8],
 	for (int32_t i = 0; i < 8; i++)
 		xyz1->y[i] = k[i];
 	xyz1->y[7] &= 0x7fffffff; /* mask */
+
+	/* if y < p */
+	if (_np25519_sub(t, _fp25519_p, xyz1->y) || _fp25519_iszero(t))
+		return -1;
 
 	/* x1 = rec_x(y1, k >> 255) */
 	if (_ed25519_point_recover_x(xyz1->y, k[7] >> 31, xyz1->x))
@@ -1469,6 +1474,7 @@ int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 	conch_memcpy(r, sign, EDDSA_ED25519_LEN);
 	conch_memcpy(s, sign + EDDSA_ED25519_LEN, EDDSA_ED25519_LEN);
 
+	/* if s > 0 && s < q */
 	if (_fp25519_iszero(s))
 		return -1;
 	if (_np25519_sub(h, _sc25519_q, s) || _fp25519_iszero(h))

@@ -1121,6 +1121,7 @@ static void _ed448_point_compress(const struct ed448_point *xyz1,
 static int32_t _ed448_point_decompress(const uint32_t k[15],
 		struct ed448_point *xyz1)
 {
+	uint32_t t[14];
 	/*
 	 * y1 = k & ((1 << 448) - 1)
 	 * x1 = rec_x(y1, (k >> 455) & 1)
@@ -1130,6 +1131,10 @@ static int32_t _ed448_point_decompress(const uint32_t k[15],
 	/* y1 = k & ((1 << 448) - 1) */
 	for (int32_t i = 0; i < 14; i++)
 		xyz1->y[i] = k[i];
+
+	/* if y < p */
+	if (_np448_sub(t, _fp448_p, xyz1->y) || _fp448_iszero(t))
+		return -1;
 
 	/* x1 = rec_x(y1, (k >> 455) & 1) */
 	if (_ed448_point_recover_x(xyz1->y, (k[14] >> 7) & 1, xyz1->x))
@@ -1319,6 +1324,7 @@ int32_t conch_eddsa_ed448_verify(const uint8_t *pub,
 	conch_memcpy(r, sign, EDDSA_ED448_LEN);
 	conch_memcpy(s, sign + EDDSA_ED448_LEN, EDDSA_ED448_LEN);
 
+	/* if s > 0 && s < q */
 	if (_fp448_iszero(s))
 		return -1;
 	if (_np448_sub(h, _sc448_q, s) || _fp448_iszero(h))
