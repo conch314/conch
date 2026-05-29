@@ -131,5 +131,31 @@
 # error "!!!unknown machine bits!!!"
 #endif
 
+#undef INT8_C
+#undef INT16_C
+#undef INT32_C
+#define INT8_C(x) x
+#define INT16_C(x) x
+#define INT32_C(x) x
+
+#undef UINT8_C
+#undef UINT16_C
+#undef UINT32_C
+#define UINT8_C(x) x
+#define UINT16_C(x) x
+#define UINT32_C(x) x##U
+
+#undef INT64_C
+#undef UINT64_C
+#if defined(CONCH_MARCH_BITS_32)
+# define INT64_C(x) x##LL
+# define UINT64_C(x) x##ULL
+#elif defined(CONCH_MARCH_BITS_64)
+# define INT64_C(x) x##L
+# define UINT64_C(x) x##UL
+#else
+# error "!!!unknown machine bits!!!"
+#endif
+
 
 #endif
