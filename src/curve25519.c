@@ -394,13 +394,13 @@ static void _fp25519_sub(uint32_t r[8],
 	t7 &= 0xffffffff;
 
 	t0 -= (carry & 38);
-	t1 += t0 >> 32;
-	t2 += t1 >> 32;
-	t3 += t2 >> 32;
-	t4 += t3 >> 32;
-	t5 += t4 >> 32;
-	t6 += t5 >> 32;
-	t7 += t6 >> 32;
+	t1 += (int32_t)(t0 >> 32);
+	t2 += (int32_t)(t1 >> 32);
+	t3 += (int32_t)(t2 >> 32);
+	t4 += (int32_t)(t3 >> 32);
+	t5 += (int32_t)(t4 >> 32);
+	t6 += (int32_t)(t5 >> 32);
+	t7 += (int32_t)(t6 >> 32);
 	carry = t7 >> 32;
 	t0 &= 0xffffffff;
 	t1 &= 0xffffffff;
@@ -412,13 +412,13 @@ static void _fp25519_sub(uint32_t r[8],
 	t7 &= 0xffffffff;
 
 	t0 -= (carry & 38);
-	t1 += t0 >> 32;
-	t2 += t1 >> 32;
-	t3 += t2 >> 32;
-	t4 += t3 >> 32;
-	t5 += t4 >> 32;
-	t6 += t5 >> 32;
-	t7 += t6 >> 32;
+	t1 += (int32_t)(t0 >> 32);
+	t2 += (int32_t)(t1 >> 32);
+	t3 += (int32_t)(t2 >> 32);
+	t4 += (int32_t)(t3 >> 32);
+	t5 += (int32_t)(t4 >> 32);
+	t6 += (int32_t)(t5 >> 32);
+	t7 += (int32_t)(t6 >> 32);
 	carry = t7 >> 32;
 	r[0] = t0 & 0xffffffff;
 	r[1] = t1 & 0xffffffff;
