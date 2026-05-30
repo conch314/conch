@@ -228,6 +228,8 @@ static uint32_t _fp25519_iszero(const uint32_t a[8])
 static void _fp25519_add(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t carry = 0;
 	uint64_t tmp = 0;
 
@@ -254,6 +256,70 @@ static void _fp25519_add(uint32_t r[8],
 		r[i] = tmp & 0xffffffff;
 		carry = tmp >> 32;
 	}
+
+#else
+
+	uint64_t t0 = (uint64_t)a[0] + b[0];
+	uint64_t t1 = (uint64_t)a[1] + b[1];
+	uint64_t t2 = (uint64_t)a[2] + b[2];
+	uint64_t t3 = (uint64_t)a[3] + b[3];
+	uint64_t t4 = (uint64_t)a[4] + b[4];
+	uint64_t t5 = (uint64_t)a[5] + b[5];
+	uint64_t t6 = (uint64_t)a[6] + b[6];
+	uint64_t t7 = (uint64_t)a[7] + b[7];
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint32_t carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 += carry * 38;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 += carry * 38;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+#endif
 }
 
 /* @func: _fp25519_sub (static)
@@ -267,6 +333,8 @@ static void _fp25519_add(uint32_t r[8],
 static void _fp25519_sub(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t carry = 0;
 	uint64_t tmp = 0;
 
@@ -297,6 +365,71 @@ static void _fp25519_sub(uint32_t r[8],
 		r[i] = tmp & 0xffffffff;
 		carry = tmp >> 32;
 	}
+
+#else
+
+	uint64_t t0 = (uint64_t)a[0] - b[0];
+	uint64_t t1 = (uint64_t)a[1] - b[1];
+	uint64_t t2 = (uint64_t)a[2] - b[2];
+	uint64_t t3 = (uint64_t)a[3] - b[3];
+	uint64_t t4 = (uint64_t)a[4] - b[4];
+	uint64_t t5 = (uint64_t)a[5] - b[5];
+	uint64_t t6 = (uint64_t)a[6] - b[6];
+	uint64_t t7 = (uint64_t)a[7] - b[7];
+	t1 += (int32_t)(t0 >> 32);
+	t2 += (int32_t)(t1 >> 32);
+	t3 += (int32_t)(t2 >> 32);
+	t4 += (int32_t)(t3 >> 32);
+	t5 += (int32_t)(t4 >> 32);
+	t6 += (int32_t)(t5 >> 32);
+	t7 += (int32_t)(t6 >> 32);
+	uint32_t carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 -= (carry & 38);
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 -= (carry & 38);
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	carry = t7 >> 32;
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+#endif
 }
 
 /* @func: _fp25519_mul (static)
@@ -310,6 +443,8 @@ static void _fp25519_sub(uint32_t r[8],
 static void _fp25519_mul(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t rr[16];
 	uint32_t carry = 0;
 	uint64_t tmp = 0;
@@ -358,6 +493,281 @@ static void _fp25519_mul(uint32_t r[8],
 		r[i] = tmp & 0xffffffff;
 		carry = tmp >> 32;
 	}
+
+#else
+
+	uint64_t a0 = a[0];
+	uint64_t a1 = a[1];
+	uint64_t a2 = a[2];
+	uint64_t a3 = a[3];
+	uint64_t a4 = a[4];
+	uint64_t a5 = a[5];
+	uint64_t a6 = a[6];
+	uint64_t a7 = a[7];
+	uint64_t b0 = b[0];
+	uint64_t b1 = b[1];
+	uint64_t b2 = b[2];
+	uint64_t b3 = b[3];
+	uint64_t b4 = b[4];
+	uint64_t b5 = b[5];
+	uint64_t b6 = b[6];
+	uint64_t b7 = b[7];
+
+	uint64_t t0 = a0 * b0;
+	uint64_t t1 = a0 * b1;
+	uint64_t t2 = a0 * b2;
+	uint64_t t3 = a0 * b3;
+	uint64_t t4 = a0 * b4;
+	uint64_t t5 = a0 * b5;
+	uint64_t t6 = a0 * b6;
+	uint64_t t7 = a0 * b7;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint64_t t8 = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t1 += a1 * b0;
+	t2 += a1 * b1;
+	t3 += a1 * b2;
+	t4 += a1 * b3;
+	t5 += a1 * b4;
+	t6 += a1 * b5;
+	t7 += a1 * b6;
+	t8 += a1 * b7;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	uint64_t t9 = t8 >> 32;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t2 += a2 * b0;
+	t3 += a2 * b1;
+	t4 += a2 * b2;
+	t5 += a2 * b3;
+	t6 += a2 * b4;
+	t7 += a2 * b5;
+	t8 += a2 * b6;
+	t9 += a2 * b7;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	uint64_t t10 = t9 >> 32;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t3 += a3 * b0;
+	t4 += a3 * b1;
+	t5 += a3 * b2;
+	t6 += a3 * b3;
+	t7 += a3 * b4;
+	t8 += a3 * b5;
+	t9 += a3 * b6;
+	t10 += a3 * b7;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	uint64_t t11 = t10 >> 32;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t4 += a4 * b0;
+	t5 += a4 * b1;
+	t6 += a4 * b2;
+	t7 += a4 * b3;
+	t8 += a4 * b4;
+	t9 += a4 * b5;
+	t10 += a4 * b6;
+	t11 += a4 * b7;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	uint64_t t12 = t11 >> 32;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t5 += a5 * b0;
+	t6 += a5 * b1;
+	t7 += a5 * b2;
+	t8 += a5 * b3;
+	t9 += a5 * b4;
+	t10 += a5 * b5;
+	t11 += a5 * b6;
+	t12 += a5 * b7;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	uint64_t t13 = t12 >> 32;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t6 += a6 * b0;
+	t7 += a6 * b1;
+	t8 += a6 * b2;
+	t9 += a6 * b3;
+	t10 += a6 * b4;
+	t11 += a6 * b5;
+	t12 += a6 * b6;
+	t13 += a6 * b7;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	t13 += t12 >> 32;
+	uint64_t t14 = t13 >> 32;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t13 &= 0xffffffff;
+	t7 += a7 * b0;
+	t8 += a7 * b1;
+	t9 += a7 * b2;
+	t10 += a7 * b3;
+	t11 += a7 * b4;
+	t12 += a7 * b5;
+	t13 += a7 * b6;
+	t14 += a7 * b7;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	t13 += t12 >> 32;
+	t14 += t13 >> 32;
+	uint64_t t15 = t14 >> 32;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t13 &= 0xffffffff;
+	t14 &= 0xffffffff;
+
+	t0 += t8 * 38;
+	t1 += t9 * 38;
+	t2 += t10 * 38;
+	t3 += t11 * 38;
+	t4 += t12 * 38;
+	t5 += t13 * 38;
+	t6 += t14 * 38;
+	t7 += t15 * 38;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint32_t carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 += carry * 38;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 += carry * 38;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+#endif
 }
 
 /* @func: _fp25519_mod (static)
