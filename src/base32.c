@@ -61,13 +61,13 @@ static const uint8_t b32d[256] = {
  * #1: s    [in]     input buffer
  * #2: slen [in]     input length
  * #3: t    [out]    output buffer
- * #4: tlen [in/out] remaining length of output buffer
+ * #4: tlen [in/out] output length and return the remaining length
  */
 void conch_base32_enc(const char *s, uint32_t slen, char *t,
 		uint32_t *tlen)
 {
 	uint32_t n = *tlen;
-	while (slen) {
+	while (slen && n) {
 		*t++ = b32e[((uint8_t)s[0] >> 3) & 0x1f];
 		if (!--n)
 			break;
@@ -118,7 +118,7 @@ void conch_base32_enc(const char *s, uint32_t slen, char *t,
  *
  * #1: s    [in]  input buffer (8byte)
  * #2: t    [out] output buffer
- * #3: tlen [in]  output buffer length
+ * #3: tlen [in]  output length
  * #r:      [ret]
  *    >0: output size, -1: output buffer full, -2: invalid character error
  */
@@ -191,7 +191,7 @@ static int32_t _base32_dec_8(const char *s, char *t, uint32_t tlen)
  * #1: s    [in]     input buffer
  * #2: slen [in]     input length
  * #3: t    [out]    output buffer
- * #4: tlen [in/out] remaining length of output buffer
+ * #4: tlen [in/out] output length and return the remaining length
  * #r:      [ret]
  *    0: no error, >0: input error location, -1: output buffer full,
  *    -2: invalid character error, -3: input incomplete
@@ -212,8 +212,9 @@ int32_t conch_base32_dec(const char *s, uint32_t slen, char *t,
 			k = _base32_dec_8(buf, t, *tlen);
 			if (k < 0)
 				return k;
-			t += k;
+
 			*tlen -= k;
+			t += k;
 			k = 0;
 		}
 	}

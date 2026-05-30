@@ -1269,8 +1269,8 @@ static int32_t _ed25519_point_decompress(const uint32_t k[8],
 		xyz1->y[i] = k[i];
 	xyz1->y[7] &= 0x7fffffff; /* mask */
 
-	/* if y < p */
-	if (_np25519_sub(t, _fp25519_p, xyz1->y) || _fp25519_iszero(t))
+	/* if y1 < p */
+	if (!_np25519_sub(t, xyz1->y, _fp25519_p))
 		return -1;
 
 	/* x1 = rec_x(y1, k >> 255) */
@@ -1469,7 +1469,7 @@ int32_t conch_eddsa_ed25519_verify(const uint8_t *pub,
 	conch_memcpy(s, sign + EDDSA_ED25519_LEN, EDDSA_ED25519_LEN);
 
 	/* if s < q */
-	if (_np25519_sub(h, _sc25519_q, s) || _fp25519_iszero(h))
+	if (!_np25519_sub(h, s, _sc25519_q))
 		return -1;
 
 	/* A = decompress(_pub) */

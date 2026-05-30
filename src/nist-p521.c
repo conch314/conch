@@ -580,7 +580,7 @@ static void _sc521_inv(uint32_t r[17], const uint32_t z[17])
  */
 static void _sc521_digest(const uint8_t dig[64], uint32_t r[17])
 {
-	r[16] = 0;
+	r[16] = 0; /* mask */
 
 	/* big endian */
 	for (int32_t i = 0; i < 64; i++)
@@ -818,6 +818,8 @@ static void _p521_scalar_mul(const uint32_t k[17],
 static int32_t _p521_check_key(const uint32_t k[17])
 {
 	uint32_t t[17];
+
+	/* if k > 0 && k < q */
 	if (_fp521_iszero(k) || !_p521_sub(t, k, _sc521_q))
 		return -1;
 
@@ -918,7 +920,7 @@ int32_t conch_ecdh_p521_public_key(const uint8_t *pri, uint8_t *pub)
 {
 	uint32_t _pri[17];
 	struct p521_point xy1;
-	_pri[16] = 0;
+	_pri[16] = 0; /* mask */
 
 	conch_memcpy(_pri, pri, ECDH_P521_PRI_LEN);
 	if (_p521_check_key(_pri))
@@ -947,7 +949,7 @@ int32_t conch_ecdh_p521_shared_key(const uint8_t *pri,
 {
 	uint32_t _pri[17];
 	struct p521_point xy1, xy2;
-	_pri[16] = 0;
+	_pri[16] = 0; /* mask */
 	xy1.x[16] = xy1.y[16] = 0;
 
 	conch_memcpy(_pri, pri, ECDH_P521_PRI_LEN);
@@ -979,7 +981,7 @@ int32_t conch_ecdsa_p521_public_key(const uint8_t *pri, uint8_t *pub)
 {
 	uint32_t _pri[17];
 	struct p521_point xy1;
-	_pri[16] = 0;
+	_pri[16] = 0; /* mask */
 
 	conch_memcpy(_pri, pri, ECDSA_P521_PRI_LEN);
 	if (_p521_check_key(_pri))
@@ -1011,11 +1013,13 @@ int32_t conch_ecdsa_p521_sign(const uint8_t *pri, const uint8_t *ran,
 	uint32_t _pri[17], _ran[17], z[17], s[17];
 	struct p521_point xy1;
 	SHA512_NEW(ctx);
-	_pri[16] = 0;
+	_pri[16] = 0; /* mask */
 	_ran[16] = 0;
 
 	conch_memcpy(_pri, pri, ECDSA_P521_PRI_LEN);
 	conch_memcpy(_ran, ran, ECDSA_P521_RAN_LEN);
+	if (_p521_check_key(_pri) || _p521_check_key(_ran))
+		return -1;
 
 	/* x1 = scalar(_ran, base) */
 	_p521_scalar_mul(_ran, &_p521_base, &xy1);
@@ -1063,7 +1067,7 @@ int32_t conch_ecdsa_p521_verify(const uint8_t *pub,
 	uint32_t z[17], t[17], u1[17], u2[17];
 	struct p521_point xy1, xy2, xy3;
 	SHA512_NEW(ctx);
-	xy1.x[16] = xy1.y[16] = 0;
+	xy1.x[16] = xy1.y[16] = 0; /* mask */
 	xy2.x[16] = xy2.y[16] = 0;
 
 	/* xy1 = sign */

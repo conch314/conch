@@ -788,6 +788,8 @@ static void _p256_scalar_mul(const uint32_t k[8],
 static int32_t _p256_check_key(const uint32_t k[8])
 {
 	uint32_t t[8];
+
+	/* if k > 0 && k < q */
 	if (_fp256_iszero(k) || !_p256_sub(t, k, _sc256_q))
 		return -1;
 
@@ -980,6 +982,8 @@ int32_t conch_ecdsa_p256_sign(const uint8_t *pri, const uint8_t *ran,
 
 	conch_memcpy(_pri, pri, ECDSA_P256_PRI_LEN);
 	conch_memcpy(_ran, ran, ECDSA_P256_RAN_LEN);
+	if (_p256_check_key(_pri) || _p256_check_key(_ran))
+		return -1;
 
 	/* x1 = scalar(_ran, base) */
 	_p256_scalar_mul(_ran, &_p256_base, &xy1);

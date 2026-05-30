@@ -800,6 +800,8 @@ static void _p384_scalar_mul(const uint32_t k[12],
 static int32_t _p384_check_key(const uint32_t k[12])
 {
 	uint32_t t[12];
+
+	/* if k > 0 && k < q */
 	if (_fp384_iszero(k) || !_p384_sub(t, k, _sc384_q))
 		return -1;
 
@@ -992,6 +994,8 @@ int32_t conch_ecdsa_p384_sign(const uint8_t *pri, const uint8_t *ran,
 
 	conch_memcpy(_pri, pri, ECDSA_P384_PRI_LEN);
 	conch_memcpy(_ran, ran, ECDSA_P384_RAN_LEN);
+	if (_p384_check_key(_pri) || _p384_check_key(_ran))
+		return -1;
 
 	/* x1 = scalar(_ran, base) */
 	_p384_scalar_mul(_ran, &_p384_base, &xy1);
