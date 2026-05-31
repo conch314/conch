@@ -41,9 +41,11 @@ extern "C" {
 
 /* rc4.c */
 extern
-void conch_rc4_init(struct rc4_ctx *ctx, const uint8_t *key, uint32_t len);
+void conch_rc4_init(struct rc4_ctx *ctx, const uint8_t *key, uint32_t len)
+;
 extern
-void conch_rc4_crypto(struct rc4_ctx *ctx, uint8_t *buf, uint32_t len);
+void conch_rc4_crypto(struct rc4_ctx *ctx, uint8_t *buf, uint32_t len)
+;
 
 #ifdef __cplusplus
 }

@@ -33,7 +33,8 @@
  * #2: key [in]  input key
  * #3: len [in]  key length (max-length: 256)
  */
-void conch_rc4_init(struct rc4_ctx *ctx, const uint8_t *key, uint32_t len) {
+void conch_rc4_init(struct rc4_ctx *ctx, const uint8_t *key, uint32_t len)
+{
 	for (int32_t i = 0; i < 256; i++)
 		ctx->s[i] = i;
 
@@ -56,7 +57,8 @@ void conch_rc4_init(struct rc4_ctx *ctx, const uint8_t *key, uint32_t len) {
  * #2: buf [in/out] buffer
  * #3: len [in]     length
  */
-void conch_rc4_crypto(struct rc4_ctx *ctx, uint8_t *buf, uint32_t len) {
+void conch_rc4_crypto(struct rc4_ctx *ctx, uint8_t *buf, uint32_t len)
+{
 	int32_t i = ctx->i, j = ctx->j;
 
 	for (uint32_t k = 0; k < len; k++) {

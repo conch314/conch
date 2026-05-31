@@ -66,8 +66,22 @@ void *conch_gomap_insert(struct gomap_head *head,
 		size_t pos = ((m + i) % n) & ~0x3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
-		if (x & 0x80808080) /* empty or delete */
-			goto e;
+		if (x & 0x80808080) { /* empty or delete */
+			x ^= mask;
+			x = (x - 0x01010101) & ~x & 0x80808080;
+			if (x)
+				goto e;
+
+			ctrl = head->group[pos >> 2]._ctrl;
+			for (j = 0; j < 4; j++) {
+				if (!(ctrl[j] & 0x80))
+					continue;
+
+				ctrl[j] = h2;
+				head->used++;
+				return GOMAP_ARRAY_OF(head, pos + j);
+			}
+		}
 
 		x ^= mask;
 		x = (x - 0x01010101) & ~x & 0x80808080;
