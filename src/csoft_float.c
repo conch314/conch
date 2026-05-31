@@ -1166,10 +1166,10 @@ uint32_t conch_csf_fdiv32(uint32_t a, uint32_t b)
 	uint32_t recip32 = _float_approx_recip32_1(b_sig);
 	/* z_sig = a_sig / b_sig quotient */
 	z_sig = ((uint64_t)a_sig * recip32) >> 32;
-	z_sig += 2;;
+	z_sig += 2;
 
 	if ((z_sig & 0x3f) < 2) {
-		z_sig &= ~0x3ULL; /* mask grs */
+		z_sig &= ~0x3U; /* mask grs */
 
 		/* r = A - z * B */
 		uint64_t rem = (uint64_t)a_sig << 31;
