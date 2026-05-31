@@ -162,6 +162,8 @@ static uint32_t _fp256_iszero(const uint32_t a[8])
 static void _fp256_add(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t carry = 0, carry2 = 0;
 	uint64_t tmp = 0;
 
@@ -179,6 +181,59 @@ static void _fp256_add(uint32_t r[8],
 		r[i] = tmp & 0xffffffff;
 		carry = tmp >> 32;
 	}
+
+#else
+
+	uint64_t t0 = (uint64_t)a[0] + b[0];
+	uint64_t t1 = (uint64_t)a[1] + b[1];
+	uint64_t t2 = (uint64_t)a[2] + b[2];
+	uint64_t t3 = (uint64_t)a[3] + b[3];
+	uint64_t t4 = (uint64_t)a[4] + b[4];
+	uint64_t t5 = (uint64_t)a[5] + b[5];
+	uint64_t t6 = (uint64_t)a[6] + b[6];
+	uint64_t t7 = (uint64_t)a[7] + b[7];
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint32_t mask = ~(((t7 >> 32) - 1) >> 32);
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 -= _fp256_p[0] & mask;
+	t1 -= _fp256_p[1] & mask;
+	t2 -= _fp256_p[2] & mask;
+	t3 -= _fp256_p[3] & mask;
+	t4 -= _fp256_p[4] & mask;
+	t5 -= _fp256_p[5] & mask;
+	t6 -= _fp256_p[6] & mask;
+	t7 -= _fp256_p[7] & mask;
+	t1 += (int32_t)(t0 >> 32);
+	t2 += (int32_t)(t1 >> 32);
+	t3 += (int32_t)(t2 >> 32);
+	t4 += (int32_t)(t3 >> 32);
+	t5 += (int32_t)(t4 >> 32);
+	t6 += (int32_t)(t5 >> 32);
+	t7 += (int32_t)(t6 >> 32);
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+#endif
 }
 
 /* @func: _fp256_sub (static)
@@ -192,6 +247,8 @@ static void _fp256_add(uint32_t r[8],
 static void _fp256_sub(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t carry = 0, carry2 = 0;
 	uint64_t tmp = 0;
 
@@ -209,6 +266,59 @@ static void _fp256_sub(uint32_t r[8],
 		r[i] = tmp & 0xffffffff;
 		carry = tmp >> 32;
 	}
+
+#else
+
+	uint64_t t0 = (uint64_t)a[0] - b[0];
+	uint64_t t1 = (uint64_t)a[1] - b[1];
+	uint64_t t2 = (uint64_t)a[2] - b[2];
+	uint64_t t3 = (uint64_t)a[3] - b[3];
+	uint64_t t4 = (uint64_t)a[4] - b[4];
+	uint64_t t5 = (uint64_t)a[5] - b[5];
+	uint64_t t6 = (uint64_t)a[6] - b[6];
+	uint64_t t7 = (uint64_t)a[7] - b[7];
+	t1 += (int32_t)(t0 >> 32);
+	t2 += (int32_t)(t1 >> 32);
+	t3 += (int32_t)(t2 >> 32);
+	t4 += (int32_t)(t3 >> 32);
+	t5 += (int32_t)(t4 >> 32);
+	t6 += (int32_t)(t5 >> 32);
+	t7 += (int32_t)(t6 >> 32);
+	uint32_t mask = ~(((t7 >> 32) - 1) >> 32);
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t0 += _fp256_p[0] & mask;
+	t1 += _fp256_p[1] & mask;
+	t2 += _fp256_p[2] & mask;
+	t3 += _fp256_p[3] & mask;
+	t4 += _fp256_p[4] & mask;
+	t5 += _fp256_p[5] & mask;
+	t6 += _fp256_p[6] & mask;
+	t7 += _fp256_p[7] & mask;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+#endif
 }
 
 /* @func: _fp256_mul (static)
@@ -222,6 +332,8 @@ static void _fp256_sub(uint32_t r[8],
 static void _fp256_mul(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t rr[16], t[8];
 	uint32_t carry = 0;
 	uint64_t tmp = 0;
@@ -318,6 +430,313 @@ static void _fp256_mul(uint32_t r[8],
 	t[7] = rr[13];
 
 	_fp256_sub(r, r, t);
+
+#else
+
+	uint64_t a0 = a[0];
+	uint64_t a1 = a[1];
+	uint64_t a2 = a[2];
+	uint64_t a3 = a[3];
+	uint64_t a4 = a[4];
+	uint64_t a5 = a[5];
+	uint64_t a6 = a[6];
+	uint64_t a7 = a[7];
+	uint64_t b0 = b[0];
+	uint64_t b1 = b[1];
+	uint64_t b2 = b[2];
+	uint64_t b3 = b[3];
+	uint64_t b4 = b[4];
+	uint64_t b5 = b[5];
+	uint64_t b6 = b[6];
+	uint64_t b7 = b[7];
+
+	uint64_t t0 = a0 * b0;
+	uint64_t t1 = a0 * b1;
+	uint64_t t2 = a0 * b2;
+	uint64_t t3 = a0 * b3;
+	uint64_t t4 = a0 * b4;
+	uint64_t t5 = a0 * b5;
+	uint64_t t6 = a0 * b6;
+	uint64_t t7 = a0 * b7;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint64_t t8 = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t1 += a1 * b0;
+	t2 += a1 * b1;
+	t3 += a1 * b2;
+	t4 += a1 * b3;
+	t5 += a1 * b4;
+	t6 += a1 * b5;
+	t7 += a1 * b6;
+	t8 += a1 * b7;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	uint64_t t9 = t8 >> 32;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t2 += a2 * b0;
+	t3 += a2 * b1;
+	t4 += a2 * b2;
+	t5 += a2 * b3;
+	t6 += a2 * b4;
+	t7 += a2 * b5;
+	t8 += a2 * b6;
+	t9 += a2 * b7;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	uint64_t t10 = t9 >> 32;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t3 += a3 * b0;
+	t4 += a3 * b1;
+	t5 += a3 * b2;
+	t6 += a3 * b3;
+	t7 += a3 * b4;
+	t8 += a3 * b5;
+	t9 += a3 * b6;
+	t10 += a3 * b7;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	uint64_t t11 = t10 >> 32;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t4 += a4 * b0;
+	t5 += a4 * b1;
+	t6 += a4 * b2;
+	t7 += a4 * b3;
+	t8 += a4 * b4;
+	t9 += a4 * b5;
+	t10 += a4 * b6;
+	t11 += a4 * b7;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	uint64_t t12 = t11 >> 32;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t5 += a5 * b0;
+	t6 += a5 * b1;
+	t7 += a5 * b2;
+	t8 += a5 * b3;
+	t9 += a5 * b4;
+	t10 += a5 * b5;
+	t11 += a5 * b6;
+	t12 += a5 * b7;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	uint64_t t13 = t12 >> 32;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t6 += a6 * b0;
+	t7 += a6 * b1;
+	t8 += a6 * b2;
+	t9 += a6 * b3;
+	t10 += a6 * b4;
+	t11 += a6 * b5;
+	t12 += a6 * b6;
+	t13 += a6 * b7;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	t13 += t12 >> 32;
+	uint64_t t14 = t13 >> 32;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t13 &= 0xffffffff;
+	t7 += a7 * b0;
+	t8 += a7 * b1;
+	t9 += a7 * b2;
+	t10 += a7 * b3;
+	t11 += a7 * b4;
+	t12 += a7 * b5;
+	t13 += a7 * b6;
+	t14 += a7 * b7;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	t13 += t12 >> 32;
+	t14 += t13 >> 32;
+	uint64_t t15 = t14 >> 32;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t13 &= 0xffffffff;
+	t14 &= 0xffffffff;
+
+	uint32_t T[8];
+
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+	T[0] = T[1] = T[2] = 0;
+	T[3] = t11 & 0xffffffff;
+	T[4] = t12 & 0xffffffff;
+	T[5] = t13 & 0xffffffff;
+	T[6] = t14 & 0xffffffff;
+	T[7] = t15 & 0xffffffff;
+
+	_fp256_add(T, T, T);
+	_fp256_add(r, r, T);
+
+	T[0] = T[1] = T[2] = 0;
+	T[3] = t12 & 0xffffffff;
+	T[4] = t13 & 0xffffffff;
+	T[5] = t14 & 0xffffffff;
+	T[6] = t15 & 0xffffffff;
+	T[7] = 0;
+
+	_fp256_add(T, T, T);
+	_fp256_add(r, r, T);
+
+	T[0] = t8 & 0xffffffff;
+	T[1] = t9 & 0xffffffff;
+	T[2] = t10 & 0xffffffff;
+	T[3] = T[4] = T[5] = 0;
+	T[6] = t14 & 0xffffffff;
+	T[7] = t15 & 0xffffffff;
+
+	_fp256_add(r, r, T);
+
+	T[0] = t9 & 0xffffffff;
+	T[1] = t10 & 0xffffffff;
+	T[2] = t11 & 0xffffffff;
+	T[3] = t13 & 0xffffffff;
+	T[4] = t14 & 0xffffffff;
+	T[5] = t15 & 0xffffffff;
+	T[6] = t13 & 0xffffffff;
+	T[7] = t8 & 0xffffffff;
+
+	_fp256_add(r, r, T);
+
+	T[0] = t11 & 0xffffffff;
+	T[1] = t12 & 0xffffffff;
+	T[2] = t13 & 0xffffffff;
+	T[3] = T[4] = T[5] = 0;
+	T[6] = t8 & 0xffffffff;
+	T[7] = t10 & 0xffffffff;
+
+	_fp256_sub(r, r, T);
+
+	T[0] = t12 & 0xffffffff;
+	T[1] = t13 & 0xffffffff;
+	T[2] = t14 & 0xffffffff;
+	T[3] = t15 & 0xffffffff;
+	T[4] = T[5] = 0;
+	T[6] = t9 & 0xffffffff;
+	T[7] = t11 & 0xffffffff;
+
+	_fp256_sub(r, r, T);
+
+	T[0] = t13 & 0xffffffff;
+	T[1] = t14 & 0xffffffff;
+	T[2] = t15 & 0xffffffff;
+	T[3] = t8 & 0xffffffff;
+	T[4] = t9 & 0xffffffff;
+	T[5] = t10 & 0xffffffff;
+	T[6] = 0;
+	T[7] = t12 & 0xffffffff;
+
+	_fp256_sub(r, r, T);
+
+	T[0] = t14 & 0xffffffff;
+	T[1] = t15 & 0xffffffff;
+	T[2] = 0;
+	T[3] = t9 & 0xffffffff;
+	T[4] = t10 & 0xffffffff;
+	T[5] = t11 & 0xffffffff;
+	T[6] = 0;
+	T[7] = t13 & 0xffffffff;
+
+	_fp256_sub(r, r, T);
+
+#endif
 }
 
 /* @func: _fp256_mod (static)
@@ -383,6 +802,8 @@ static void _fp256_inv(uint32_t r[8], const uint32_t z[8])
 static void _sc256_modw(uint32_t r[8],
 		const uint32_t a[8], uint32_t b)
 {
+#if 0
+
 	uint32_t rr[8];
 	uint32_t carry = 0, carry2 = 0;
 	uint64_t tmp = 0;
@@ -416,6 +837,107 @@ static void _sc256_modw(uint32_t r[8],
 		r[i] = tmp & 0xffffffff;
 		carry = tmp >> 32;
 	}
+
+#else
+
+	uint64_t tt0 = (uint64_t)b * _sc256_R[0];
+	uint64_t tt1 = (uint64_t)b * _sc256_R[1];
+	uint64_t tt2 = (uint64_t)b * _sc256_R[2];
+	uint64_t tt3 = (uint64_t)b * _sc256_R[3];
+	uint64_t tt4 = (uint64_t)b * _sc256_R[4];
+	uint64_t tt5 = (uint64_t)b * _sc256_R[5];
+	uint64_t tt6 = (uint64_t)b * _sc256_R[6];
+	uint64_t tt7 = (uint64_t)b * _sc256_R[7];
+	tt1 += tt0 >> 32;
+	tt2 += tt1 >> 32;
+	tt3 += tt2 >> 32;
+	tt4 += tt3 >> 32;
+	tt5 += tt4 >> 32;
+	tt6 += tt5 >> 32;
+	tt7 += tt6 >> 32;
+	tt0 &= 0xffffffff;
+	tt1 &= 0xffffffff;
+	tt2 &= 0xffffffff;
+	tt3 &= 0xffffffff;
+	tt4 &= 0xffffffff;
+	tt5 &= 0xffffffff;
+	tt6 &= 0xffffffff;
+	tt7 &= 0xffffffff;
+
+	uint64_t t0 = (uint64_t)a[0] + tt0;
+	uint64_t t1 = (uint64_t)a[1] + tt1;
+	uint64_t t2 = (uint64_t)a[2] + tt2;
+	uint64_t t3 = (uint64_t)a[3] + tt3;
+	uint64_t t4 = (uint64_t)a[4] + tt4;
+	uint64_t t5 = (uint64_t)a[5] + tt5;
+	uint64_t t6 = (uint64_t)a[6] + tt6;
+	uint64_t t7 = (uint64_t)a[7] + tt7;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint32_t carry = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	tt0 = (uint64_t)carry * _sc256_R[0];
+	tt1 = (uint64_t)carry * _sc256_R[1];
+	tt2 = (uint64_t)carry * _sc256_R[2];
+	tt3 = (uint64_t)carry * _sc256_R[3];
+	tt4 = (uint64_t)carry * _sc256_R[4];
+	tt5 = (uint64_t)carry * _sc256_R[5];
+	tt6 = (uint64_t)carry * _sc256_R[6];
+	tt7 = (uint64_t)carry * _sc256_R[7];
+	tt1 += tt0 >> 32;
+	tt2 += tt1 >> 32;
+	tt3 += tt2 >> 32;
+	tt4 += tt3 >> 32;
+	tt5 += tt4 >> 32;
+	tt6 += tt5 >> 32;
+	tt7 += tt6 >> 32;
+	tt0 &= 0xffffffff;
+	tt1 &= 0xffffffff;
+	tt2 &= 0xffffffff;
+	tt3 &= 0xffffffff;
+	tt4 &= 0xffffffff;
+	tt5 &= 0xffffffff;
+	tt6 &= 0xffffffff;
+	tt7 &= 0xffffffff;
+
+	t0 += tt0;
+	t1 += tt1;
+	t2 += tt2;
+	t3 += tt3;
+	t4 += tt4;
+	t5 += tt5;
+	t6 += tt6;
+	t7 += tt7;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	r[0] = t0 & 0xffffffff;
+	r[1] = t1 & 0xffffffff;
+	r[2] = t2 & 0xffffffff;
+	r[3] = t3 & 0xffffffff;
+	r[4] = t4 & 0xffffffff;
+	r[5] = t5 & 0xffffffff;
+	r[6] = t6 & 0xffffffff;
+	r[7] = t7 & 0xffffffff;
+
+#endif
 }
 
 /* @func: _sc256_mod (static)
@@ -481,6 +1003,8 @@ static void _sc256_add(uint32_t r[8],
 static void _sc256_mul(uint32_t r[8],
 		const uint32_t a[8], const uint32_t b[8])
 {
+#if 0
+
 	uint32_t rr[16];
 	uint32_t carry = 0;
 	uint64_t tmp = 0;
@@ -515,6 +1039,249 @@ static void _sc256_mul(uint32_t r[8],
 	_sc256_modw(rr + 2, rr + 2, rr[10]);
 	_sc256_modw(rr + 1, rr + 1, rr[9]);
 	_sc256_modw(r, rr, rr[8]);
+
+#else
+
+	uint64_t a0 = a[0];
+	uint64_t a1 = a[1];
+	uint64_t a2 = a[2];
+	uint64_t a3 = a[3];
+	uint64_t a4 = a[4];
+	uint64_t a5 = a[5];
+	uint64_t a6 = a[6];
+	uint64_t a7 = a[7];
+	uint64_t b0 = b[0];
+	uint64_t b1 = b[1];
+	uint64_t b2 = b[2];
+	uint64_t b3 = b[3];
+	uint64_t b4 = b[4];
+	uint64_t b5 = b[5];
+	uint64_t b6 = b[6];
+	uint64_t b7 = b[7];
+
+	uint64_t t0 = a0 * b0;
+	uint64_t t1 = a0 * b1;
+	uint64_t t2 = a0 * b2;
+	uint64_t t3 = a0 * b3;
+	uint64_t t4 = a0 * b4;
+	uint64_t t5 = a0 * b5;
+	uint64_t t6 = a0 * b6;
+	uint64_t t7 = a0 * b7;
+	t1 += t0 >> 32;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	uint64_t t8 = t7 >> 32;
+	t0 &= 0xffffffff;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+
+	t1 += a1 * b0;
+	t2 += a1 * b1;
+	t3 += a1 * b2;
+	t4 += a1 * b3;
+	t5 += a1 * b4;
+	t6 += a1 * b5;
+	t7 += a1 * b6;
+	t8 += a1 * b7;
+	t2 += t1 >> 32;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	uint64_t t9 = t8 >> 32;
+	t1 &= 0xffffffff;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t2 += a2 * b0;
+	t3 += a2 * b1;
+	t4 += a2 * b2;
+	t5 += a2 * b3;
+	t6 += a2 * b4;
+	t7 += a2 * b5;
+	t8 += a2 * b6;
+	t9 += a2 * b7;
+	t3 += t2 >> 32;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	uint64_t t10 = t9 >> 32;
+	t2 &= 0xffffffff;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t3 += a3 * b0;
+	t4 += a3 * b1;
+	t5 += a3 * b2;
+	t6 += a3 * b3;
+	t7 += a3 * b4;
+	t8 += a3 * b5;
+	t9 += a3 * b6;
+	t10 += a3 * b7;
+	t4 += t3 >> 32;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	uint64_t t11 = t10 >> 32;
+	t3 &= 0xffffffff;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t4 += a4 * b0;
+	t5 += a4 * b1;
+	t6 += a4 * b2;
+	t7 += a4 * b3;
+	t8 += a4 * b4;
+	t9 += a4 * b5;
+	t10 += a4 * b6;
+	t11 += a4 * b7;
+	t5 += t4 >> 32;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	uint64_t t12 = t11 >> 32;
+	t4 &= 0xffffffff;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t5 += a5 * b0;
+	t6 += a5 * b1;
+	t7 += a5 * b2;
+	t8 += a5 * b3;
+	t9 += a5 * b4;
+	t10 += a5 * b5;
+	t11 += a5 * b6;
+	t12 += a5 * b7;
+	t6 += t5 >> 32;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	uint64_t t13 = t12 >> 32;
+	t5 &= 0xffffffff;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t6 += a6 * b0;
+	t7 += a6 * b1;
+	t8 += a6 * b2;
+	t9 += a6 * b3;
+	t10 += a6 * b4;
+	t11 += a6 * b5;
+	t12 += a6 * b6;
+	t13 += a6 * b7;
+	t7 += t6 >> 32;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	t13 += t12 >> 32;
+	uint64_t t14 = t13 >> 32;
+	t6 &= 0xffffffff;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t13 &= 0xffffffff;
+	t7 += a7 * b0;
+	t8 += a7 * b1;
+	t9 += a7 * b2;
+	t10 += a7 * b3;
+	t11 += a7 * b4;
+	t12 += a7 * b5;
+	t13 += a7 * b6;
+	t14 += a7 * b7;
+	t8 += t7 >> 32;
+	t9 += t8 >> 32;
+	t10 += t9 >> 32;
+	t11 += t10 >> 32;
+	t12 += t11 >> 32;
+	t13 += t12 >> 32;
+	t14 += t13 >> 32;
+	uint64_t t15 = t14 >> 32;
+	t7 &= 0xffffffff;
+	t8 &= 0xffffffff;
+	t9 &= 0xffffffff;
+	t10 &= 0xffffffff;
+	t11 &= 0xffffffff;
+	t12 &= 0xffffffff;
+	t13 &= 0xffffffff;
+	t14 &= 0xffffffff;
+
+	uint32_t T[16];
+
+	T[0] = t0 & 0xffffffff;
+	T[1] = t1 & 0xffffffff;
+	T[2] = t2 & 0xffffffff;
+	T[3] = t3 & 0xffffffff;
+	T[4] = t4 & 0xffffffff;
+	T[5] = t5 & 0xffffffff;
+	T[6] = t6 & 0xffffffff;
+	T[7] = t7 & 0xffffffff;
+	T[8] = t8 & 0xffffffff;
+	T[9] = t9 & 0xffffffff;
+	T[10] = t10 & 0xffffffff;
+	T[11] = t11 & 0xffffffff;
+	T[12] = t12 & 0xffffffff;
+	T[13] = t13 & 0xffffffff;
+	T[14] = t14 & 0xffffffff;
+	T[15] = t15 & 0xffffffff;
+
+	_sc256_modw(T + 7, T + 7, T[15]);
+	_sc256_modw(T + 6, T + 6, T[14]);
+	_sc256_modw(T + 5, T + 5, T[13]);
+	_sc256_modw(T + 4, T + 4, T[12]);
+	_sc256_modw(T + 3, T + 3, T[11]);
+	_sc256_modw(T + 2, T + 2, T[10]);
+	_sc256_modw(T + 1, T + 1, T[9]);
+	_sc256_modw(r, T, T[8]);
+
+#endif
 }
 
 /* @func: _sc256_inv (static)

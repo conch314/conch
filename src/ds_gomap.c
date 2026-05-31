@@ -56,14 +56,14 @@ void *conch_gomap_insert(struct gomap_head *head,
 	uint64_t h1 = h >> 7;
 	uint8_t h2 = h & 0x7f;
 
-	uint32_t mask = h2 * 0x01010101;
+	uint32_t mask = (uint32_t)h2 * 0x01010101;
 	uint8_t *ctrl;
 	size_t j;
 
 	size_t n = head->capacity;
 	size_t m = h1 % n;
 	for (size_t i = 0; i < n; i += 4) {
-		size_t pos = ((m + i) % n) & ~0x3UL;
+		size_t pos = ((m + i) % n) & ~3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
 		if (x & 0x80808080) { /* empty or delete */
@@ -130,14 +130,14 @@ void *conch_gomap_find(struct gomap_head *head,
 	uint64_t h1 = h >> 7;
 	uint8_t h2 = h & 0x7f;
 
-	uint32_t mask = h2 * 0x01010101;
+	uint32_t mask = (uint32_t)h2 * 0x01010101;
 	uint8_t *ctrl;
 	size_t j;
 
 	size_t n = head->capacity;
 	size_t m = h1 % n;
 	for (size_t i = 0; i < n; i += 4) {
-		size_t pos = ((m + i) % n) & ~0x3UL;
+		size_t pos = ((m + i) % n) & ~3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
 		x ^= mask;
@@ -176,14 +176,14 @@ void *conch_gomap_delete(struct gomap_head *head,
 	uint64_t h1 = h >> 7;
 	uint8_t h2 = h & 0x7f;
 
-	uint32_t mask = h2 * 0x01010101;
+	uint32_t mask = (uint32_t)h2 * 0x01010101;
 	uint8_t *ctrl;
 	size_t j;
 
 	size_t n = head->capacity;
 	size_t m = h1 % n;
 	for (size_t i = 0; i < n; i += 4) {
-		size_t pos = ((m + i) % n) & ~0x3UL;
+		size_t pos = ((m + i) % n) & ~3UL;
 		uint32_t x = head->group[pos >> 2].ctrl;
 
 		x ^= mask;

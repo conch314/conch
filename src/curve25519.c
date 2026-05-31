@@ -393,7 +393,7 @@ static void _fp25519_sub(uint32_t r[8],
 	t6 &= 0xffffffff;
 	t7 &= 0xffffffff;
 
-	t0 -= (carry & 38);
+	t0 -= carry & 38;
 	t1 += (int32_t)(t0 >> 32);
 	t2 += (int32_t)(t1 >> 32);
 	t3 += (int32_t)(t2 >> 32);
@@ -411,7 +411,7 @@ static void _fp25519_sub(uint32_t r[8],
 	t6 &= 0xffffffff;
 	t7 &= 0xffffffff;
 
-	t0 -= (carry & 38);
+	t0 -= carry & 38;
 	t1 += (int32_t)(t0 >> 32);
 	t2 += (int32_t)(t1 >> 32);
 	t3 += (int32_t)(t2 >> 32);
