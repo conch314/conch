@@ -397,7 +397,7 @@ static uint64_t _float_sub_mags64(uint64_t a, uint64_t b, int32_t z_sign)
 
 		if (a_exp)
 			a_exp--;
-		if (z_sig < 0) { /* a < b */
+		if (b_sig > a_sig) { /* b > a */
 			z_sign = !z_sign;
 			z_sig = -z_sig;
 		}
@@ -540,6 +540,7 @@ uint64_t conch_csf_fmul64(uint64_t a, uint64_t b)
 	if (!a_exp) {
 		if (!a_sig)
 			return _float_pack64(z_sign, 0, 0);
+
 		/* aligned */
 		sh = conch_csf_clz64(a_sig) - 11;
 		a_exp = 1 - sh;
@@ -548,6 +549,7 @@ uint64_t conch_csf_fmul64(uint64_t a, uint64_t b)
 	if (!b_exp) {
 		if (!b_sig)
 			return _float_pack64(z_sign, 0, 0);
+
 		/* aligned */
 		sh = conch_csf_clz64(b_sig) - 11;
 		b_exp = 1 - sh;
@@ -627,6 +629,7 @@ uint64_t conch_csf_fdiv64(uint64_t a, uint64_t b)
 			}
 			return _float_pack64(z_sign, 0x7ff, 0);
 		}
+
 		/* aligned */
 		sh = conch_csf_clz64(b_sig) - 11;
 		b_exp = 1 - sh;
@@ -635,6 +638,7 @@ uint64_t conch_csf_fdiv64(uint64_t a, uint64_t b)
 	if (!a_exp) {
 		if (!a_sig) /* zero */
 			return _float_pack64(z_sign, 0, 0);
+
 		/* aligned */
 		sh = conch_csf_clz64(a_sig) - 11;
 		a_exp = 1 - sh;
@@ -905,7 +909,7 @@ static uint32_t _float_sub_mags32(uint32_t a, uint32_t b, int32_t z_sign)
 
 		if (a_exp)
 			a_exp--;
-		if (z_sig < 0) { /* a < b */
+		if (b_sig > a_sig) { /* b > a */
 			z_sign = !z_sign;
 			z_sig = -z_sig;
 		}
@@ -1048,6 +1052,7 @@ uint32_t conch_csf_fmul32(uint32_t a, uint32_t b)
 	if (!a_exp) {
 		if (!a_sig)
 			return _float_pack32(z_sign, 0, 0);
+
 		/* aligned */
 		sh = conch_csf_clz32(a_sig) - 8;
 		a_exp = 1 - sh;
@@ -1056,6 +1061,7 @@ uint32_t conch_csf_fmul32(uint32_t a, uint32_t b)
 	if (!b_exp) {
 		if (!b_sig)
 			return _float_pack32(z_sign, 0, 0);
+
 		/* aligned */
 		sh = conch_csf_clz32(b_sig) - 8;
 		b_exp = 1 - sh;
@@ -1137,6 +1143,7 @@ uint32_t conch_csf_fdiv32(uint32_t a, uint32_t b)
 			}
 			return _float_pack32(z_sign, 0xff, 0);
 		}
+
 		/* aligned */
 		sh = conch_csf_clz32(b_sig) - 8;
 		b_exp = 1 - sh;
@@ -1145,6 +1152,7 @@ uint32_t conch_csf_fdiv32(uint32_t a, uint32_t b)
 	if (!a_exp) {
 		if (!a_sig) /* zero */
 			return _float_pack32(z_sign, 0, 0);
+
 		/* aligned */
 		sh = conch_csf_clz32(a_sig) - 8;
 		a_exp = 1 - sh;
