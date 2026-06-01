@@ -70,6 +70,24 @@ static const uint8_t blake2b_sigma[12][16] = {
 	v[c] = v[c] + v[d]; \
 	v[b] = ROTR64(v[b] ^ v[c], 63)
 
+#define BLAKE2B_ROUND(v, m, n) \
+	BLAKE2B_G(v, m, 0, 4, 8, 12, \
+		blake2b_sigma[n][0], blake2b_sigma[n][1]); \
+	BLAKE2B_G(v, m, 1, 5, 9, 13, \
+		blake2b_sigma[n][2], blake2b_sigma[n][3]); \
+	BLAKE2B_G(v, m, 2, 6, 10, 14, \
+		blake2b_sigma[n][4], blake2b_sigma[n][5]); \
+	BLAKE2B_G(v, m, 3, 7, 11, 15, \
+		blake2b_sigma[n][6], blake2b_sigma[n][7]); \
+	BLAKE2B_G(v, m, 0, 5, 10, 15, \
+		blake2b_sigma[n][8], blake2b_sigma[n][9]); \
+	BLAKE2B_G(v, m, 1, 6, 11, 12, \
+		blake2b_sigma[n][10], blake2b_sigma[n][11]); \
+	BLAKE2B_G(v, m, 2, 7, 8, 13, \
+		blake2b_sigma[n][12], blake2b_sigma[n][13]); \
+	BLAKE2B_G(v, m, 3, 4, 9, 14, \
+		blake2b_sigma[n][14], blake2b_sigma[n][15])
+
 
 /* @func: _blake2b_compress (static)
  * #desc:
@@ -121,24 +139,18 @@ static void _blake2b_compress(struct blake2b_ctx *ctx, const uint8_t *s)
 	v[14] ^= ctx->flags[0];
 	v[15] ^= ctx->flags[1];
 
-	for (int32_t i = 0; i < 12; i++) {
-		BLAKE2B_G(v, m, 0, 4, 8, 12,
-			blake2b_sigma[i][0], blake2b_sigma[i][1]);
-		BLAKE2B_G(v, m, 1, 5, 9, 13,
-			blake2b_sigma[i][2], blake2b_sigma[i][3]);
-		BLAKE2B_G(v, m, 2, 6, 10, 14,
-			blake2b_sigma[i][4], blake2b_sigma[i][5]);
-		BLAKE2B_G(v, m, 3, 7, 11, 15,
-			blake2b_sigma[i][6], blake2b_sigma[i][7]);
-		BLAKE2B_G(v, m, 0, 5, 10, 15,
-			blake2b_sigma[i][8], blake2b_sigma[i][9]);
-		BLAKE2B_G(v, m, 1, 6, 11, 12,
-			blake2b_sigma[i][10], blake2b_sigma[i][11]);
-		BLAKE2B_G(v, m, 2, 7, 8, 13,
-			blake2b_sigma[i][12], blake2b_sigma[i][13]);
-		BLAKE2B_G(v, m, 3, 4, 9, 14,
-			blake2b_sigma[i][14], blake2b_sigma[i][15]);
-	}
+	BLAKE2B_ROUND(v, m, 0);
+	BLAKE2B_ROUND(v, m, 1);
+	BLAKE2B_ROUND(v, m, 2);
+	BLAKE2B_ROUND(v, m, 3);
+	BLAKE2B_ROUND(v, m, 4);
+	BLAKE2B_ROUND(v, m, 5);
+	BLAKE2B_ROUND(v, m, 6);
+	BLAKE2B_ROUND(v, m, 7);
+	BLAKE2B_ROUND(v, m, 8);
+	BLAKE2B_ROUND(v, m, 9);
+	BLAKE2B_ROUND(v, m, 10);
+	BLAKE2B_ROUND(v, m, 11);
 
 	ctx->state[0] ^= v[0] ^ v[8];
 	ctx->state[1] ^= v[1] ^ v[9];
