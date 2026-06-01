@@ -97,6 +97,8 @@ static void _sha512_compress(struct sha512_ctx *ctx, const uint8_t *s)
 	G = ctx->state[6];
 	H = ctx->state[7];
 
+#if 0
+
 	for (int32_t i = 0; i < 16; i++) {
 		m[i] = (uint64_t)s[0] << 56
 			| (uint64_t)s[1] << 48
@@ -124,6 +126,187 @@ static void _sha512_compress(struct sha512_ctx *ctx, const uint8_t *s)
 		B = A;
 		A = t1 + t2;
 	}
+
+#else
+
+#define PACK8_BE(x) \
+	((uint64_t)((x)[0]) << 56 | (uint64_t)((x)[1]) << 48 \
+	| (uint64_t)((x)[2]) << 40 | (uint64_t)((x)[3]) << 32 \
+	| (uint64_t)((x)[4]) << 24 | (uint64_t)((x)[5]) << 16 \
+	| (uint64_t)((x)[6]) << 8 | (uint64_t)((x)[7]))
+
+#define RE(n) \
+	m[n] = SEP1(m[n - 2]) + m[n - 7] + SEP0(m[n - 15]) + m[n - 16]
+
+#define RO(n) \
+	t1 = H + SIG1(E) + SCH(E, F, G) + sha512_constants[n] + m[n]; \
+	t2 = SIG0(A) + SMAJ(A, B, C); \
+	H = G; G = F; F = E; E = D + t1; D = C; C = B; B = A; A = t1 + t2
+
+	m[0] = PACK8_BE(s); s += 8;
+	m[1] = PACK8_BE(s); s += 8;
+	m[2] = PACK8_BE(s); s += 8;
+	m[3] = PACK8_BE(s); s += 8;
+	m[4] = PACK8_BE(s); s += 8;
+	m[5] = PACK8_BE(s); s += 8;
+	m[6] = PACK8_BE(s); s += 8;
+	m[7] = PACK8_BE(s); s += 8;
+	m[8] = PACK8_BE(s); s += 8;
+	m[9] = PACK8_BE(s); s += 8;
+	m[10] = PACK8_BE(s); s += 8;
+	m[11] = PACK8_BE(s); s += 8;
+	m[12] = PACK8_BE(s); s += 8;
+	m[13] = PACK8_BE(s); s += 8;
+	m[14] = PACK8_BE(s); s += 8;
+	m[15] = PACK8_BE(s);
+
+	RE(16);
+	RE(17);
+	RE(18);
+	RE(19);
+	RE(20);
+	RE(21);
+	RE(22);
+	RE(23);
+	RE(24);
+	RE(25);
+	RE(26);
+	RE(27);
+	RE(28);
+	RE(29);
+	RE(30);
+	RE(31);
+	RE(32);
+	RE(33);
+	RE(34);
+	RE(35);
+	RE(36);
+	RE(37);
+	RE(38);
+	RE(39);
+	RE(40);
+	RE(41);
+	RE(42);
+	RE(43);
+	RE(44);
+	RE(45);
+	RE(46);
+	RE(47);
+	RE(48);
+	RE(49);
+	RE(50);
+	RE(51);
+	RE(52);
+	RE(53);
+	RE(54);
+	RE(55);
+	RE(56);
+	RE(57);
+	RE(58);
+	RE(59);
+	RE(60);
+	RE(61);
+	RE(62);
+	RE(63);
+	RE(64);
+	RE(65);
+	RE(66);
+	RE(67);
+	RE(68);
+	RE(69);
+	RE(70);
+	RE(71);
+	RE(72);
+	RE(73);
+	RE(74);
+	RE(75);
+	RE(76);
+	RE(77);
+	RE(78);
+	RE(79);
+
+	RO(0);
+	RO(1);
+	RO(2);
+	RO(3);
+	RO(4);
+	RO(5);
+	RO(6);
+	RO(7);
+	RO(8);
+	RO(9);
+	RO(10);
+	RO(11);
+	RO(12);
+	RO(13);
+	RO(14);
+	RO(15);
+	RO(16);
+	RO(17);
+	RO(18);
+	RO(19);
+	RO(20);
+	RO(21);
+	RO(22);
+	RO(23);
+	RO(24);
+	RO(25);
+	RO(26);
+	RO(27);
+	RO(28);
+	RO(29);
+	RO(30);
+	RO(31);
+	RO(32);
+	RO(33);
+	RO(34);
+	RO(35);
+	RO(36);
+	RO(37);
+	RO(38);
+	RO(39);
+	RO(40);
+	RO(41);
+	RO(42);
+	RO(43);
+	RO(44);
+	RO(45);
+	RO(46);
+	RO(47);
+	RO(48);
+	RO(49);
+	RO(50);
+	RO(51);
+	RO(52);
+	RO(53);
+	RO(54);
+	RO(55);
+	RO(56);
+	RO(57);
+	RO(58);
+	RO(59);
+	RO(60);
+	RO(61);
+	RO(62);
+	RO(63);
+	RO(64);
+	RO(65);
+	RO(66);
+	RO(67);
+	RO(68);
+	RO(69);
+	RO(70);
+	RO(71);
+	RO(72);
+	RO(73);
+	RO(74);
+	RO(75);
+	RO(76);
+	RO(77);
+	RO(78);
+	RO(79);
+
+#endif
 
 	ctx->state[0] += A;
 	ctx->state[1] += B;
@@ -229,8 +412,7 @@ void conch_sha512_finish(struct sha512_ctx *ctx, uint64_t len)
 	uint8_t padbuf[SHA512_BLOCKSIZE];
 	conch_memset(padbuf, 0, sizeof(padbuf));
 	padbuf[0] = 0x80;
-	conch_sha512_process(ctx, padbuf,
-		1 + ((239 - (len % 128)) % 128));
+	conch_sha512_process(ctx, padbuf, 1 + ((239 - (len % 128)) % 128));
 
 	/* bit length */
 	len *= 8;

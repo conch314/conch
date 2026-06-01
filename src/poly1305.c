@@ -32,7 +32,8 @@
  * h = ((h + m) * r) % P
  */
 
-#define PACK4(x) ((uint32_t)((x)[0]) | (uint32_t)((x)[1]) << 8 \
+#define PACK4(x) \
+	((uint32_t)((x)[0]) | (uint32_t)((x)[1]) << 8 \
 	| (uint32_t)((x)[2]) << 16 | (uint32_t)((x)[3]) << 24)
 
 

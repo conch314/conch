@@ -1517,17 +1517,17 @@ static int32_t _ed25519_check_point(const struct ed25519_point *xyz1)
 	uint32_t a[8], b[8], t1[8], t2[8];
 	/*
 	 * if ((y * y) - (x * x)) != (1 + (d * (x * x) * (y * y)))
-	 *   return -1;
-	 * return 0;
+	 *   return -1
+	 * return 0
 	 */
 
-	/* t1 = (y * y) - (x * x) */
+	/* t1 = ((y * y) - (x * x)) % p */
 	_fp25519_mul(a, xyz1->y, xyz1->y);
 	_fp25519_mul(b, xyz1->x, xyz1->x);
 	_fp25519_sub(t1, a, b);
 	_fp25519_mod(t1);
 
-	/* t2 = 1 + (d * a * b) */
+	/* t2 = (1 + (d * a * b)) % p */
 	_fp25519_mul(t2, a, b);
 	_fp25519_mul(t2, t2, _ed25519_d);
 	_fp25519_add(t2, t2, _ed25519_one);

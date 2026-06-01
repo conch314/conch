@@ -27,6 +27,10 @@
 #include <conch/xxhash.h>
 
 
+#define PACK4(x) \
+	((uint32_t)((x)[0]) | (uint32_t)((x)[1]) << 8 \
+	| (uint32_t)((x)[2]) << 16 | (uint32_t)((x)[3]) << 24)
+
 #define PRIME32_1 0x9e3779b1
 #define PRIME32_2 0x85ebca77
 #define PRIME32_3 0xc2b2ae3d
@@ -51,13 +55,10 @@ static void _xxhash32_compress(struct xxhash32_ctx *ctx, const uint8_t *s)
 	c = ctx->state[2];
 	d = ctx->state[3];
 
-	for (int32_t i = 0; i < 4; i++) {
-		m[i] = (uint32_t)s[0]
-			| (uint32_t)s[1] << 8
-			| (uint32_t)s[2] << 16
-			| (uint32_t)s[3] << 24;
-		s += 4;
-	}
+	m[0] = PACK4(s); s += 4;
+	m[1] = PACK4(s); s += 4;
+	m[2] = PACK4(s); s += 4;
+	m[3] = PACK4(s);
 
 	/* round */
 	a += m[0] * PRIME32_2;

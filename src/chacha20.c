@@ -29,7 +29,8 @@
 /* key padding constant */
 static const uint8_t chacha20_constant[] = "expand 32-byte k";
 
-#define PACK4(x) ((uint32_t)((x)[0]) | (uint32_t)((x)[1]) << 8 \
+#define PACK4(x) \
+	((uint32_t)((x)[0]) | (uint32_t)((x)[1]) << 8 \
 	| (uint32_t)((x)[2]) << 16 | (uint32_t)((x)[3]) << 24)
 
 #define ROTL32(x, n) (((x) << (n)) | ((x) >> (32 - (n))))

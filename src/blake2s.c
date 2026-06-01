@@ -49,6 +49,10 @@ static const uint8_t blake2s_sigma[12][16] = {
 	{ 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 }
 	};
 
+#define PACK4(x) \
+	((uint32_t)((x)[0]) | (uint32_t)((x)[1]) << 8 \
+	| (uint32_t)((x)[2]) << 16 | (uint32_t)((x)[3]) << 24)
+
 #define ROTR32(x, n) (((x) >> (n)) | ((x) << (32 - (n))))
 
 /* mixing function */
@@ -74,18 +78,39 @@ static void _blake2s_compress(struct blake2s_ctx *ctx, const uint8_t *s)
 {
 	uint32_t m[16], v[16];
 
-	for (int32_t i = 0; i < 16; i++) {
-		m[i] = (uint32_t)s[0]
-			| (uint32_t)s[1] << 8
-			| (uint32_t)s[2] << 16
-			| (uint32_t)s[3] << 24;
-		s += 4;
-	}
+	m[0] = PACK4(s); s += 4;
+	m[1] = PACK4(s); s += 4;
+	m[2] = PACK4(s); s += 4;
+	m[3] = PACK4(s); s += 4;
+	m[4] = PACK4(s); s += 4;
+	m[5] = PACK4(s); s += 4;
+	m[6] = PACK4(s); s += 4;
+	m[7] = PACK4(s); s += 4;
+	m[8] = PACK4(s); s += 4;
+	m[9] = PACK4(s); s += 4;
+	m[10] = PACK4(s); s += 4;
+	m[11] = PACK4(s); s += 4;
+	m[12] = PACK4(s); s += 4;
+	m[13] = PACK4(s); s += 4;
+	m[14] = PACK4(s); s += 4;
+	m[15] = PACK4(s);
 
-	for (int32_t i = 0; i < 8; i++) {
-		v[i] = ctx->state[i];
-		v[i + 8] = blake2s_iv[i];
-	}
+	v[0] = ctx->state[0];
+	v[1] = ctx->state[1];
+	v[2] = ctx->state[2];
+	v[3] = ctx->state[3];
+	v[4] = ctx->state[4];
+	v[5] = ctx->state[5];
+	v[6] = ctx->state[6];
+	v[7] = ctx->state[7];
+	v[8] = blake2s_iv[0];
+	v[9] = blake2s_iv[1];
+	v[10] = blake2s_iv[2];
+	v[11] = blake2s_iv[3];
+	v[12] = blake2s_iv[4];
+	v[13] = blake2s_iv[5];
+	v[14] = blake2s_iv[6];
+	v[15] = blake2s_iv[7];
 
 	v[12] ^= ctx->tsize[0];
 	v[13] ^= ctx->tsize[1];
@@ -111,8 +136,14 @@ static void _blake2s_compress(struct blake2s_ctx *ctx, const uint8_t *s)
 			blake2s_sigma[i][14], blake2s_sigma[i][15]);
 	}
 
-	for (int32_t i = 0; i < 8; i++)
-		ctx->state[i] ^= v[i] ^ v[i + 8];
+	ctx->state[0] ^= v[0] ^ v[8];
+	ctx->state[1] ^= v[1] ^ v[9];
+	ctx->state[2] ^= v[2] ^ v[10];
+	ctx->state[3] ^= v[3] ^ v[11];
+	ctx->state[4] ^= v[4] ^ v[12];
+	ctx->state[5] ^= v[5] ^ v[13];
+	ctx->state[6] ^= v[6] ^ v[14];
+	ctx->state[7] ^= v[7] ^ v[15];
 }
 
 /* @func: conch_blake2s_init

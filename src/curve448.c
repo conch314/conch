@@ -1834,17 +1834,17 @@ static int32_t _ed448_check_point(const struct ed448_point *xyz1)
 	uint32_t a[14], b[14], t1[14], t2[14];
 	/*
 	 * if ((y * y) + (x * x)) != (1 + (d * (x * x) * (y * y)))
-	 *   return -1;
-	 * return 0;
+	 *   return -1
+	 * return 0
 	 */
 
-	/* t1 = (y * y) + (x * x) */
+	/* t1 = ((y * y) + (x * x)) % p */
 	_fp448_mul(a, xyz1->y, xyz1->y);
 	_fp448_mul(b, xyz1->x, xyz1->x);
 	_fp448_add(t1, a, b);
 	_fp448_mod(t1);
 
-	/* t2 = 1 + (d * a * b) */
+	/* t2 = (1 + (d * a * b)) % p */
 	_fp448_mul(t2, a, b);
 	_fp448_mul(t2, t2, _ed448_d);
 	_fp448_add(t2, t2, _ed448_one);
@@ -2183,11 +2183,11 @@ int32_t conch_eddsa_ed448_verify(const uint8_t *pub,
 	/* A = decompress(_pub) */
 	if (_ed448_point_decompress(_pub, &A))
 		return -1;
-	/* R = decompress(rs) */
+	/* R = decompress(r) */
 	if (_ed448_point_decompress(r, &R))
 		return -1;
 
-	/* h = sha(ctx + rs + _pub + msg) % q */
+	/* h = sha(ctx + r + _pub + msg) % q */
 	conch_sha3_init(&sha_ctx, SHA3_SHAKE256_TYPE, 114);
 	conch_sha3_process(&sha_ctx, _ed448_ctx, ED448_CTX_LEN);
 	conch_sha3_process(&sha_ctx, (uint8_t *)r, EDDSA_ED448_LEN);

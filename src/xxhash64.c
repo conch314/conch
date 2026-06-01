@@ -27,6 +27,12 @@
 #include <conch/xxhash.h>
 
 
+#define PACK8(x) \
+	((uint64_t)((x)[0]) | (uint64_t)((x)[1]) << 8 \
+	| (uint64_t)((x)[2]) << 16 | (uint64_t)((x)[3]) << 24 \
+	| (uint64_t)((x)[4]) << 32 | (uint64_t)((x)[5]) << 40 \
+	| (uint64_t)((x)[6]) << 48 | (uint64_t)((x)[7]) << 56)
+
 #define PRIME64_1 0x9e3779b185ebca87ULL
 #define PRIME64_2 0xc2b2ae3d27d4eb4fULL
 #define PRIME64_3 0x165667b19e3779f9ULL
@@ -51,17 +57,10 @@ static void _xxhash64_compress(struct xxhash64_ctx *ctx, const uint8_t *s)
 	c = ctx->state[2];
 	d = ctx->state[3];
 
-	for (int32_t i = 0; i < 4; i++) {
-		m[i] = (uint64_t)s[0]
-			| (uint64_t)s[1] << 8
-			| (uint64_t)s[2] << 16
-			| (uint64_t)s[3] << 24
-			| (uint64_t)s[4] << 32
-			| (uint64_t)s[5] << 40
-			| (uint64_t)s[6] << 48
-			| (uint64_t)s[7] << 56;
-		s += 8;
-	}
+	m[0] = PACK8(s); s += 8;
+	m[1] = PACK8(s); s += 8;
+	m[2] = PACK8(s); s += 8;
+	m[3] = PACK8(s);
 
 	/* round */
 	a += m[0] * PRIME64_2;

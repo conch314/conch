@@ -26,7 +26,8 @@
 #include <conch/siphash24.h>
 
 
-#define PACK8(x) ((uint64_t)((x)[0]) | (uint64_t)((x)[1]) << 8 \
+#define PACK8(x) \
+	((uint64_t)((x)[0]) | (uint64_t)((x)[1]) << 8 \
 	| (uint64_t)((x)[2]) << 16 | (uint64_t)((x)[3]) << 24 \
 	| (uint64_t)((x)[4]) << 32 | (uint64_t)((x)[5]) << 40 \
 	| (uint64_t)((x)[6]) << 48 | (uint64_t)((x)[7]) << 56)
