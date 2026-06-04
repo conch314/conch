@@ -810,7 +810,7 @@ void conch_mlkem768_pke_genkey(const uint8_t *ran, uint8_t *ekp,
 	const uint8_t *noise = buf + MLKEM_SYM_LEN;
 	struct polyvec A[MLKEM_768_K], s, e, t;
 
-	/* (seed, noise) = hash_g(ran + K) */
+	/* (seed, noise) = hash_g(ran + k) */
 	conch_memcpy(buf, ran, MLKEM_RAN_LEN);
 	buf[MLKEM_RAN_LEN] = MLKEM_768_K;
 	_hash_g(buf, MLKEM_RAN_LEN + 1, buf);
@@ -992,8 +992,8 @@ void conch_mlkem768_encaps(const uint8_t *msg, const uint8_t *ek,
 	const uint8_t *r = buf + MLKEM_SYM_LEN;
 
 	/* (k, r) = hash_g(msg + hash_h(ek)) */
-	conch_memcpy(buf, msg, MLKEM_RAN_LEN);
-	_hash_h(ek, MLKEM_768_EK_LEN, buf + MLKEM_RAN_LEN);
+	conch_memcpy(buf, msg, MLKEM_SYM_LEN);
+	_hash_h(ek, MLKEM_768_EK_LEN, buf + MLKEM_SYM_LEN);
 	_hash_g(buf, MLKEM_SYM_LEN * 2, buf);
 
 	/* sk = k */

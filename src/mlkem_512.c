@@ -1023,8 +1023,8 @@ void conch_mlkem512_encaps(const uint8_t *msg, const uint8_t *ek,
 	const uint8_t *r = buf + MLKEM_SYM_LEN;
 
 	/* (k, r) = hash_g(msg + hash_h(ek)) */
-	conch_memcpy(buf, msg, MLKEM_RAN_LEN);
-	_hash_h(ek, MLKEM_512_EK_LEN, buf + MLKEM_RAN_LEN);
+	conch_memcpy(buf, msg, MLKEM_SYM_LEN);
+	_hash_h(ek, MLKEM_512_EK_LEN, buf + MLKEM_SYM_LEN);
 	_hash_g(buf, MLKEM_SYM_LEN * 2, buf);
 
 	/* sk = k */
