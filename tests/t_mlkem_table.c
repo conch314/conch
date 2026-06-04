@@ -23,10 +23,10 @@
 #include <conch/c_stdint.h>
 
 
-#define MLKEM_Q 3329 /* 2^8*13+1 */
-#define MLKEM_ROOT 17
-#define MLKEM_MONT -1044 /* 2^16 mod q == 2285 */
-#define MLKEM_QINV -3327 /* q^-1 mod 2^16 == 62209 */
+#define MLKEM_Q 3329     /* 2^8*13+1 */
+#define MLKEM_ROOT 17    /* 17^(q-1) == 1 (mod q) */
+#define MLKEM_MONT -1044 /* 2^16 == 2285 (mod q) */
+#define MLKEM_QINV -3327 /* q^-1 == 62209 (mod 2^16) */
 
 #define MONT_MUL(a, b) _montgomery_reduce((int32_t)(a) * (b))
 

@@ -35,10 +35,10 @@
  *  | 768 256 3329 3 2    2    10 4  1184 2400 1088    32    |
  *  |1024 256 3329 4 2    2    11 5  1568 3168 1568    32    |
  */
-#define MLKEM_MONT -1044   /* 2^16 mod q == 2285 */
-#define MLKEM_MONT_R2 1353 /* 2^32 mod q == 1353 */
-#define MLKEM_QINV -3327   /* q^-1 mod 2^16 == 62209 */
-#define MLKEM_NORM 1441    /* mont^2*128^-1 (mod 3329) == 1441 */
+#define MLKEM_MONT -1044   /* 2^16 == 2285 (mod q) */
+#define MLKEM_MONT_R2 1353 /* 2^32 == 1353 (mod q) */
+#define MLKEM_QINV -3327   /* q^-1 == 62209 (mod 2^16) */
+#define MLKEM_NORM 1441    /* mont^2*128^-1 == 1441 (mod q) */
 
 /* butterfly operations for root of unity */
 static const int16_t zetas[MLKEM_N / 2] = {
@@ -152,7 +152,7 @@ static void _poly_ntt(struct poly *r)
  */
 static void _poly_invntt(struct poly *r)
 {
-	uint32_t start, len, j, k;
+	uint32_t len, start, j, k;
 	int16_t t, zeta;
 	int16_t *rr = r->coeffs;
 
@@ -273,15 +273,15 @@ static void _poly_compress_du(const struct poly *a, uint8_t *r)
 
 	for (int32_t i = 0; i < MLKEM_N; i += 8) {
 		for (int32_t j = 0; j < 8; j++) {
-				d = a->coeffs[i + j];
-				d += (d >> 15) & MLKEM_Q;
-				u = d;
-				/* ((u << 11) + MLKEM_Q / 2) / MLKEM_Q */
-				u <<= 11;
-				u += MLKEM_Q / 2;
-				u *= 645084;
-				u >>= 31;
-				t[j] = u & 0x7ff;
+			d = a->coeffs[i + j];
+			d += (d >> 15) & MLKEM_Q;
+			u = d;
+			/* ((u << 11) + MLKEM_Q / 2) / MLKEM_Q */
+			u <<= 11;
+			u += MLKEM_Q / 2;
+			u *= 645084;
+			u >>= 31;
+			t[j] = u & 0x7ff;
 		}
 
 		r[0] = (uint8_t)t[0];
@@ -311,7 +311,7 @@ static void _poly_decompress_du(const uint8_t *a, struct poly *r)
 	uint16_t t[8];
 
 	for (int32_t i = 0; i < MLKEM_N; i += 8) {
-		t[0] = (uint16_t)a[0] >> 0 | (uint16_t)a[1] << 8;
+		t[0] = (uint16_t)a[0] | (uint16_t)a[1] << 8;
 		t[1] = (uint16_t)a[1] >> 3 | (uint16_t)a[2] << 5;
 		t[2] = (uint16_t)a[2] >> 6 | (uint16_t)a[3] << 2
 			| (uint16_t)a[4] << 10;
@@ -399,7 +399,7 @@ static void _poly_decompress_dv(const uint8_t *a, struct poly *r)
  *    polynomial to bytes conversion.
  *
  * #1: a [in]  input polynomial
- * #2: r [out] output buffer
+ * #2: r [out] output bytes
  */
 static void _poly_tobytes(const struct poly *a, uint8_t *r)
 {
@@ -427,7 +427,7 @@ static void _poly_tobytes(const struct poly *a, uint8_t *r)
  *    bytes to polynomial conversion.
  *
  * #1: r [out] output polynomial
- * #2: a [in]  input buffer
+ * #2: a [in]  input bytes
  */
 static void _poly_frombytes(struct poly *r, const uint8_t *a)
 {
@@ -445,10 +445,10 @@ static void _poly_frombytes(struct poly *r, const uint8_t *a)
 
 /* @func: _poly_tomsg (static)
  * #desc:
- *    polynomial to 32-bytes message conversion.
+ *    polynomial to message conversion.
  *
  * #1: a [in]  input polynomial
- * #2: r [out] output buffer
+ * #2: r [out] output message
  */
 static void _poly_tomsg(const struct poly *a, uint8_t *r)
 {
@@ -475,10 +475,10 @@ static void _poly_tomsg(const struct poly *a, uint8_t *r)
 
 /* @func: _poly_frommsg (static)
  * #desc:
- *    32-bytes message to polynomial conversion.
+ *    message to polynomial conversion.
  *
  * #1: r [out] output polynomial
- * #2: a [in]  input buffer
+ * #2: a [in]  input message
  */
 static void _poly_frommsg(struct poly *r, const uint8_t *a)
 {
@@ -488,7 +488,7 @@ static void _poly_frommsg(struct poly *r, const uint8_t *a)
 		t = *a++;
 		for (int32_t j = 0; j < 8; j++) {
 			r->coeffs[i + j] = (MLKEM_Q + 1) / 2;
-			r->coeffs[i + j] &= ~((t & 1) - 1);
+			r->coeffs[i + j] &= ~((uint16_t)(t & 1) - 1);
 			t >>= 1;
 		}
 	}
@@ -529,7 +529,7 @@ static void _polyvec_decompress(const uint8_t *a, struct polyvec *r)
  *    polynomial vector to bytes conversion.
  *
  * #1: a [in]  input polynomial vector
- * #2: r [out] output buffer
+ * #2: r [out] output bytes
  */
 static void _polyvec_tobytes(const struct polyvec *a, uint8_t *r)
 {
@@ -544,7 +544,7 @@ static void _polyvec_tobytes(const struct polyvec *a, uint8_t *r)
  *    bytes to polynomial vector conversion.
  *
  * #1: r [out] output polynomial vector
- * #2: a [in]  input buffer
+ * #2: a [in]  input bytes
  */
 static void _polyvec_frombytes(struct polyvec *r, const uint8_t *a)
 {
@@ -834,18 +834,17 @@ void conch_mlkem1024_pke_genkey(const uint8_t *ran, uint8_t *ekp,
 	uint8_t buf[MLKEM_SYM_LEN * 2], nonce = 0;
 	const uint8_t *seed = buf;
 	const uint8_t *noise = buf + MLKEM_SYM_LEN;
-	struct polyvec a[MLKEM_1024_K], s, e, t;
+	struct polyvec A[MLKEM_1024_K], s, e, t;
 
 	/* (seed, noise) = hash_g(ran + k) */
 	conch_memcpy(buf, ran, MLKEM_RAN_LEN);
 	buf[MLKEM_RAN_LEN] = MLKEM_1024_K;
 	_hash_g(buf, MLKEM_RAN_LEN + 1, buf);
 
-	/* a = gen_matrix(seed, j, i) */
+	/* A = gen_matrix(seed, j, i) */
 	for (int32_t i = 0; i < MLKEM_1024_K; i++) {
-		for (int32_t j = 0; j < MLKEM_1024_K; j++) {
-			_sample_ntt_xof(&a[i].vec[j], seed, j, i);
-		}
+		for (int32_t j = 0; j < MLKEM_1024_K; j++)
+			_sample_ntt_xof(&A[i].vec[j], seed, j, i);
 	}
 
 	/* s = eta1(noise, nonce++) */
@@ -861,9 +860,9 @@ void conch_mlkem1024_pke_genkey(const uint8_t *ran, uint8_t *ekp,
 	/* e = ntt(e) */
 	_polyvec_ntt(&e);
 
-	/* t = mont(a * s) */
+	/* t = mont(A * s) */
 	for (int32_t i = 0; i < MLKEM_1024_K; i++) {
-		_polyvec_basemul(&t.vec[i], &a[i], &s);
+		_polyvec_basemul(&t.vec[i], &A[i], &s);
 		_poly_mont(&t.vec[i]);
 	}
 
@@ -871,8 +870,10 @@ void conch_mlkem1024_pke_genkey(const uint8_t *ran, uint8_t *ekp,
 	_polyvec_add(&t, &t, &e);
 	_polyvec_reduce(&t);
 
-	conch_memcpy(ekp + MLKEM_1024_POLYVEC_BYTES, seed, MLKEM_SYM_LEN);
+	/* ekp = t + seed */
 	_polyvec_tobytes(&t, ekp);
+	conch_memcpy(ekp + MLKEM_1024_POLYVEC_BYTES, seed, MLKEM_SYM_LEN);
+	/* dkp = s */
 	_polyvec_tobytes(&s, dkp);
 }
 
@@ -889,18 +890,19 @@ void conch_mlkem1024_pke_encrypt(const uint8_t *ran, const uint8_t *ekp,
 		const uint8_t *msg, uint8_t *ct)
 {
 	uint8_t seed[MLKEM_SYM_LEN], nonce = 0;
-	struct polyvec a[MLKEM_1024_K], r, e, u, t;
+	struct polyvec A[MLKEM_1024_K], r, e, u, t;
 	struct poly e2, v, m;
 
+	/* (t, seed) = ekp */
 	_polyvec_frombytes(&t, ekp);
 	conch_memcpy(seed, ekp + MLKEM_1024_POLYVEC_BYTES, MLKEM_SYM_LEN);
+	/* m = msg */
 	_poly_frommsg(&m, msg);
 
-	/* a = gen_matrix(seed, i, j) */
+	/* A = gen_matrix(seed, i, j) */
 	for (int32_t i = 0; i < MLKEM_1024_K; i++) {
-		for (int32_t j = 0; j < MLKEM_1024_K; j++) {
-			_sample_ntt_xof(&a[i].vec[j], seed, i, j);
-		}
+		for (int32_t j = 0; j < MLKEM_1024_K; j++)
+			_sample_ntt_xof(&A[i].vec[j], seed, i, j);
 	}
 
 	/* r = eta1(ran, nonce++) */
@@ -917,9 +919,9 @@ void conch_mlkem1024_pke_encrypt(const uint8_t *ran, const uint8_t *ekp,
 	/* r = ntt(r) */
 	_polyvec_ntt(&r);
 
-	/* u = a * r */
+	/* u = A * r */
 	for (int32_t i = 0; i < MLKEM_1024_K; i++)
-		_polyvec_basemul(&u.vec[i], &a[i], &r);
+		_polyvec_basemul(&u.vec[i], &A[i], &r);
 
 	/* u = redc(invntt(u) + e) */
 	_polyvec_invntt(&u);
@@ -935,6 +937,7 @@ void conch_mlkem1024_pke_encrypt(const uint8_t *ran, const uint8_t *ekp,
 	_poly_add(&v, &v, &m);
 	_poly_reduce(&v);
 
+	/* ct = compress(u, v) */
 	_polyvec_compress(&u, ct);
 	_poly_compress_dv(&v, ct + MLKEM_1024_POLYVEC_COMPRESS);
 }
@@ -953,7 +956,9 @@ void conch_mlkem1024_pke_decrypt(const uint8_t *dkp, const uint8_t *ct,
 	struct polyvec u, s;
 	struct poly v, m;
 
+	/* s = dkp */
 	_polyvec_frombytes(&s, dkp);
+	/* (u, v) = decompress(ct) */
 	_polyvec_decompress(ct, &u);
 	_poly_decompress_dv(ct + MLKEM_1024_POLYVEC_COMPRESS, &v);
 
@@ -966,6 +971,7 @@ void conch_mlkem1024_pke_decrypt(const uint8_t *dkp, const uint8_t *ct,
 	_poly_sub(&m, &v, &m);
 	_poly_reduce(&m);
 
+	/* msg = m */
 	_poly_tomsg(&m, msg);
 }
 
@@ -1017,7 +1023,7 @@ void conch_mlkem1024_encaps(const uint8_t *msg, const uint8_t *ek,
 	_hash_g(buf, MLKEM_SYM_LEN * 2, buf);
 
 	/* sk = k */
-	conch_memcpy(sk, k, MLKEM_SYM_LEN);
+	conch_memcpy(sk, k, MLKEM_KEY_LEN);
 
 	/* ct = pke_encrypt(r, ek, msg) */
 	conch_mlkem1024_pke_encrypt(r, ek, msg, ct);
@@ -1034,8 +1040,9 @@ void conch_mlkem1024_encaps(const uint8_t *msg, const uint8_t *ek,
 void conch_mlkem1024_decaps(const uint8_t *dk, const uint8_t *ct,
 		uint8_t *sk)
 {
-	uint8_t buf[MLKEM_SYM_LEN * 2], k2[MLKEM_SYM_LEN * 2],
-		msg[MLKEM_SYM_LEN], ct2[MLKEM_1024_CT_LEN];
+	uint8_t buf[MLKEM_SYM_LEN + MLKEM_1024_CT_LEN],
+		ct2[MLKEM_1024_CT_LEN], sk2[MLKEM_SYM_LEN],
+		msg[MLKEM_SYM_LEN];
 	const uint8_t *k = buf;
 	const uint8_t *r = buf + MLKEM_SYM_LEN;
 	const uint8_t *dkp = dk;
@@ -1043,7 +1050,12 @@ void conch_mlkem1024_decaps(const uint8_t *dk, const uint8_t *ct,
 	const uint8_t *h = dk += MLKEM_1024_EK_LEN;
 	const uint8_t *z = dk += MLKEM_SYM_LEN;
 
-	/* msg = pke_decrypt(dkp, ct, msg) */
+	/* sk2 = hash_j(z + ct) */
+	conch_memcpy(buf, z, MLKEM_RAN_LEN);
+	conch_memcpy(buf, ct, MLKEM_1024_CT_LEN);
+	_hash_j(buf, MLKEM_RAN_LEN + MLKEM_1024_CT_LEN, sk2);
+
+	/* msg = pke_decrypt(dkp, ct) */
 	conch_mlkem1024_pke_decrypt(dkp, ct, msg);
 
 	/* (k, r) = hash_g(msg + h) */
@@ -1052,25 +1064,20 @@ void conch_mlkem1024_decaps(const uint8_t *dk, const uint8_t *ct,
 	_hash_g(buf, MLKEM_SYM_LEN * 2, buf);
 
 	/* sk = k */
-	conch_memcpy(sk, k, MLKEM_SYM_LEN);
-
-	/* k2 = hash_j(z + ct) */
-	conch_memcpy(k2, z, MLKEM_RAN_LEN);
-	conch_memcpy(k2 + MLKEM_RAN_LEN, ct, MLKEM_SYM_LEN);
-	_hash_j(k2, MLKEM_SYM_LEN * 2, k2);
+	conch_memcpy(sk, k, MLKEM_KEY_LEN);
 
 	/* ct2 = pke_encrypt(r, ekp, msg) */
 	conch_mlkem1024_pke_encrypt(r, ekp, msg, ct2);
 
-	/* sk = if ct != ct2 : swap k2 */
+	/* sk = if ct != ct2 : swap sk2 */
 	uint32_t rr = 0;
 	for (int32_t i = 0; i < MLKEM_1024_CT_LEN; i++)
 		rr |= ct[i] ^ ct2[i];
 
 	rr = (((rr - 1) >> 31) & 1) - 1;
 	for (int32_t i = 0; i < MLKEM_KEY_LEN; i++) {
-		uint32_t t = rr & (sk[i] ^ k2[i]);
+		uint32_t t = rr & (sk[i] ^ sk2[i]);
 		sk[i] ^= t;
-		k2[i] ^= t;
+		sk2[i] ^= t;
 	}
 }

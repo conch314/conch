@@ -976,7 +976,7 @@ static void _fp25519_mul121665(uint32_t r[8],
 		carry = tmp >> 32;
 	}
 
-	/* NOTE: (2^256) == 38 (mod 2^255-19) */
+	/* NOTE: 2^256 == 38 (mod 2^255-19) */
 
 	/* r = r % p modular reduction */
 	carry *= 38;

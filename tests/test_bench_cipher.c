@@ -24,6 +24,7 @@
 #include <conch/c_stdint.h>
 #include <conch/aes.h>
 #include <conch/des.h>
+#include <conch/blowfish.h>
 #include <conch/rc4.h>
 #include <conch/chacha20.h>
 #include <conch/salsa20.h>
@@ -239,6 +240,42 @@ void test_des(void)
 		(len / time) / 1024 / 1024);
 }
 
+void test_blowfish(void)
+{
+	clock_t start, end;
+	double time;
+	uint64_t len;
+
+	BLOWFISH_NEW(ctx);
+
+	len = 0;
+	conch_blowfish_init(&ctx, g_buf, sizeof(g_buf));
+
+	start = clock();
+	for (int32_t i = 0; i < (1 << 21); i++) {
+		conch_blowfish_encrypt(&ctx,
+			(uint32_t *)g_buf, (uint32_t *)g_buf + 1);
+		len += 8;
+	}
+	end = clock();
+	time = (double)(end - start) / CLOCKS_PER_SEC;
+	printf("blowfish enc: %.6f (%.2f MiB/s)\n", time,
+		(len / time) / 1024 / 1024);
+
+	len = 0;
+
+	start = clock();
+	for (int32_t i = 0; i < (1 << 21); i++) {
+		conch_blowfish_decrypt(&ctx,
+			(uint32_t *)g_buf, (uint32_t *)g_buf + 1);
+		len += 8;
+	}
+	end = clock();
+	time = (double)(end - start) / CLOCKS_PER_SEC;
+	printf("blowfish dec: %.6f (%.2f MiB/s)\n", time,
+		(len / time) / 1024 / 1024);
+}
+
 void test_rc4(void)
 {
 	clock_t start, end;
@@ -360,6 +397,9 @@ int main(void)
 #endif
 #ifndef NO_DES
 	test_des();
+#endif
+#ifndef NO_BLOWFISH
+	test_blowfish();
 #endif
 #ifndef NO_RC4
 	test_rc4();
