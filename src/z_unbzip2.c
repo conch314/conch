@@ -327,7 +327,7 @@ static int32_t _decode_sym(const struct unbzip2_sym_desc *desc, uint32_t v,
 
 /* @func: _build_symbol (static)
  * #desc:
- *    build symbol description gbased on length.
+ *    build symbol description based on length.
  *
  * #1: ctx        [in/out] unbzip2 struct context
  * #2: alpha_size [in]     alpha number
@@ -454,7 +454,6 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				} else {
 					return UNBZIP2_ERR_HEAD;
 				}
-
 				ctx->block_count++; /* block counter */
 				break;
 			case 1:
@@ -462,7 +461,6 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				BITS_DUMP(ctx, &v, 32);
 				if (v != 0x59265359)
 					return UNBZIP2_ERR_HEAD;
-
 				ctx->state = 4;
 				break;
 			case 2:
@@ -470,7 +468,6 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				BITS_DUMP(ctx, &v, 32);
 				if (v != 0x45385090)
 					return UNBZIP2_ERR_HEAD;
-
 				ctx->state = 3;
 			case 3: /* end header */
 				BITS_FILL(ctx, flush);
