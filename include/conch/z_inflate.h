@@ -172,11 +172,11 @@
 #define INFLATE_ERR_DYN_DCODES -8
 
 struct inflate_sym_desc {
-	uint16_t count[INFLATE_BITS_MAX + 1];
-	uint16_t *sym;
-	uint32_t elems;
-	uint16_t bits_min;
-	uint16_t bits_max;
+	uint16_t count[INFLATE_BITS_MAX + 1]; /* bit-length count */
+	uint16_t *sym;     /* symbol of codes */
+	uint32_t elems;    /* codes number */
+	uint16_t bits_min; /* min codes bits */
+	uint16_t bits_max; /* max codes bits */
 };
 
 struct inflate_ctx {

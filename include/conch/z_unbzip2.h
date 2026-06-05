@@ -33,8 +33,8 @@
 
 /* number of the alpha symbol */
 #define UNBZIP2_ALPHA_SIZE 258
-/* max code length */
-#define UNBZIP2_CODE_LEN_MAX 23
+/* max codes length */
+#define UNBZIP2_BITS_MAX 23
 
 /* number of the huffman groups */
 #define UNBZIP2_NGROUPS 6
@@ -70,6 +70,14 @@
 /* huffman code error */
 #define UNBZIP2_ERR_HUFFMAN_CODE -10
 
+struct unbzip2_sym_desc {
+	uint16_t count[UNBZIP2_BITS_MAX + 1]; /* bit-length count */
+	uint16_t *sym;     /* symbol of codes */
+	uint32_t elems;    /* codes number */
+	uint16_t bits_min; /* min codes bits */
+	uint16_t bits_max; /* max codes bits */
+};
+
 struct unbzip2_ctx {
 	uint8_t block[UNBZIP2_BLOCKSIZE_MAX]; /* input block (after rle) */
 	uint32_t block_max; /* max block length */
@@ -97,12 +105,9 @@ struct unbzip2_ctx {
 	uint32_t orig_index; /* primary index */
 
 	/* huffman decoding */
-	uint8_t huf_len[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
-	int32_t huf_code[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
-	int32_t huf_limit[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
-	int32_t huf_base[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
-	int32_t huf_perm[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
-	int32_t huf_min[UNBZIP2_NGROUPS];
+	struct unbzip2_sym_desc huf_desc[UNBZIP2_NGROUPS];
+	uint8_t huf_lens[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
+	uint16_t huf_sym[UNBZIP2_NGROUPS][UNBZIP2_ALPHA_SIZE];
 
 	/* huffman groups selectors */
 	uint8_t selector[UNBZIP2_NSELECTORS];
@@ -114,6 +119,7 @@ struct unbzip2_ctx {
 	const uint8_t *s; /* input buffer */
 	uint32_t s_len;   /* input length */
 
+	struct unbzip2_sym_desc *t_desc;
 	uint32_t t_len;
 	int32_t t_i;
 	int32_t t_j;

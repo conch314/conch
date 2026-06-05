@@ -508,8 +508,7 @@ static void _gen_bitlen(struct deflate_ctx *ctx, struct deflate_tree_desc *desc)
 	int32_t code_max = desc->code_max;
 	int32_t n, m, len, overflow = 0;
 
-	for (int32_t i = 0; i <= DEFLATE_BITS_MAX; i++)
-		ctx->bl_count[i] = 0;
+	conch_memset(ctx->bl_count, 0, sizeof(ctx->bl_count));
 
 	/* root */
 	tree[ctx->heap[ctx->heap_back]].dl.len = 0;
@@ -869,8 +868,8 @@ static void _init_block(struct deflate_ctx *ctx)
 static int32_t _bits_overflow(struct deflate_ctx *ctx,
 		const struct deflate_ctdata *tree, int32_t n)
 {
-	for (int32_t i = 0; i <= DEFLATE_BITS_MAX; i++)
-		ctx->bl_count[i] = 0;
+	conch_memset(ctx->bl_count, 0, sizeof(ctx->bl_count));
+
 	for (int32_t i = 0; i < n; i++)
 		ctx->bl_count[tree[i].dl.len]++;
 

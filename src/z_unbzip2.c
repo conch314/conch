@@ -33,6 +33,20 @@
 		if (_bits_fill(s) && !f) \
 			goto e; \
 	} while (0)
+#define BITS_PEEK(s, v, n) \
+	do { \
+		if (_bits_peek(s, v, n)) \
+			return UNBZIP2_ERR_INCOMP; \
+	} while (0)
+#define BITS_PEEK2(s, v, t, m, g) \
+	do { \
+		t = g; \
+		if (_bits_peek(s, v, t)) { \
+			t = m; \
+			if (_bits_peek(s, v, t)) \
+				return UNBZIP2_ERR_INCOMP; \
+		} \
+	} while (0)
 #define BITS_DUMP(s, v, n) \
 	do { \
 		if (_bits_dump(s, v, n)) \
@@ -55,6 +69,23 @@ static int32_t _bits_fill(struct unbzip2_ctx *ctx)
 
 	if (!ctx->s_len && BITS_GET_REMLEN(&ctx->bits_ctx) < 4)
 		return 1;
+
+	return 0;
+}
+
+/* @func: _bits_peek (static)
+ * #desc:
+ *    peek at the bits in the buffer.
+ *
+ * #1: ctx [in/out] unbzip2 struct context
+ * #2: v   [out]    bits value
+ * #3: len [in]     bits length
+ * #r:     [ret]    0: no error, -1: bits of no extra
+ */
+static int32_t _bits_peek(struct unbzip2_ctx *ctx, uint32_t *v, uint32_t len)
+{
+	if (conch_bits_beget(&ctx->bits_ctx, v, len, 1))
+		return -1;
 
 	return 0;
 }
@@ -149,7 +180,6 @@ static uint32_t _decode_mtfval(uint8_t *out, uint16_t *in, uint32_t len,
 
 	for (uint32_t i = 0; i < len; i++) {
 		pos = in[i];
-
 		if (pos < 2) { /* zero rle */
 			n = 0;
 			e = 1;
@@ -204,56 +234,100 @@ static void _decode_selector_mtfval(struct unbzip2_ctx *ctx)
 	}
 }
 
-/* @func: _gen_decode_symbol (static)
+/* @func: _build_sym (static)
  * #desc:
- *    generate decoding symbol based on length.
+ *    build symbol description based on length.
  *
- * #1: limit      [out] limit length
- * #2: base       [out] base offset
- * #3: perm       [out] codes symbol
- * #4: length     [in]  codes length
- * #5: minlen     [in]  min length
- * #6: maxlen     [in]  max length
- * #7: alpha_size [in]  alpha number
+ * #1: desc [in/out] unbzip2 symbol description
+ * #2: lens [in]     length of codes
+ * #r:      [ret]    0: no error, -1: bits overflow
  */
-static void _gen_decode_symbol(int32_t *limit, int32_t *base, int32_t *perm,
-		const uint8_t *length, int32_t minlen, int32_t maxlen,
-		int32_t alpha_size)
+static int32_t _build_sym(struct unbzip2_sym_desc *desc, const uint8_t *lens)
 {
-	int32_t p = 0;
-	for (int32_t i = minlen; i <= maxlen; i++) {
-		for (int32_t j = 0; j < alpha_size; j++) {
-			if (length[j] == i)
-				perm[p++] = j;
-		}
+	uint16_t offs[UNBZIP2_BITS_MAX + 1];
+	uint32_t elems = desc->elems;
+	int32_t m, g, w;
+
+	conch_memset(desc->count, 0, sizeof(desc->count));
+
+	/* statistical bit-length */
+	for (uint32_t i = 0; i < elems; i++)
+		desc->count[lens[i]]++;
+
+	/* max and min of the bits */
+	for (m = 1; m <= UNBZIP2_BITS_MAX; m++) {
+		if (desc->count[m])
+			break;
+	}
+	for (g = UNBZIP2_BITS_MAX; g > 0; g--) {
+		if (desc->count[g])
+			break;
+	}
+	desc->bits_min = m;
+	desc->bits_max = g;
+
+	/* check bits overflow */
+	for (w = 1 << m; m < g; w <<= 1, m++) {
+		w -= desc->count[m];
+		if (w < 0)
+			return -1;
+	}
+	w -= desc->count[g];
+	if (w < 0)
+		return -1;
+
+	/* symbol offset */
+	offs[1] = 0;
+	for (int32_t i = 1; i < UNBZIP2_BITS_MAX; i++)
+		offs[i + 1] = offs[i] + desc->count[i];
+
+	/* generate symbol */
+	for (uint32_t i = 0; i < elems; i++) {
+		int32_t len = lens[i];
+		if (!len)
+			continue;
+		desc->sym[offs[len]++] = (uint16_t)i;
 	}
 
-	for (int32_t i = 0; i < 23; i++)
-		base[i] = 0;
+	return 0;
+}
 
-	for (int32_t i = 0; i < alpha_size; i++)
-		base[length[i] + 1]++;
+/* @func: _decode_sym (static)
+ * #desc:
+ *    decoding the symbol code.
+ *
+ * #1: desc [in/out] unbzip2 symbol description
+ * #2: v    [in]     input bits
+ * #3: len  [in/out] input length and return the length used
+ * #r:      [ret]    -1: decode error, >=0: symbol code
+ */
+static int32_t _decode_sym(const struct unbzip2_sym_desc *desc, uint32_t v,
+		uint32_t *len)
+{
+	uint32_t base = 0, offs = 0, m = 1, g = *len, w;
 
-	for (int32_t i = 1; i < 23; i++)
-		base[i] += base[i - 1];
+	w = g - 1;
+	for (; m <= g; m++) { /* msb */
+		offs = (offs << 1) + ((v >> w) & 1);
+		if (offs < desc->count[m])
+			break;
 
-	for (int32_t i = 0; i < 23; i++)
-		limit[i] = 0;
-
-	uint32_t vec = 0;
-	for (int32_t i = minlen; i <= maxlen; i++) {
-		vec += (base[i + 1] - base[i]);
-		limit[i] = vec - 1;
-		vec <<= 1;
+		base += desc->count[m];
+		offs -= desc->count[m];
+		w--;
 	}
+	*len = m;
 
-	for (int32_t i = minlen + 1; i <= maxlen; i++)
-		base[i] = ((limit[i - 1] + 1) << 1) - base[i];
+	offs += base;
+	if (offs >= desc->elems)
+		return -1;
+
+	return desc->sym[offs];
 }
 
 /* @func: _build_symbol (static)
  * #desc:
- *    build symbol description based on length.
+ *    build symbol description gbased on length.
  *
  * #1: ctx        [in/out] unbzip2 struct context
  * #2: alpha_size [in]     alpha number
@@ -261,23 +335,8 @@ static void _gen_decode_symbol(int32_t *limit, int32_t *base, int32_t *perm,
 static void _build_symbol(struct unbzip2_ctx *ctx, int32_t alpha_size)
 {
 	for (int32_t i = 0; i < ctx->ngroups; i++) {
-		int32_t min_len = 32;
-		int32_t max_len = 0;
-		for (int32_t j = 0; j < alpha_size; j++) {
-			if (ctx->huf_len[i][j] > max_len)
-				max_len = ctx->huf_len[i][j];
-			if (ctx->huf_len[i][j] < min_len)
-				min_len = ctx->huf_len[i][j];
-		}
-
-		ctx->huf_min[i] = min_len;
-		_gen_decode_symbol(ctx->huf_limit[i],
-				ctx->huf_base[i],
-				ctx->huf_perm[i],
-				ctx->huf_len[i],
-				min_len,
-				max_len,
-				alpha_size);
+		ctx->huf_desc[i].elems = alpha_size;
+		_build_sym(&ctx->huf_desc[i], ctx->huf_lens[i]);
 	}
 }
 
@@ -381,6 +440,7 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 		ctx->len = 0;
 	}
 
+	int32_t sym;
 	uint32_t v, t, m;
 	do {
 		switch (ctx->state) {
@@ -543,7 +603,11 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 						return UNBZIP2_ERR_HUFFMAN_LEN;
 				}
 
-				ctx->huf_len[ctx->t_i][ctx->t_j++] = ctx->t_k;
+				t = ctx->t_k;
+				if (t > UNBZIP2_BITS_MAX)
+					return UNBZIP2_ERR_HUFFMAN_LEN;
+
+				ctx->huf_lens[ctx->t_i][ctx->t_j++] = t;
 				if (ctx->t_j > ctx->mtf_e) {
 					ctx->state = 13;
 					ctx->t_i++;
@@ -559,36 +623,27 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				ctx->mtf_n = 0;
 				ctx->t_n = 0;
 			case 16:
-				ctx->t_k = ctx->selector[ctx->t_n++];
+				t = ctx->selector[ctx->t_n++];
+				ctx->t_desc = &ctx->huf_desc[t];
+
 				ctx->t_j = 0;
 				ctx->state = 17;
 			case 17:
 				BITS_FILL(ctx, flush);
+				BITS_PEEK2(ctx, &v, t,
+					ctx->t_desc->bits_min,
+					ctx->t_desc->bits_max);
 
-				m = ctx->huf_min[ctx->t_k];
-				BITS_DUMP(ctx, &v, m);
-				t = v;
-
-				while (1) {
-					if (m > 20)
-						return UNBZIP2_ERR_HUFFMAN_CODE;
-					if (t <= ctx->huf_limit[ctx->t_k][m])
-						break;
-
-					BITS_DUMP(ctx, &v, 1);
-					t = (t << 1) | v;
-					m++;
-				}
-
-				t -= ctx->huf_base[ctx->t_k][m];
-				if (t >= 258)
+				/* decoding */
+				sym = _decode_sym(ctx->t_desc, v, &t);
+				if (sym < 0 || sym >= UNBZIP2_ALPHA_SIZE)
 					return UNBZIP2_ERR_HUFFMAN_CODE;
 
-				t = ctx->huf_perm[ctx->t_k][t];
-				ctx->mtf_v[ctx->mtf_n++] = t;
-				ctx->t_j++;
+				BITS_DUMP(ctx, &v, t);
 
-				if (t == ctx->mtf_e) {
+				ctx->mtf_v[ctx->mtf_n++] = sym;
+				ctx->t_j++;
+				if (sym == ctx->mtf_e) {
 					ctx->state = 18;
 				} else if (ctx->t_j == UNBZIP2_SGROUPS_SIZE) {
 					ctx->state = 16;
@@ -598,10 +653,17 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 
 				break;
 			case 18: /* decoding mtf and inverse bwt */
-				ctx->block_len = _decode_mtfval(ctx->buf,
-					ctx->mtf_v, ctx->mtf_n - 1, ctx->inuse);
-				_bwt_inverse(ctx->block, ctx->buf, ctx->block_len,
-					ctx->orig_index, ctx->rank_tmp);
+				ctx->block_len = _decode_mtfval(
+					ctx->buf,
+					ctx->mtf_v,
+					ctx->mtf_n - 1,
+					ctx->inuse);
+				_bwt_inverse(
+					ctx->block,
+					ctx->buf,
+					ctx->block_len,
+					ctx->orig_index,
+					ctx->rank_tmp);
 
 				ctx->t_len = 0;
 				ctx->rle_inchr = 256;
@@ -609,16 +671,22 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				ctx->state = 19;
 			case 19: /* input block */
 				if (ctx->len >= (UNBZIP2_BLOCKSIZE_MAX - 512)) {
-					ctx->block_crc = conch_crc32_msb(ctx->crc_t,
-						ctx->block_crc, ctx->buf, ctx->len);
+					ctx->block_crc = conch_crc32_msb(
+						ctx->crc_t,
+						ctx->block_crc,
+						ctx->buf,
+						ctx->len);
 
 					ctx->flush = 1;
 					return UNBZIP2_IS_FLUSH;
-				}
-				if (ctx->t_len == ctx->block_len) { /* end-block */
+				} else if (ctx->t_len == ctx->block_len) {
+					/* end-block */
 					_input_block_flush(ctx);
-					ctx->block_crc = conch_crc32_msb(ctx->crc_t,
-						ctx->block_crc, ctx->buf, ctx->len);
+					ctx->block_crc = conch_crc32_msb(
+						ctx->crc_t,
+						ctx->block_crc,
+						ctx->buf,
+						ctx->len);
 
 					ctx->state = 20;
 					ctx->flush = 1;
@@ -626,7 +694,8 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				}
 
 				v = ctx->block_len - ctx->t_len;
-				t = _input_block(ctx, ctx->block + ctx->t_len, v);
+				t = _input_block(ctx,
+					ctx->block + ctx->t_len, v);
 				ctx->t_len += v - t;
 
 				break;
@@ -669,6 +738,9 @@ int32_t conch_unbzip2_init(struct unbzip2_ctx *ctx, int32_t lev)
 	/* crc */
 	ctx->combined_crc = 0;
 	ctx->crc_t = conch_crc32_table(CRC32_DEFAULT_MSB_TYPE);
+
+	for (int32_t i = 0; i < UNBZIP2_NGROUPS; i++)
+		ctx->huf_desc[i].sym = ctx->huf_sym[i];
 
 	BITS_GET_INIT(&ctx->bits_ctx);
 	ctx->block_count = 0;

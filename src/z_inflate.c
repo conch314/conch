@@ -171,9 +171,9 @@ static int32_t _build_sym(struct inflate_sym_desc *desc, const uint8_t *lens)
 	uint32_t elems = desc->elems;
 	int32_t m, g, w;
 
+	conch_memset(desc->count, 0, sizeof(desc->count));
+
 	/* statistical bit-length */
-	for (int32_t i = 0; i <= INFLATE_BITS_MAX; i++)
-		desc->count[i] = 0;
 	for (uint32_t i = 0; i < elems; i++)
 		desc->count[lens[i]]++;
 
@@ -209,7 +209,7 @@ static int32_t _build_sym(struct inflate_sym_desc *desc, const uint8_t *lens)
 		int32_t len = lens[i];
 		if (!len)
 			continue;
-		desc->sym[offs[len]++] = i;
+		desc->sym[offs[len]++] = (uint16_t)i;
 	}
 
 	return 0;
@@ -362,10 +362,10 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 				BITS_FILL(ctx, flush);
 				BITS_DUMP(ctx, &v, 16);
 				BITS_DUMP(ctx, &t, 16);
-				ctx->t_i = v;
-
 				if (v != (~t & 0xffff))
 					return INFLATE_ERR_STORED_HEAD;
+
+				ctx->t_i = v;
 				ctx->state = 5;
 			case 5:
 				while (ctx->t_i) {
@@ -427,8 +427,7 @@ static int32_t _inflate_block(struct inflate_ctx *ctx, const uint8_t *s,
 					}
 					break;
 				} else if (sym == INFLATE_END_BLOCK) {
-					/* last block */
-					if (ctx->last) {
+					if (ctx->last) { /* last block */
 						ctx->buf = ctx->window;
 						ctx->len = ctx->start;
 						ctx->last = 2;
