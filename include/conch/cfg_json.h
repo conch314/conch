@@ -88,57 +88,39 @@ struct json_ctx {
 
 /* json tree */
 struct json_value {
+	struct json_value *prev;
+	struct json_value *next;
+	char *name;
 	int32_t type;
 	union {
 		int64_t i;
 		double f;
 		char *str;
-		struct json_array *array;
-		struct json_object *object;
+		struct json_value *ao;
 	} u;
-};
-
-struct json_array {
-	struct json_value value;
-	struct json_array *next;
-};
-
-struct json_object {
-	char *name;
-	struct json_value value;
-	struct json_object *next;
 };
 
 struct json_stack {
 	int32_t type;
 	char *name;
-	union {
-		struct json_array **array;
-		struct json_object **object;
-	} u;
-	union {
-		struct json_array *array;
-		struct json_object *object;
-	} t;
+	struct json_value **ptr_ao;
+	struct json_value *tmp_ao;
 	struct json_stack *next;
 };
 
 struct json_tree {
 	int32_t type;
-	union {
-		struct json_array *array;
-		struct json_object *object;
-	} u;
+	struct json_value *ao;
 	struct json_stack *stack;
 	struct json_ctx ctx;
 };
 
-#define JSON_TREE_SET0 { 0, .u = { NULL }, NULL }
+#define JSON_TREE_SET0 { .type = 0, .ao = NULL, .stack = NULL }
 #define JSON_TREE_NEW(x) struct json_tree x = JSON_TREE_SET0
 #define JSON_TREE_INIT(x) \
 	do { \
 		(x)->type = 0; \
-		(x)->u.array = NULL; \
+		(x)->ao = NULL; \
 		(x)->stack = NULL; \
 	} while (0)
 

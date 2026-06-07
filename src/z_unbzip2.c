@@ -487,10 +487,10 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				BITS_FILL(ctx, flush);
 				BITS_DUMP(ctx, &v, 1); /* random flag */
 				BITS_DUMP(ctx, &v, 24);
-				ctx->orig_index = v;
 				if (v >= ctx->block_max)
 					return UNBZIP2_ERR_ORIG_INDEX;
 
+				ctx->orig_index = v;
 				ctx->state = 6;
 			case 6: /* inuse */
 				BITS_FILL(ctx, flush);
@@ -615,14 +615,13 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				}
 
 				break;
-			case 15: /* decoding */
+			case 15: /* build huffman */
 				_build_symbol(ctx, ctx->mtf_e + 1);
 				ctx->mtf_n = 0;
 				ctx->t_n = 0;
 			case 16:
 				t = ctx->selector[ctx->t_n++];
 				ctx->t_desc = &ctx->huf_desc[t];
-
 				ctx->t_j = 0;
 				ctx->state = 17;
 			case 17:

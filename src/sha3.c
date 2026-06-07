@@ -340,8 +340,7 @@ void conch_sha3_process(struct sha3_ctx *ctx, const uint8_t *s,
  */
 void conch_sha3_finish(struct sha3_ctx *ctx)
 {
-	conch_memset(ctx->u.buf + ctx->count, 0,
-		ctx->rate - ctx->count);
+	conch_memset(ctx->u.buf + ctx->count, 0, ctx->rate - ctx->count);
 	ctx->u.buf[ctx->count] = ctx->pad;
 	ctx->u.buf[ctx->rate - 1] |= 0x80;
 

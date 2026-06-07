@@ -31,9 +31,6 @@
 
 /* TODO: The implementation of json tree is not yet complete */
 
-static void _tree_free_array(struct json_array *a);
-static void _tree_free_object(struct json_object *o);
-
 
 /* @func: _json_value_add (static)
  * #desc:
@@ -44,37 +41,23 @@ static void _tree_free_object(struct json_object *o);
  */
 static struct json_value *_json_value_add(struct json_stack *s)
 {
-	struct json_value *v;
-	struct json_array *a;
-	struct json_object *o;
+	struct json_value *v = conch_malloc(sizeof(struct json_value));
 
 	if (s->type == JSON_OBJECT_TYPE) {
-		o = conch_malloc(sizeof(struct json_object));
-		o->name = s->name;
+		v->name = s->name;
 		s->name = NULL;
-		v = &o->value;
-
-		o->next = NULL;
-		if (*s->u.object) {
-			s->t.object->next = o;
-			s->t.object = o;
-		} else {
-			*s->u.object = o;
-			s->t.object = o;
-		}
 	} else {
-		a = conch_malloc(sizeof(struct json_array));
-		v = &a->value;
-
-		a->next = NULL;
-		if (*s->u.array) {
-			s->t.array->next = a;
-			s->t.array = a;
-		} else {
-			*s->u.array = a;
-			s->t.array = a;
-		}
+		v->name = NULL;
 	}
+
+	v->prev = s->tmp_ao;
+	v->next = NULL;
+	if (*s->ptr_ao) {
+		s->tmp_ao->next = v;
+	} else {
+		*s->ptr_ao = v;
+	}
+	s->tmp_ao = v;
 
 	return v;
 }
@@ -100,16 +83,17 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 		case JSON_ARRAY_TYPE:
 			ss = conch_malloc(sizeof(struct json_stack));
 			ss->type = JSON_ARRAY_TYPE;
+			ss->tmp_ao = NULL;
 
 			if (!t->type) {
 				t->type = JSON_ARRAY_TYPE;
-				t->u.array = NULL;
-				ss->u.array = &t->u.array;
+				t->ao = NULL;
+				ss->ptr_ao = &t->ao;
 			} else {
 				v = _json_value_add(s);
 				v->type = JSON_ARRAY_TYPE;
-				v->u.array = NULL;
-				ss->u.array = &v->u.array;
+				v->u.ao = NULL;
+				ss->ptr_ao = &v->u.ao;
 			}
 
 			ss->next = s;
@@ -118,16 +102,17 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 		case JSON_OBJECT_TYPE:
 			ss = conch_malloc(sizeof(struct json_stack));
 			ss->type = JSON_OBJECT_TYPE;
+			ss->tmp_ao = NULL;
 
 			if (!t->type) {
 				t->type = JSON_OBJECT_TYPE;
-				t->u.object = NULL;
-				ss->u.object = &t->u.object;
+				t->ao = NULL;
+				ss->ptr_ao = &t->ao;
 			} else {
 				v = _json_value_add(s);
 				v->type = JSON_OBJECT_TYPE;
-				v->u.object = NULL;
-				ss->u.object = &v->u.object;
+				v->u.ao = NULL;
+				ss->ptr_ao = &v->u.ao;
 			}
 
 			ss->next = s;
@@ -247,26 +232,23 @@ int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
 	return ret;
 }
 
-/* @func: _tree_free_array (static)
+/* @func: _tree_free_value (static)
  * #desc:
- *    free the list of json tree array.
+ *    free the list of json tree value.
  *
- * #1: a [in/out] json array list
+ * #1: o [in/out] json value list
  */
-static void _tree_free_array(struct json_array *a)
+static void _tree_free_value(struct json_value *v)
 {
-	struct json_value *v;
-	struct json_array *aa;
-
-	while (a) {
-		aa = a;
-		v = &a->value;
+	struct json_value *t = v;
+	while (v) {
 		switch (v->type) {
 			case JSON_ARRAY_TYPE:
-				_tree_free_array(v->u.array);
+				_tree_free_value(v->u.ao);
 				break;
-			case JSON_OBJECT_TYPE:
-				_tree_free_object(v->u.object);
+			case JSON_OBJKEY_TYPE:
+				_tree_free_value(v->u.ao);
+				conch_free(v->name);
 				break;
 			case JSON_STRING_TYPE:
 				conch_free(v->u.str);
@@ -274,41 +256,11 @@ static void _tree_free_array(struct json_array *a)
 			default:
 				break;
 		}
-		a = a->next;
-		conch_free(aa);
-	}
-}
 
-/* @func: _tree_free_object (static)
- * #desc:
- *    free the list of json tree object.
- *
- * #1: o [in/out] json object list
- */
-static void _tree_free_object(struct json_object *o)
-{
-	struct json_value *v;
-	struct json_object *oo;
-
-	while (o) {
-		oo = o;
-		v = &o->value;
-		switch (v->type) {
-			case JSON_ARRAY_TYPE:
-				_tree_free_array(v->u.array);
-				break;
-			case JSON_OBJECT_TYPE:
-				_tree_free_object(v->u.object);
-				break;
-			case JSON_STRING_TYPE:
-				conch_free(v->u.str);
-				break;
-			default:
-				break;
-		}
-		conch_free(o->name);
-		o = o->next;
-		conch_free(oo);
+		t = v;
+		v = v->next;
+		if (t)
+			conch_free(t);
 	}
 }
 
@@ -320,10 +272,6 @@ static void _tree_free_object(struct json_object *o)
  */
 void conch_json_tree_free(struct json_tree *tree)
 {
-	if (tree->type == JSON_OBJECT_TYPE) {
-		_tree_free_object(tree->u.object);
-	} else {
-		_tree_free_array(tree->u.array);
-	}
-	tree->u.array = NULL;
+	_tree_free_value(tree->ao);
+	tree->ao = NULL;
 }

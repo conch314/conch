@@ -103,6 +103,47 @@ xFILE *__conch_stdout = (xFILE *)&__stdout;
 xFILE *__conch_stderr = (xFILE *)&__stderr;
 
 
+/* @func: _stdio_feof (static)
+ * #desc:
+ *    get the eof flags function.
+ *
+ * #1: fp [in/out] stdio file struct
+ * #r:    [ret]    0: no eof, -1: eof
+ */
+static int32_t _stdio_feof(xFILE *fp)
+{
+	struct stdio_file *f = (struct stdio_file *)fp;
+
+	return (f->flags & FG_EOF) ? X_EOF : 0;
+}
+
+/* @func: _stdio_ferror (static)
+ * #desc:
+ *    get the error flags function.
+ *
+ * #1: fp [in/out] stdio file struct
+ * #r:    [ret]    0: no error, -1: error
+ */
+static int32_t _stdio_ferror(xFILE *fp)
+{
+	struct stdio_file *f = (struct stdio_file *)fp;
+
+	return (f->flags & FG_ERR) ? -1 : 0;
+}
+
+/* @func: _stdio_clearerr (static)
+ * #desc:
+ *    clear error flags function.
+ *
+ * #1: fp [in/out] stdio file struct
+ */
+static void _stdio_clearerr(xFILE *fp)
+{
+	struct stdio_file *f = (struct stdio_file *)fp;
+
+	f->flags &= ~FG_ERR;
+}
+
 /* @func: _stdio_write (static)
  * #desc:
  *    write to the file from stream buffer and input buffer.
@@ -421,17 +462,62 @@ static int32_t _stdio_fgetc(xFILE *fp)
  * #desc:
  *    get the character function.
  *
- * #1: buf [out]    output buffer
- * #2: len [in]     buffer length
+ * #1: s   [out]    output string
+ * #2: len [in]     output length
  * #3: fp  [in/out] stdio file struct
  * #r:     [ret]    returns the string / NULL
  */
-static char *_stdio_fgets(char *buf, int32_t len, xFILE *fp)
+static char *_stdio_fgets(char *s, int32_t len, xFILE *fp)
 {
-	if (!_stdio_fread(buf, 1, (size_t)len, fp))
-		return NULL;
+	struct stdio_file *f = (struct stdio_file *)fp;
+	char *p = s;
+	uint8_t *z;
+	int32_t c;
+	size_t k;
 
-	return buf;
+	if (len <= 1) {
+		if (len < 1)
+			return NULL;
+		*p = '\0';
+		return s;
+	}
+	len--;
+
+#undef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+	while (len) {
+		k = (size_t)(f->rend - f->rpos);
+		if (k) {
+			z = conch_memchr(f->rpos, '\n', k);
+			if (z)
+				k = (size_t)(z - f->rpos + 1);
+
+			k = MIN(k, (size_t)len);
+			conch_memcpy(p, f->rpos, k);
+			f->rpos += k;
+			p += k;
+			len -= k;
+
+			if (z || !len)
+				break;
+		}
+
+		c = _stdio_fgetc(fp);
+		if (c < 0) {
+			if (p == s || !_stdio_feof(fp))
+				return NULL;
+			break;
+		}
+
+		*p++ = (char)c;
+		len--;
+		if (c == '\n')
+			break;
+	}
+	*p = '\0';
+
+	return s;
 }
 
 /* @func: _stdio_fputc (static)
@@ -595,45 +681,89 @@ static int32_t _stdio_setvbuf(xFILE *fp, uint8_t *buf, int32_t type,
 	return 0;
 }
 
-/* @func: _stdio_feof (static)
+/* @func: _stdio_fgetpos (static)
+ * #desc:
+ *    get the stream position.
+ *
+ * #1: fp  [in]  stdio file struct
+ * #2: pos [out] position pointer
+ * #r:     [ret] 0: no error, -1: error
+ */
+static int32_t _stdio_fgetpos(xFILE *fp, xfpos_t *pos)
+{
+	int64_t r = _stdio_ftell(fp);
+	if (r < 0)
+		return -1;
+
+	*(int64_t *)pos = r;
+	return 0;
+}
+
+/* @func: _stdio_fsetpos (static)
+ * #desc:
+ *    set the stream position.
+ *
+ * #1: fp  [in]  stdio file struct
+ * #2: pos [out] position pointer
+ * #r:     [ret] 0: no error, -1: error
+ */
+static int32_t _stdio_fsetpos(xFILE *fp, const xfpos_t *pos)
+{
+	if (_stdio_fseek(fp, *(int64_t *)pos, X_SEEK_SET))
+		return -1;
+
+	return 0;
+}
+
+/* @func: conch_feof
  * #desc:
  *    get the eof flags function.
  *
  * #1: fp [in/out] stdio file struct
  * #r:    [ret]    0: no eof, -1: eof
  */
-static int32_t _stdio_feof(xFILE *fp)
+int32_t conch_feof(xFILE *fp)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
-	return (f->flags & FG_EOF) ? X_EOF : 0;
+	SPIN_LOCK(&f->lock);
+	int32_t ret = _stdio_feof(fp);
+	SPIN_UNLOCK(&f->lock);
+
+	return ret;
 }
 
-/* @func: _stdio_ferror (static)
+/* @func: conch_ferror
  * #desc:
  *    get the error flags function.
  *
  * #1: fp [in/out] stdio file struct
  * #r:    [ret]    0: no error, -1: error
  */
-static int32_t _stdio_ferror(xFILE *fp)
+int32_t conch_ferror(xFILE *fp)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
-	return (f->flags & FG_ERR) ? -1 : 0;
+	SPIN_LOCK(&f->lock);
+	int32_t ret = _stdio_ferror(fp);
+	SPIN_UNLOCK(&f->lock);
+
+	return ret;
 }
 
-/* @func: _stdio_clearerr (static)
+/* @func: conch_clearerr
  * #desc:
  *    clear error flags function.
  *
  * #1: fp [in/out] stdio file struct
  */
-static void _stdio_clearerr(xFILE *fp)
+void conch_clearerr(xFILE *fp)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
-	f->flags &= ~FG_ERR;
+	SPIN_LOCK(&f->lock);
+	_stdio_clearerr(fp);
+	SPIN_UNLOCK(&f->lock);
 }
 
 /* @func: conch_fflush
@@ -774,17 +904,17 @@ int32_t conch_fgetc(xFILE *fp)
  * #desc:
  *    get the character function.
  *
- * #1: buf [out]    output buffer
- * #2: len [in]     buffer length
+ * #1: s   [out]    output string
+ * #2: len [in]     output length
  * #3: fp  [in/out] stdio file struct
- * #r:     [ret]    returns the string / NULL
+ * #r:     [ret]    returns the string
  */
-char *conch_fgets(char *buf, int32_t len, xFILE *fp)
+char *conch_fgets(char *s, int32_t len, xFILE *fp)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
 	SPIN_LOCK(&f->lock);
-	char *ret = _stdio_fgets(buf, len, fp);
+	char *ret = _stdio_fgets(s, len, fp);
 	SPIN_UNLOCK(&f->lock);
 
 	return ret;
@@ -881,53 +1011,40 @@ int32_t conch_setvbuf(xFILE *fp, uint8_t *buf, int32_t type,
 	return ret;
 }
 
-/* @func: conch_feof
+/* @func: conch_fgetpos
  * #desc:
- *    get the eof flags function.
+ *    get the stream position.
  *
- * #1: fp [in/out] stdio file struct
- * #r:    [ret]    0: no eof, -1: eof
+ * #1: fp  [in]  stdio file struct
+ * #2: pos [out] position pointer
+ * #r:     [ret] 0: no error, -1: error
  */
-int32_t conch_feof(xFILE *fp)
+int32_t conch_fgetpos(xFILE *fp, xfpos_t *pos)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
 	SPIN_LOCK(&f->lock);
-	int32_t ret = _stdio_feof(fp);
+	int32_t ret = _stdio_fgetpos(fp, pos);
 	SPIN_UNLOCK(&f->lock);
 
 	return ret;
 }
 
-/* @func: conch_ferror
+/* @func: conch_fsetpos
  * #desc:
- *    get the error flags function.
+ *    set the stream position.
  *
- * #1: fp [in/out] stdio file struct
- * #r:    [ret]    0: no error, -1: error
+ * #1: fp  [in]  stdio file struct
+ * #2: pos [out] position pointer
+ * #r:     [ret] 0: no error, -1: error
  */
-int32_t conch_ferror(xFILE *fp)
+int32_t conch_fsetpos(xFILE *fp, const xfpos_t *pos)
 {
 	struct stdio_file *f = (struct stdio_file *)fp;
 
 	SPIN_LOCK(&f->lock);
-	int32_t ret = _stdio_ferror(fp);
+	int32_t ret = _stdio_fsetpos(fp, pos);
 	SPIN_UNLOCK(&f->lock);
 
 	return ret;
-}
-
-/* @func: conch_clearerr
- * #desc:
- *    clear error flags function.
- *
- * #1: fp [in/out] stdio file struct
- */
-void conch_clearerr(xFILE *fp)
-{
-	struct stdio_file *f = (struct stdio_file *)fp;
-
-	SPIN_LOCK(&f->lock);
-	_stdio_clearerr(fp);
-	SPIN_UNLOCK(&f->lock);
 }

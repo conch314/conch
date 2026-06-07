@@ -27,27 +27,25 @@
 #include <conch/cfg_json.h>
 
 
-void _print_array(struct json_array *a, int32_t ind);
-void _print_object(struct json_object *o, int32_t ind);
+void _print_array(struct json_value *v, int32_t ind);
+void _print_object(struct json_value *v, int32_t ind);
 
-void _print_array(struct json_array *a, int32_t ind)
+
+void _print_array(struct json_value *v, int32_t ind)
 {
-	struct json_value *v;
-
-	for (; a; a = a->next) {
-		v = &a->value;
+	while (v) {
 		switch (v->type) {
 			case JSON_ARRAY_TYPE:
 				conch_printf("%*s[\n",
 					ind, "");
-				_print_array(v->u.array, ind + 2);
+				_print_array(v->u.ao, ind + 2);
 				conch_printf("%*s]",
 					ind, "");
 				break;
 			case JSON_OBJECT_TYPE:
 				conch_printf("%*s{\n",
 					ind, "");
-				_print_object(v->u.object, ind + 2);
+				_print_object(v->u.ao, ind + 2);
 				conch_printf("%*s}",
 					ind, "");
 				break;
@@ -90,73 +88,74 @@ void _print_array(struct json_array *a, int32_t ind)
 			default:
 				return;
 		}
-		if (a->next)
+
+		v = v->next;
+		if (v)
 			conch_printf(",");
 		conch_printf("\n");
 	}
 }
 
-void _print_object(struct json_object *o, int32_t ind)
+void _print_object(struct json_value *v, int32_t ind)
 {
-	struct json_value *v;
-
-	for (; o; o = o->next) {
-		v = &o->value;
+	while (v) {
 		switch (v->type) {
 			case JSON_ARRAY_TYPE:
 				conch_printf("%*s\"%s\": [\n",
-					ind, "", o->name);
-				_print_array(v->u.array, ind + 2);
+					ind, "", v->name);
+				_print_array(v->u.ao, ind + 2);
 				conch_printf("%*s]",
 					ind, "");
 				break;
 			case JSON_OBJECT_TYPE:
 				conch_printf("%*s\"%s\": {\n",
-					ind, "", o->name);
-				_print_object(v->u.object, ind + 2);
+					ind, "", v->name);
+				_print_object(v->u.ao, ind + 2);
 				conch_printf("%*s}",
 					ind, "");
 				break;
 			case JSON_STRING_TYPE:
 				conch_printf("%*s\"%s\": \"%s\"",
-					ind, "", o->name, v->u.str);
+					ind, "", v->name, v->u.str);
 				break;
 			case JSON_NUMBER_DEC_TYPE:
 				conch_printf("%*s\"%s\": %lld",
-					ind, "", o->name, v->u.i);
+					ind, "", v->name, v->u.i);
 				break;
 			case JSON_NUMBER_HEX_TYPE:
 				conch_printf("%*s\"%s\": 0x%llx",
-					ind, "", o->name, v->u.i);
+					ind, "", v->name, v->u.i);
 				break;
 			case JSON_NUMBER_FLT_TYPE:
 				conch_printf("%*s\"%s\": %f",
-					ind, "", o->name, v->u.f);
+					ind, "", v->name, v->u.f);
 				break;
 			case JSON_NUMBER_INF_TYPE:
 				conch_printf("%*s\"%s\": Infinity",
-					ind, "", o->name);
+					ind, "", v->name);
 				break;
 			case JSON_NUMBER_NAN_TYPE:
 				conch_printf("%*s\"%s\": NaN",
-					ind, "", o->name);
+					ind, "", v->name);
 				break;
 			case JSON_NULL_TYPE:
 				conch_printf("%*s\"%s\": null",
-					ind, "", o->name);
+					ind, "", v->name);
 				break;
 			case JSON_TRUE_TYPE:
 				conch_printf("%*s\"%s\": true",
-					ind, "", o->name);
+					ind, "", v->name);
 				break;
 			case JSON_FALSE_TYPE:
 				conch_printf("%*s\"%s\": false",
-					ind, "", o->name);
+					ind, "", v->name);
 				break;
 			default:
 				return;
 		}
-		if (o->next)
+
+		v = v->next;
+		if (v)
 			conch_printf(",");
 		conch_printf("\n");
 	}
@@ -166,11 +165,11 @@ void _print(struct json_tree *t, int32_t ind)
 {
 	if (t->type == JSON_OBJECT_TYPE) {
 		conch_printf("{\n");
-		_print_object(t->u.object, ind);
+		_print_object(t->ao, ind);
 		conch_printf("}\n");
 	} else {
 		conch_printf("[\n");
-		_print_array(t->u.array, ind);
+		_print_array(t->ao, ind);
 		conch_printf("]\n");
 	}
 }

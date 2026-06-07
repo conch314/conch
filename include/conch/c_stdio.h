@@ -44,6 +44,8 @@ typedef struct {
 	char _; /* internal implemented */
 } xFILE;
 
+typedef int64_t xfpos_t;
+
 #define x_stdin __conch_stdin
 #define x_stdout __conch_stdout
 #define x_stderr __conch_stderr
@@ -76,6 +78,15 @@ extern
 xFILE *__conch_stderr
 ;
 extern
+int32_t conch_feof(xFILE *fp)
+;
+extern
+int32_t conch_ferror(xFILE *fp)
+;
+extern
+void conch_clearerr(xFILE *fp)
+;
+extern
 int32_t conch_fflush(xFILE *fp)
 ;
 extern
@@ -97,7 +108,7 @@ extern
 int32_t conch_fgetc(xFILE *fp)
 ;
 extern
-char *conch_fgets(char *buf, int32_t len, xFILE *fp)
+char *conch_fgets(char *s, int32_t len, xFILE *fp)
 ;
 extern
 int32_t conch_fputc(int32_t c, xFILE *fp)
@@ -116,13 +127,10 @@ int32_t conch_setvbuf(xFILE *fp, uint8_t *buf, int32_t type,
 		size_t size)
 ;
 extern
-int32_t conch_feof(xFILE *fp)
+int32_t conch_fgetpos(xFILE *fp, xfpos_t *pos)
 ;
 extern
-int32_t conch_ferror(xFILE *fp)
-;
-extern
-void conch_clearerr(xFILE *fp)
+int32_t conch_fsetpos(xFILE *fp, const xfpos_t *pos)
 ;
 
 /* c_stdio_printf.c */
