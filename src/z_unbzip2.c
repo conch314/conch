@@ -615,7 +615,7 @@ static int32_t _unbzip2_block(struct unbzip2_ctx *ctx, const uint8_t *s,
 				}
 
 				break;
-			case 15: /* build huffman */
+			case 15: /* huffman */
 				_build_symbol(ctx, ctx->mtf_e + 1);
 				ctx->mtf_n = 0;
 				ctx->t_n = 0;
