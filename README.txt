@@ -8,6 +8,8 @@ Includes
   util_ungz
   util_totp
   util_entropy
+  util_bzip2
+  util_unbzip2
   simple_bwt
 
  src/
