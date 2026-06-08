@@ -24,295 +24,129 @@
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 #include <conch/c_string.h>
+#include <conch/c_ctype.h>
 #include <conch/cfg_ini.h>
 
 
-// [section] # comment
-//
-// [  section	] ; comment
-//   	key = val @ ; comment
-//   	key ="string"# comment
-//
-//   key =	# comment
+// [a] a
+// [ b ] b
+//  [ a b ] c
+// 
+// # ;
+// ; #
+// ω=
+// 
+// a=;
+//  b = 	# ω	#
+//  	c = ω
 
-/* [A-Za-z0-9\x80-\xff._-] */
-static const uint8_t ini_name[256] = {
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
-	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
-	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	};
-
-#define INI_COMMENT(x) ((x) == '#' || (x) == ';')
-#define SKIP_CHAR(x) ((x) == ' ' || (x) == '\t')
-#define INVALID_CHAR(x) ((uint8_t)(x) < 0x20)
-
-
-/* @func: _ini_section (static)
- * #desc:
- *    parse ini section.
- *
- * #1: ctx [in/out] ini struct context
- * #2: a   [in]     input row
- * #3: n   [in]     row length
- * #r:     [ret]    0: no error, -1: error, -2: call error
- */
-static int32_t _ini_section(struct ini_ctx *ctx, const char *a, int32_t n)
-{
-	const char *p = NULL;
-	int32_t st = 0, len = 0;
-
-	for (int32_t i = 0; i < n; a++, i++) {
-		char c = *a;
-		switch (st) {
-			case 0:
-				if (c == '[')
-					st = 1;
-				break;
-			case 1:
-				if (SKIP_CHAR(c))
-					break;
-				p = a;
-				st = 2;
-			case 2:
-				if (SKIP_CHAR(c)) {
-					st = 3;
-					break;
-				} else if (c == ']') {
-					if (ctx->call(INI_SECTION_TYPE,
-							p,
-							len,
-							ctx->arg))
-						return -2;
-					st = 4;
-					break;
-				}
-
-				if (ini_name[(uint8_t)c]) {
-					ctx->err = INI_ERR_SECTION_NAME;
-					return -1;
-				}
-				len++;
-				break;
-			case 3:
-				if (SKIP_CHAR(c))
-					break;
-				if (c != ']') {
-					ctx->err = INI_ERR_SECTION_END;
-					return -1;
-				}
-
-				if (ctx->call(INI_SECTION_TYPE,
-						p,
-						len,
-						ctx->arg))
-					return -2;
-				st = 4;
-				break;
-			case 4:
-				if (SKIP_CHAR(c))
-					break;
-				if (INI_COMMENT(c))
-					return 0;
-				ctx->err = INI_ERR_SECTION_END;
-				return -1;
-			default:
-				return -1;
-		}
-	}
-	if (st != 4) {
-		ctx->err = INI_ERR_SECTION_END;
-		return -1;
-	}
-
-	return 0;
-}
-
-/* @func: _ini_key (static)
- * #desc:
- *    parse ini key and value.
- *
- * #1: ctx [in/out] ini struct context
- * #2: a   [in]     input row
- * #3: n   [in]     row length
- * #r:     [ret]    0: no error, -1: error, -2: call error
- */
-static int32_t _ini_key(struct ini_ctx *ctx, const char *a, int32_t n)
-{
-	const char *p = NULL, *e = NULL;
-	int32_t st = 0, len = 0;
-
-	for (int32_t i = 0; i < n; a++, i++) {
-		char c = *a;
-		switch (st) {
-			case 0:
-				if (ini_name[(uint8_t)c]) {
-					ctx->err = INI_ERR_KEY_NAME;
-					return -1;
-				}
-				p = a;
-				len++;
-				st = 1;
-				break;
-			case 1:
-				if (SKIP_CHAR(c)) {
-					st = 2;
-					break;
-				}
-				if (c == '=') {
-					if (ctx->call(INI_KEY_TYPE,
-							p,
-							len,
-							ctx->arg))
-						return -2;
-					st = 3;
-					break;
-				}
-
-				if (ini_name[(uint8_t)c]) {
-					ctx->err = INI_ERR_KEY_NAME;
-					return -1;
-				}
-				len++;
-				break;
-			case 2:
-				if (SKIP_CHAR(c))
-					break;
-				if (c != '=') {
-					ctx->err = INI_ERR_KEY_VALUE;
-					return -1;
-				}
-
-				if (ctx->call(INI_KEY_TYPE,
-						p,
-						len,
-						ctx->arg))
-					return -2;
-				st = 3;
-				break;
-			case 3:
-				if (SKIP_CHAR(c))
-					break;
-				if (INI_COMMENT(c))
-					return 0;
-				if (INVALID_CHAR(c)) {
-					ctx->err = INI_ERR_VALUE_NAME;
-					return -1;
-				}
-				p = a;
-				st = 4;
-			case 4:
-				if (INVALID_CHAR(c)) {
-					ctx->err = INI_ERR_VALUE_NAME;
-					return -1;
-				}
-
-				if (INI_COMMENT(c)) {
-					len = (int32_t)((e ? (e + 1) : a) - p);
-					if (ctx->call(INI_VALUE_TYPE,
-							p,
-							len,
-							ctx->arg))
-						return -2;
-					return 0;
-				}
-
-				if (!SKIP_CHAR(c))
-					e = a;
-				break;
-			default:
-				return -1;
-		}
-	}
-	if (st == 4) {
-		len = (int32_t)((e ? (e + 1) : a) - p);
-		if (ctx->call(INI_VALUE_TYPE,
-				p,
-				len,
-				ctx->arg))
-			return -2;
-		return 0;
-	}
-
-	return (st == 3) ? 0 : -1;
-}
 
 /* @func: conch_ini_parse
  * #desc:
  *    ini (initial configuration) parser.
  *
- * #1: ctx [in/out] ini struct context
- * #2: s   [in]     input string
- * #r:     [ret]    0: no error, -1: error, -2: call error
+ * #1: s        [in]  input string
+ * #2: err_line [out] error line
+ * #3: arg      [in]  callback arg
+ * #4: call     [in]  callback (type, string, length, arg)
+ * #r:          [ret] 0: no error, -1: parse error, -2: callback error
  */
-int32_t conch_ini_parse(struct ini_ctx *ctx, const char *s)
+int32_t conch_ini_parse(const char *s, int32_t *err_line, void *arg,
+		int32_t (*call)(int32_t, const char *, int32_t, void *))
 {
-	ctx->str = s;
-	ctx->len = 0;
-	ctx->err = 0;
+	const char *p, *p2;
+	size_t n;
+	int32_t len;
+	*err_line = 0;
 
-	const char *p = NULL, *a = NULL;
-	int32_t n = 0, k = 0;
+	while (*s != '\0') {
+		(*err_line)++;
 
-	for (; *(ctx->str) != '\0'; ctx->str = p, ctx->len += n) {
-		a = ctx->str;
-		p = conch_strchr(ctx->str, '\n');
-		if (!p) {
-			p = ctx->str;
-			p += conch_strlen(p);
-			n = (int32_t)(p - ctx->str);
-		} else {
-			n = (int32_t)(p - ctx->str);
-			p++;
-			ctx->len++;
-		}
-		if (!n)
+		p = s;
+		n = conch_strcspn(s, "\n");
+		s += n + 1;
+		if (!n || *p == '\r') /* '\n' and '\r' next */
 			continue;
 
-		for (k = n; k; a++, k--) {
-			char c = *a;
-			if (SKIP_CHAR(c))
-				continue;
-			if (INVALID_CHAR(c)) {
-				ctx->err = INI_ERR_INVALID;
-				ctx->str = a;
-				ctx->len = n;
+		p += conch_strspn(p, "\t ");
+		if (conch_strchr("#;", *p)) /* '#' or ';' next */
+			continue;
+
+		if (*p == '[') {
+			p++;
+			p2 = p += conch_strspn(p, " ");
+			len = 0;
+
+			/* '['\s*'<section>'\s*']' */
+			for (; *p != '\0'; p++) {
+				if (conch_strchr("]", *p))
+					break;
+				if ((uint8_t)*p > 0x7f
+						|| conch_isprint(*p)) {
+					len++;
+					continue;
+				}
 				return -1;
 			}
-			if (INI_COMMENT(c))
-				break;
-			break;
-		}
-		if (!k || INI_COMMENT(*a))
-			continue;
+			if (*p != ']')
+				return -1;
 
-		if (*a == '[') {
-			k = _ini_section(ctx, a, k);
-			if (k < 0)
-				return k;
+			/* skip the tail space */
+			for (p--; p != p2 && conch_strchr("\t ", *p); p--)
+				len--;
+
+			/* section */
+			if (call(INI_SECTION_TYPE, p2, len, arg))	
+				return -2;
 		} else {
-			k = _ini_key(ctx, a, k);
-			if (k < 0)
-				return k;
-		}
-	}
+			p2 = p;
+			len = 0;
 
-	if (ctx->call_end) {
-		k = ctx->call_end(ctx->arg);
-		if (k)
-			return -1;
+			/* '<key>'\s*= */
+			for (; *p != '\0'; p++) {
+				if (conch_strchr("\t =", *p)) {
+					p += conch_strspn(p, "\t ");
+					break;
+				}
+				if ((uint8_t)*p > 0x7f
+						|| conch_isprint(*p)) {
+					len++;
+					continue;
+				}
+				return -1;
+			}
+			if (*p++ != '=')
+				return -1;
+
+			/* key */
+			if (call(INI_KEY_TYPE, p2, len, arg))
+				return -2;
+
+			p2 = p += conch_strspn(p, "\t ");
+			len = 0;
+			if (*p == '\0' || conch_strchr("\n", *p)) /* next */
+				continue;
+
+			/* =\s*'<value>'\s* */
+			for (; *p != '\0'; p++) {
+				if (conch_strchr("\n", *p))
+					break;
+				if (*p == '\t' || (uint8_t)*p > 0x7f
+						|| conch_isprint(*p)) {
+					len++;
+					continue;
+				}
+				return -1;
+			}
+
+			/* skip the tail space */
+			for (p--; p != p2 && conch_strchr("\t ", *p); p--)
+				len--;
+
+			/* value */
+			if (call(INI_VALUE_TYPE, p2, len, arg))
+				return -2;
+		}
 	}
 
 	return 0;

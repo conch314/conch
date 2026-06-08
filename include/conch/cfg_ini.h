@@ -1,6 +1,6 @@
 /* @file: cfg_ini.h
  * #desc:
- *    The definitions of ini (initial configuration) configuration.
+ *    The definitions of ini (initial configuration) parser.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.
@@ -32,43 +32,6 @@
 #define INI_KEY_TYPE 2
 #define INI_VALUE_TYPE 3
 
-/* ini error code */
-#define INI_ERR_INVALID 1
-#define INI_ERR_SECTION_NAME 2
-#define INI_ERR_SECTION_END 3
-#define INI_ERR_KEY_NAME 4
-#define INI_ERR_KEY_VALUE 5
-#define INI_ERR_VALUE_NAME 6
-
-struct ini_ctx {
-	const char *str;
-	int32_t len;
-	int32_t err;
-	void *arg;
-	/* type, string, length, arg */
-	int32_t (*call)(int32_t, const char *, int32_t, void *);
-	/* arg */
-	int32_t (*call_end)(void *);
-};
-
-#define INI_CTX_SET(_call, _call_end, _arg) \
-	{ \
-		.call = _call, \
-		.call_end = _call_end, \
-		.arg = _arg \
-	}
-#define INI_NEW(name, _call, _call_end, _arg) \
-	struct ini_ctx name = INI_CTX_SET(_call, _call_end, _arg)
-#define INI_INIT(x, _call, _call_end, _arg) \
-	do { \
-		(x)->call = _call; \
-		(x)->call_end = _call_end; \
-		(x)->arg = _arg; \
-	} while (0)
-
-#define INI_ERR(x) ((x)->err)
-#define INI_LEN(x) ((x)->len)
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,7 +39,8 @@ extern "C" {
 
 /* cfg_ini_parse.c */
 extern
-int32_t conch_ini_parse(struct ini_ctx *ctx, const char *s)
+int32_t conch_ini_parse(const char *s, int32_t *err_line, void *arg,
+		int32_t (*call)(int32_t, const char *, int32_t, void *))
 ;
 
 #ifdef __cplusplus

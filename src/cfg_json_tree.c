@@ -70,7 +70,7 @@ static struct json_value *_json_value_add(struct json_stack *s)
  * #2: str  [in]  input string
  * #3: len  [in]  input length
  * #4: arg  [in]  callback arg
- * #r:      [ret] 0: no error, -1: call error
+ * #r:      [ret] 0: no error, -1: callback error
  */
 static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 {
@@ -182,7 +182,7 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
  *
  * #1: type [in]  json type
  * #2: arg  [in]  callback arg
- * #r:      [ret] 0: no error, -1: call error
+ * #r:      [ret] 0: no error, -1: callback error
  */
 static int32_t _call_end(int32_t type, void *arg)
 {
@@ -209,7 +209,7 @@ static int32_t _call_end(int32_t type, void *arg)
  *
  * #1: tree [in/out] json tree struct
  * #2: s    [in]     input string
- * #r:      [ret]    0: no error, -1: error, -2: call error
+ * #r:      [ret]    0: no error, -1: error, -2: callback error
  */
 int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
 {
@@ -236,7 +236,7 @@ int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
  * #desc:
  *    free the list of json tree value.
  *
- * #1: o [in/out] json value list
+ * #1: v [in/out] json value list
  */
 static void _tree_free_value(struct json_value *v)
 {

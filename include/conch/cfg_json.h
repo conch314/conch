@@ -1,6 +1,6 @@
 /* @file: cfg_json.h
  * #desc:
- *    The definitions of json (javascript object notation) configuration.
+ *    The definitions of json (javascript object notation) parser.
  *
  * #copy:
  *    Copyright (C) 1970 Public Free Software.

@@ -554,7 +554,7 @@ size_t conch_strcspn(const char *s, const char *cs)
 	size_t n = 0;
 	for (; *s != '\0'; s++, n++) {
 		if (conch_strchr(cs, *s))
-			return n;
+			break;
 	}
 
 	return n;

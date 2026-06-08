@@ -795,7 +795,7 @@ static int32_t _json_array(struct json_ctx *ctx)
  *
  * #1: ctx [in/out] json struct context
  * #2: s   [in]     input string
- * #r:     [ret]    0: no error, -1: error, -2: call error
+ * #r:     [ret]    0: no error, -1: error, -2: callback error
  */
 int32_t conch_json_parse(struct json_ctx *ctx, const char *s)
 {

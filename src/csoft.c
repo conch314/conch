@@ -118,7 +118,7 @@ int32_t conch_csf_ctz32(uint32_t x)
 	if (!x)
 		return 32;
 
-	/* ctz32()=4: 0b01..10..10000 (32-bit) */
+	/* ctz32()=4: 0b01..10..10000 */
 
 	int32_t n = 0;
 	if (!(x & 0xffff)) { /* low-16 */
