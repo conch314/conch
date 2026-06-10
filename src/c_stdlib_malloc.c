@@ -29,7 +29,8 @@
 #include <conch/c_atomic.h>
 
 
-static void *_alloc(size_t size, void *arg) {
+static void *_alloc(size_t size, void *arg)
+{
 	(void)arg;
 	void *p = conch_mmap(NULL, (size + 4095) & ~4095UL,
 		X_PROT_READ | X_PROT_WRITE,
@@ -38,7 +39,8 @@ static void *_alloc(size_t size, void *arg) {
 	return (p == X_MAP_FAILED) ? NULL : p;
 }
 
-static int32_t _free(void *p, size_t size, void *arg) {
+static int32_t _free(void *p, size_t size, void *arg)
+{
 	(void)arg;
 	conch_munmap(p, (size + 4095) & ~4095UL);
 

@@ -303,3 +303,24 @@ int32_t conch_sigfillset(xsigset_t *set)
 
 	return 0;
 }
+
+/* @func: conch_signal
+ * #desc:
+ *    set signal callback.
+ *
+ * #1: sig     [in]  signal number
+ * #2: handler [in]  callback handler
+ * #r:         [ret] old handler (X_SIG_ERR: errno)
+ */
+void (*conch_signal(int32_t sig, void (*handler)(int32_t)))(int32_t)
+{
+	struct xsigaction act, old;
+	act.u._sa_handler = handler;
+	act.sa_flags = X_SA_RESTART;
+	conch_sigemptyset(&act.sa_mask);
+
+	if (conch_sigaction(sig, &act, &old))
+		return X_SIG_ERR;
+
+	return old.u._sa_handler;
+}

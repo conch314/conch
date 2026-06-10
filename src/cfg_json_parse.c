@@ -24,6 +24,7 @@
 #include <conch/c_stddef.h>
 #include <conch/c_stdint.h>
 #include <conch/c_string.h>
+#include <conch/c_ctype.h>
 #include <conch/cfg_json.h>
 
 
@@ -43,25 +44,24 @@
 //     "": true,
 //     "": -123e12,
 //     "": 3.14e+10,
-//     '': 123,
-//     '': Infinity,
-//     '': NaN,
-//     '': {
-//       '': "Hello, World",
-//       '': '',
-//       "": 'Hello, \
-// World',
-//     }
+//     "": 123,
+//     "": Infinity,
+//     "": NaN,
+//     "": {
+//       "": "Hello, World",
+//       "": "",
+//       "": [ 123, +1, +0xf, -NaN, 1e1, .12e-1 ]
+//     },
 //   },
 //   [ 123, /* Comment */"", true, false, null, {}, [ 1, 2, "", {},
-//   /* Comment */1.2 /* Comment */, '123'], ],
+//   /* Comment */1.2 /* Comment */, "\u1234123\t\""], ],
 //   [],
 // ]
 
 /*
  * escape character:
  *  \"      quotation mark character
- *  \'      apostrophe character
+ *  \'      !! apostrophe character
  *  \\      reverse solidus characte
  *  \/      solidus character
  *  \b      backspace character
@@ -69,9 +69,18 @@
  *  \n      line feed character
  *  \r      carriage return character
  *  \t      character tabulation character
- *  \<any>  return the any-self character
+ *  \<any>  !! return the any-self character
  *  \uXXXX  4 hexadecimal digits unicode
  */
+
+struct json_ctx {
+	const char *str;
+	int32_t len;
+	int32_t err;
+	void *arg;
+	/* type, string, length, arg */
+	int32_t (*call)(int32_t, const char *, int32_t, void *);
+};
 
 enum {
 	TOKEN_ARRAY = 1,
@@ -88,19 +97,12 @@ enum {
 	TOKEN_COMMENT
 };
 
-static int32_t _json_token(char c);
-static int32_t _json_string(struct json_ctx *ctx);
-static int32_t _json_number(struct json_ctx *ctx, int32_t *type);
-static int32_t _json_null(struct json_ctx *ctx);
-static int32_t _json_true(struct json_ctx *ctx);
-static int32_t _json_false(struct json_ctx *ctx);
-static int32_t _json_comment(struct json_ctx *ctx);
-static int32_t _json_object(struct json_ctx *ctx);
-static int32_t _json_array(struct json_ctx *ctx);
-
 #define SKIP_CHAR(x) \
 	((x) == ' ' || (x) == '\n' || (x) == '\t' || (x) == '\r')
 #define INVALID_CHAR(x) ((uint8_t)(x) < 0x20)
+
+static int32_t _json_object(struct json_ctx *ctx);
+static int32_t _json_array(struct json_ctx *ctx);
 
 
 /* @func: _json_token (static)
@@ -161,14 +163,14 @@ static int32_t _json_token(char c)
  */
 static int32_t _json_string(struct json_ctx *ctx)
 {
-	char cc;
 	int32_t st = 0, len = ctx->len;
+	char cc;
 
-	for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-		char c = *(ctx->str);
+	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+		char c = *ctx->str;
 		switch (st) {
 			case 0: /* begin */
-				if (c != '"' && c != '\'')
+				if (c != '"')
 					return -1;
 				cc = c;
 				st = 1;
@@ -207,97 +209,93 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 {
 	int32_t st = 0, len = ctx->len;
 
-	for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-		char c = *(ctx->str);
+	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+		char c = *ctx->str;
 		switch (st) {
 			case 0: /* begin */
 				if (c == '+' || c == '-') {
 					st = 1;
 					break;
-				} else if (c >= '0' && c <= '9') {
-					st = 1;
+				}
+			case 1:
+				if (c == 'I' || c == 'N') {
+					st = 8;
 					break;
 				} else if (c == '.') {
-					st = 4;
+					st = 5;
 					break;
-				} else if (c == 'I' || c == 'N') {
-					st = 7;
+				} else if (conch_isdigit(c)) {
+					st = 2;
 					break;
 				}
 				return -1;
-			case 1: /* hexadecimal, decimal or floating */
+			case 2:
 				if (c == 'X' || c == 'x') {
-					st = 2;
-					break;
-				} else if (c >= '0' && c <= '9') {
 					st = 3;
 					break;
 				} else if (c == '.') {
+					st = 5;
+					break;
+				} else if (c == 'e') {
+					st = 6;
+					break;
+				} else if (conch_isdigit(c)) {
 					st = 4;
 					break;
-				} else if (c == 'I' || c == 'N') {
+				}
+
+				*type = JSON_NUMBER_DEC_TYPE;
+				return ctx->len - len;
+			case 3: /* hexadecimal */
+				if (conch_isxdigit(c))
+					break;
+
+				*type = JSON_NUMBER_HEX_TYPE;
+				return ctx->len - len;
+			case 4: /* decimal, floating, or exponent */
+				if (c == '.') {
+					st = 5;
+					break;
+				} else if (c == 'e') {
+					st = 6;
+					break;
+				} else if (conch_isdigit(c)) {
+					break;
+				}
+
+				*type = JSON_NUMBER_DEC_TYPE;
+				return ctx->len - len;
+			case 5: /* floating */
+				if (c == 'e') {
+					st = 6;
+					break;
+				} else if (conch_isdigit(c)) {
+					break;
+				}
+
+				*type = JSON_NUMBER_FLT_TYPE;
+				return ctx->len - len;
+			case 6: /* '+-' exponent */
+				if (c == '+' || c == '-') {
 					st = 7;
 					break;
 				}
-				*type = JSON_NUMBER_DEC_TYPE;
-				return ctx->len - len;
-			case 2: /* hexadecimal */
-				if (c >= '0' && c <= '9') {
+			case 7:
+				if (conch_isdigit(c))
 					break;
-				} else if (c >= 'A' && c <= 'F') {
-					break;
-				} else if (c >= 'a' && c <= 'f') {
-					break;
-				}
-				*type = JSON_NUMBER_HEX_TYPE;
-				return ctx->len - len;
-			case 3: /* decimal, floating, or exponent */
-				if (c >= '0' && c <= '9') {
-					break;
-				} else if (c == '.') {
-					st = 4;
-					break;
-				} else if (c == 'e') {
-					st = 5;
-					break;
-				}
-				*type = JSON_NUMBER_DEC_TYPE;
-				return ctx->len - len;
-			case 4: /* floating, or exponent */
-				if (c >= '0' && c <= '9') {
-					break;
-				} else if (c == 'e') {
-					st = 5;
-					break;
-				}
+
 				*type = JSON_NUMBER_FLT_TYPE;
 				return ctx->len - len;
-			case 5: /* '+-', or exponent */
-				if (c >= '0' && c <= '9') {
-					break;
-				} else if (c == '+' || c == '-') {
-					st = 6;
-					break;
-				}
-				*type = JSON_NUMBER_FLT_TYPE;
-				return ctx->len - len;
-			case 6: /* exponent */
-				if (c >= '0' && c <= '9')
-					break;
-				*type = JSON_NUMBER_FLT_TYPE;
-				return ctx->len - len;
-			case 7: /* Infinity and NaN */
+			case 8: /* Infinity and NaN */
 				ctx->str--;
 				ctx->len--;
-				if (!conch_strncmp("Infinity",
-						ctx->str, 8)) {
+				if (!conch_strncmp("Infinity", ctx->str, 8)) {
 					ctx->str += 8;
 					ctx->len += 8;
 					*type = JSON_NUMBER_INF_TYPE;
 					return ctx->len - len;
 				}
-				if (!conch_strncmp("NaN",
-						ctx->str, 3)) {
+				if (!conch_strncmp("NaN", ctx->str, 3)) {
 					ctx->str += 3;
 					ctx->len += 3;
 					*type = JSON_NUMBER_NAN_TYPE;
@@ -380,8 +378,8 @@ static int32_t _json_comment(struct json_ctx *ctx)
 	if (!conch_strncmp("//", ctx->str, 2)) {
 		ctx->str += 2;
 		ctx->len += 2;
-		for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-			if (*(ctx->str) == '\n') {
+		for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+			if (*ctx->str == '\n') {
 				ctx->str++;
 				ctx->len++;
 				break;
@@ -393,8 +391,8 @@ static int32_t _json_comment(struct json_ctx *ctx)
 	if (!conch_strncmp("/*", ctx->str, 2)) {
 		ctx->str += 2;
 		ctx->len += 2;
-		for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-			char c = *(ctx->str);
+		for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+			char c = *ctx->str;
 			switch (st) {
 				case 0:
 					if (c == '*')
@@ -422,14 +420,14 @@ static int32_t _json_comment(struct json_ctx *ctx)
  *    parse json object.
  *
  * #1: ctx [in/out] json struct context
- * #r:     [ret]    0: no error, -1: error, -2: call error
+ * #r:     [ret]    0: no error, -1: error, -2: callback error
  */
 static int32_t _json_object(struct json_ctx *ctx)
 {
-	int32_t st = 0, k = 0, type = 0;
+	int32_t st = 0, ret, type;
 
-	for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-		char c = *(ctx->str);
+	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+		char c = *ctx->str;
 		if (SKIP_CHAR(c))
 			continue;
 		if (INVALID_CHAR(c)) {
@@ -449,8 +447,8 @@ static int32_t _json_object(struct json_ctx *ctx)
 			case 1:
 				switch (_json_token(c)) {
 					case TOKEN_COMMENT:
-						k = _json_comment(ctx);
-						if (k < 0) {
+						ret = _json_comment(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_COMMENT;
 							return -1;
 						}
@@ -458,14 +456,14 @@ static int32_t _json_object(struct json_ctx *ctx)
 						ctx->len--;
 						break;
 					case TOKEN_STRING: /* object key */
-						k = _json_string(ctx);
-						if (k < 0) {
+						ret = _json_string(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_OBJECT_OBJKEY;
 							return -1;
 						}
 						if (ctx->call(JSON_OBJKEY_TYPE,
-								ctx->str - k + 1,
-								k - 2,
+								ctx->str - ret + 1,
+								ret - 2,
 								ctx->arg))
 							return -2;
 						ctx->str--;
@@ -473,7 +471,9 @@ static int32_t _json_object(struct json_ctx *ctx)
 						st = 2;
 						break;
 					case TOKEN_OBJECT_END: /* end '}' */
-						if (ctx->call_end(JSON_OBJECT_TYPE,
+						if (ctx->call(JSON_OBJECT_END_TYPE,
+								NULL,
+								0,
 								ctx->arg))
 							return -2;
 						ctx->str++;
@@ -487,8 +487,8 @@ static int32_t _json_object(struct json_ctx *ctx)
 			case 2: /* ':' */
 				switch (_json_token(c)) {
 					case TOKEN_COMMENT:
-						k = _json_comment(ctx);
-						if (k < 0) {
+						ret = _json_comment(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_COMMENT;
 							return -1;
 						}
@@ -505,8 +505,8 @@ static int32_t _json_object(struct json_ctx *ctx)
 				break;
 			case 3:
 				if (_json_token(c) == TOKEN_COMMENT) {
-					k = _json_comment(ctx);
-					if (k < 0) {
+					ret = _json_comment(ctx);
+					if (ret < 0) {
 						ctx->err = JSON_ERR_COMMENT;
 						return -1;
 					}
@@ -517,32 +517,32 @@ static int32_t _json_object(struct json_ctx *ctx)
 
 				switch (_json_token(c)) {
 					case TOKEN_STRING:
-						k = _json_string(ctx);
-						if (k < 0) {
+						ret = _json_string(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_OBJECT_STRING;
 							return -1;
 						}
 						if (ctx->call(JSON_STRING_TYPE,
-								ctx->str - k + 1,
-								k - 2,
+								ctx->str - ret + 1,
+								ret - 2,
 								ctx->arg))
 							return -2;
 						break;
 					case TOKEN_NUMBER:
-						k = _json_number(ctx, &type);
-						if (k < 0) {
+						ret = _json_number(ctx, &type);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_OBJECT_NUMBER;
 							return -1;
 						}
 						if (ctx->call(type,
-								ctx->str - k,
-								k,
+								ctx->str - ret,
+								ret,
 								ctx->arg))
 							return -2;
 						break;
 					case TOKEN_NULL:
-						k = _json_null(ctx);
-						if (k < 0) {
+						ret = _json_null(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_OBJECT_TOKEN;
 							return -1;
 						}
@@ -553,8 +553,8 @@ static int32_t _json_object(struct json_ctx *ctx)
 							return -2;
 						break;
 					case TOKEN_TRUE:
-						k = _json_true(ctx);
-						if (k < 0) {
+						ret = _json_true(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_OBJECT_TOKEN;
 							return -1;
 						}
@@ -565,8 +565,8 @@ static int32_t _json_object(struct json_ctx *ctx)
 							return -2;
 						break;
 					case TOKEN_FALSE:
-						k = _json_false(ctx);
-						if (k < 0) {
+						ret = _json_false(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_OBJECT_TOKEN;
 							return -1;
 						}
@@ -577,14 +577,14 @@ static int32_t _json_object(struct json_ctx *ctx)
 							return -2;
 						break;
 					case TOKEN_OBJECT: /* object */
-						k = _json_object(ctx);
-						if (k < 0)
-							return k;
+						ret = _json_object(ctx);
+						if (ret < 0)
+							return ret;
 						break;
 					case TOKEN_ARRAY: /* array */
-						k = _json_array(ctx);
-						if (k < 0)
-							return k;
+						ret = _json_array(ctx);
+						if (ret < 0)
+							return ret;
 						break;
 					default:
 						ctx->err = JSON_ERR_OBJECT_TOKEN;
@@ -597,8 +597,8 @@ static int32_t _json_object(struct json_ctx *ctx)
 			case 4: /* next ',' or end '}' */
 				switch (_json_token(c)) {
 					case TOKEN_COMMENT:
-						k = _json_comment(ctx);
-						if (k < 0) {
+						ret = _json_comment(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_COMMENT;
 							return -1;
 						}
@@ -609,7 +609,9 @@ static int32_t _json_object(struct json_ctx *ctx)
 						st = 1;
 						break;
 					case TOKEN_OBJECT_END:
-						if (ctx->call_end(JSON_OBJECT_TYPE,
+						if (ctx->call(JSON_OBJECT_END_TYPE,
+								NULL,
+								0,
 								ctx->arg))
 							return -2;
 						ctx->str++;
@@ -633,14 +635,14 @@ static int32_t _json_object(struct json_ctx *ctx)
  *    parse json array.
  *
  * #1: ctx [in/out] json struct context
- * #r:     [ret]    0: no error, -1: error, -2: call error
+ * #r:     [ret]    0: no error, -1: error, -2: callback error
  */
 static int32_t _json_array(struct json_ctx *ctx)
 {
-	int32_t st = 0, k = 0, type = 0;
+	int32_t st = 0, ret = 0, type = 0;
 
-	for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-		char c = *(ctx->str);
+	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+		char c = *ctx->str;
 		if (SKIP_CHAR(c))
 			continue;
 		if (INVALID_CHAR(c)) {
@@ -659,8 +661,8 @@ static int32_t _json_array(struct json_ctx *ctx)
 				break;
 			case 1:
 				if (_json_token(c) == TOKEN_COMMENT) {
-					k = _json_comment(ctx);
-					if (k < 0) {
+					ret = _json_comment(ctx);
+					if (ret < 0) {
 						ctx->err = JSON_ERR_COMMENT;
 						return -1;
 					}
@@ -671,32 +673,32 @@ static int32_t _json_array(struct json_ctx *ctx)
 
 				switch (_json_token(c)) {
 					case TOKEN_STRING:
-						k = _json_string(ctx);
-						if (k < 0) {
+						ret = _json_string(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_ARRAY_STRING;
 							return -1;
 						}
 						if (ctx->call(JSON_STRING_TYPE,
-								ctx->str - k + 1,
-								k - 2,
+								ctx->str - ret + 1,
+								ret - 2,
 								ctx->arg))
 							return -2;
 						break;
 					case TOKEN_NUMBER:
-						k = _json_number(ctx, &type);
-						if (k < 0) {
+						ret = _json_number(ctx, &type);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_ARRAY_NUMBER;
 							return -1;
 						}
 						if (ctx->call(type,
-								ctx->str - k,
-								k,
+								ctx->str - ret,
+								ret,
 								ctx->arg))
 							return -2;
 						break;
 					case TOKEN_NULL:
-						k = _json_null(ctx);
-						if (k < 0) {
+						ret = _json_null(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_ARRAY_TOKEN;
 							return -1;
 						}
@@ -707,8 +709,8 @@ static int32_t _json_array(struct json_ctx *ctx)
 							return -2;
 						break;
 					case TOKEN_TRUE:
-						k = _json_true(ctx);
-						if (k < 0) {
+						ret = _json_true(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_ARRAY_TOKEN;
 							return -1;
 						}
@@ -719,8 +721,8 @@ static int32_t _json_array(struct json_ctx *ctx)
 							return -2;
 						break;
 					case TOKEN_FALSE:
-						k = _json_false(ctx);
-						if (k < 0) {
+						ret = _json_false(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_ARRAY_TOKEN;
 							return -1;
 						}
@@ -731,17 +733,19 @@ static int32_t _json_array(struct json_ctx *ctx)
 							return -2;
 						break;
 					case TOKEN_OBJECT: /* object */
-						k = _json_object(ctx);
-						if (k < 0)
-							return k;
+						ret = _json_object(ctx);
+						if (ret < 0)
+							return ret;
 						break;
 					case TOKEN_ARRAY: /* array */
-						k = _json_array(ctx);
-						if (k < 0)
-							return k;
+						ret = _json_array(ctx);
+						if (ret < 0)
+							return ret;
 						break;
 					case TOKEN_ARRAY_END: /* end */
-						if (ctx->call_end(JSON_ARRAY_TYPE,
+						if (ctx->call(JSON_ARRAY_END_TYPE,
+								NULL,
+								0,
 								ctx->arg))
 							return -2;
 						ctx->str++;
@@ -758,8 +762,8 @@ static int32_t _json_array(struct json_ctx *ctx)
 			case 2: /* next ',' or end ']' */
 				switch (_json_token(c)) {
 					case TOKEN_COMMENT:
-						k = _json_comment(ctx);
-						if (k < 0) {
+						ret = _json_comment(ctx);
+						if (ret < 0) {
 							ctx->err = JSON_ERR_COMMENT;
 							return -1;
 						}
@@ -770,7 +774,9 @@ static int32_t _json_array(struct json_ctx *ctx)
 						st = 1;
 						break;
 					case TOKEN_ARRAY_END:
-						if (ctx->call_end(JSON_ARRAY_TYPE,
+						if (ctx->call(JSON_ARRAY_END_TYPE,
+								NULL,
+								0,
 								ctx->arg))
 							return -2;
 						ctx->str++;
@@ -789,23 +795,19 @@ static int32_t _json_array(struct json_ctx *ctx)
 	return -1;
 }
 
-/* @func: conch_json_parse
+/* @func: _json_parse (static)
  * #desc:
- *    json (javascript object notation) parser.
+ *    json begin parse.
  *
  * #1: ctx [in/out] json struct context
- * #2: s   [in]     input string
  * #r:     [ret]    0: no error, -1: error, -2: callback error
  */
-int32_t conch_json_parse(struct json_ctx *ctx, const char *s)
+static int32_t _json_parse(struct json_ctx *ctx)
 {
-	ctx->str = s;
-	ctx->len = 0;
-	ctx->err = 0;
+	int32_t ret;
 
-	int32_t k = 0;
-	for (; *(ctx->str) != '\0'; ctx->str++, ctx->len++) {
-		char c = *(ctx->str);
+	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
+		char c = *ctx->str;
 		if (SKIP_CHAR(c))
 			continue;
 		if (INVALID_CHAR(c)) {
@@ -815,8 +817,8 @@ int32_t conch_json_parse(struct json_ctx *ctx, const char *s)
 
 		switch (_json_token(c)) {
 			case TOKEN_COMMENT:
-				k = _json_comment(ctx);
-				if (k < 0) {
+				ret = _json_comment(ctx);
+				if (ret < 0) {
 					ctx->err = JSON_ERR_COMMENT;
 					return -1;
 				}
@@ -834,4 +836,28 @@ int32_t conch_json_parse(struct json_ctx *ctx, const char *s)
 	}
 
 	return 0;
+}
+
+/* @func: conch_json_parse
+ * #desc:
+ *    json (javascript object notation) parser.
+ *
+ * #1: s       [in]  input string
+ * #2: err_len [out] error location length
+ * #3: err     [out] error code
+ * #4: arg     [in]  callback arg
+ * #5: call    [in]  callback (type, string, length, arg)
+ * #r:         [ret] 0: no error, -1: error, -2: callback error
+ */
+int32_t conch_json_parse(const char *s, int32_t *err_len, int32_t *err,
+		void *arg,
+		int32_t (*call)(int32_t, const char *, int32_t, void *))
+{
+	struct json_ctx ctx = { s, 0, 0, arg, call };
+
+	int32_t ret = _json_parse(&ctx);
+	*err_len = ctx.len;
+	*err = ctx.err;
+
+	return ret;
 }

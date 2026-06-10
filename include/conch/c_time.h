@@ -56,6 +56,13 @@ struct xitimerval {
 /* thread cpu time */
 #define X_CLOCK_THREAD_CPUTIME_ID 3
 
+/* system time */
+#define X_ITIMER_REAL 0
+/* userspace process cpu time */
+#define X_ITIMER_VIRTUAL 1
+/* userspace and kernelspace process cpu time */
+#define X_ITIMER_PROF 2
+
 #else
 # error "!!!unknown platform!!!"
 #endif
@@ -82,6 +89,15 @@ xtime_t conch_time(xtime_t *r)
 /* c_time_sleep.c */
 extern
 int32_t conch_nanosleep(const struct xtimespec *req, struct xtimespec *rem)
+;
+
+/* c_time_timer.c */
+extern
+int32_t conch_setitimer(int32_t which, const struct xitimerval *_new,
+		struct xitimerval *old)
+;
+extern
+int32_t conch_getitimer(int32_t which, struct xitimerval *curr)
 ;
 
 #ifdef __cplusplus

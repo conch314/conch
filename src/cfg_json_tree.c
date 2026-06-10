@@ -169,30 +169,8 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 			v = _json_value_add(s);
 			v->type = JSON_FALSE_TYPE;
 			break;
-		default:
-			return -1;
-	}
-
-	return 0;
-}
-
-/* @func: _call_end (static)
- * #desc:
- *    callback-end function of json parse.
- *
- * #1: type [in]  json type
- * #2: arg  [in]  callback arg
- * #r:      [ret] 0: no error, -1: callback error
- */
-static int32_t _call_end(int32_t type, void *arg)
-{
-	struct json_tree *t = arg;
-	struct json_stack *s;
-
-	switch (type) {
-		case JSON_ARRAY_TYPE:
-		case JSON_OBJECT_TYPE:
-			s = t->stack;
+		case JSON_ARRAY_END_TYPE:
+		case JSON_OBJECT_END_TYPE:
 			t->stack = s->next;
 			conch_free(s);
 			break;
@@ -214,9 +192,9 @@ static int32_t _call_end(int32_t type, void *arg)
 int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
 {
 	struct json_stack *_s, *ss;
-	JSON_INIT(&tree->ctx, _call, _call_end, tree);
 
-	int32_t ret = conch_json_parse(&tree->ctx, s);
+	int32_t ret = conch_json_parse(s, &tree->err_len, &tree->err,
+		tree, _call);
 	if (ret) {
 		_s = tree->stack;
 		while (_s) {

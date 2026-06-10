@@ -85,8 +85,6 @@
 /* use custom sigreturn */
 #define X_SA_RESTORER  0x04000000
 
-/* NOTE: blocking signal queued only while callback is executing */
-
 /* add blocking signals */
 #define X_SIG_BLOCK 0
 /* unblocking signals */
@@ -266,19 +264,18 @@ struct xsigaction {
 #if (defined(CONCH_MARCH_X86_32) || defined(CONCH_MARCH_ARM_32))
 
 	xsigset_t sa_mask;
-	int32_t sa_flags;
+	unsigned long sa_flags;
 	void (*sa_restorer)(void);
 
-#elif defined(CONCH_MARCH_X86_64)
+#elif (defined(CONCH_MARCH_X86_64) || defined(CONCH_MARCH_ARM_64))
 
-	int32_t sa_flags;
+	unsigned long sa_flags;
 	void (*sa_restorer)(void);
 	xsigset_t sa_mask;
 
-#elif (defined(CONCH_MARCH_ARM_64) \
-	|| defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
+#elif (defined(CONCH_MARCH_RISCV_32) || defined(CONCH_MARCH_RISCV_64))
 
-	int32_t sa_flags;
+	unsigned long sa_flags;
 	xsigset_t sa_mask;
 
 #else
@@ -337,6 +334,9 @@ int32_t conch_sigemptyset(xsigset_t *set)
 ;
 extern
 int32_t conch_sigfillset(xsigset_t *set)
+;
+extern
+void (*conch_signal(int32_t sig, void (*handler)(int32_t)))(int32_t)
 ;
 
 #ifdef __cplusplus

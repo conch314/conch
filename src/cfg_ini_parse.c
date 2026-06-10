@@ -55,8 +55,8 @@ int32_t conch_ini_parse(const char *s, int32_t *err_line, void *arg,
 		int32_t (*call)(int32_t, const char *, int32_t, void *))
 {
 	const char *p, *p2;
-	size_t n;
 	int32_t len;
+	size_t n;
 	*err_line = 0;
 
 	while (*s != '\0') {
