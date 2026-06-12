@@ -46,6 +46,10 @@ typedef struct {
 
 typedef int64_t xfpos_t;
 
+#define X_STDIN_FILENO  0
+#define X_STDOUT_FILENO 1
+#define X_STDERR_FILENO 2
+
 #define x_stdin __conch_stdin
 #define x_stdout __conch_stdout
 #define x_stderr __conch_stderr

@@ -237,7 +237,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		a = z = r = big;
 	} else {
 		a = z = r = big + (sizeof(big) / sizeof(uint32_t))
-			- X_FP_DBL_MANT_DIG - 1;
+			- DBL_MANT_DIG - 1;
 	}
 
 	/* enlarge */
@@ -254,7 +254,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 	/* max precision */
 	pre = MAX(pre, 0);
 	pre = MIN(pre, DOU2STR_DF_PREMAX);
-	need = ((pre + (X_FP_DBL_MANT_DIG / 3) + 8) / 9) + 1;
+	need = ((pre + (DBL_MANT_DIG / 3) + 8) / 9) + 1;
 
 	while (e > 0) { /* positive */
 		int32_t sh = MIN(29, e);
@@ -291,9 +291,9 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 
 	/* rounding (non GRS round) */
 	if (pre < ((int32_t)(z - r - 1) * 9)) {
-		int32_t j = ((pre + 9 * X_FP_DBL_MAX_EXP) % 9) + 1;
-		uint32_t *d = r + (((pre + 9 * X_FP_DBL_MAX_EXP) / 9)
-			- X_FP_DBL_MAX_EXP) + 1;
+		int32_t j = ((pre + 9 * DBL_MAX_EXP) % 9) + 1;
+		uint32_t *d = r + (((pre + 9 * DBL_MAX_EXP) / 9)
+			- DBL_MAX_EXP) + 1;
 
 		uint32_t carry, k;
 		for (k = 10; j < 9; k *= 10, j++);
@@ -301,18 +301,17 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 
 		if (carry) {
 			*d += carry;
-			/* *d += k; */
 			while (*d > 999999999) {
 				*d-- = 0;
 				if (d < a)
 					*--a = 0;
 				(*d)++;
 			}
-		}
 
-		if (z > (d + 1))
-			z = d + 1;
-		for (; z > a && !z[-1]; z--);
+			if (z > (d + 1))
+				z = d + 1;
+			for (; z > a && !z[-1]; z--);
+		}
 	}
 
 	/* integer length, (r - a) * 9 + floor(log10(*a)) */

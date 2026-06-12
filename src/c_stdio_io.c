@@ -55,7 +55,7 @@ struct stdio_file {
 
 static struct stdio_file __stdin = {
 	.flags = FG_PERM | FG_NOWR,
-	.fd = 0,
+	.fd = X_STDIN_FILENO,
 	.buf = __stdin.vbuf,
 	.buf_size = X_BUFSIZ,
 	.rpos = NULL,
@@ -68,7 +68,7 @@ static struct stdio_file __stdin = {
 
 static struct stdio_file __stdout = {
 	.flags = FG_PERM | FG_TEXT | FG_NORD,
-	.fd = 1,
+	.fd = X_STDOUT_FILENO,
 	.buf = __stdout.vbuf,
 	.buf_size = X_BUFSIZ,
 	.rpos = NULL,
@@ -81,7 +81,7 @@ static struct stdio_file __stdout = {
 
 static struct stdio_file __stderr = {
 	.flags = FG_PERM | FG_NORD,
-	.fd = 2,
+	.fd = X_STDERR_FILENO,
 	.buf = NULL,
 	.buf_size = 0,
 	.rpos = NULL,

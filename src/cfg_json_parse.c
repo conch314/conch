@@ -430,7 +430,7 @@ static int32_t _json_comment(struct json_ctx *ctx)
  */
 static int32_t _json_object(struct json_ctx *ctx)
 {
-	int32_t st = 0, ret, type;
+	int32_t st = 0, ret = 0, type = -1;
 
 	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
 		char c = *ctx->str;
@@ -645,7 +645,7 @@ static int32_t _json_object(struct json_ctx *ctx)
  */
 static int32_t _json_array(struct json_ctx *ctx)
 {
-	int32_t st = 0, ret = 0, type = 0;
+	int32_t st = 0, ret = 0, type = -1;
 
 	for (; *ctx->str != '\0'; ctx->str++, ctx->len++) {
 		char c = *ctx->str;

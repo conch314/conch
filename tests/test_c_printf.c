@@ -133,20 +133,20 @@ void test_printf(void)
 	B_PRINTF("31.2 B: llx: %llx\n", UINT64_MAX);
 
 	/* floating */
-	A_PRINTF("32.1 A: f: %.800f\n", X_FP_DBL_MAX);
-	B_PRINTF("32.2 B: f: %.800f\n", X_FP_DBL_MAX);
+	A_PRINTF("32.1 A: f: %.800f\n", DBL_MAX);
+	B_PRINTF("32.2 B: f: %.800f\n", DBL_MAX);
 
-	A_PRINTF("33.1 A: f: %.380f\n", -X_FP_DBL_MAX);
-	B_PRINTF("33.2 B: f: %.380f\n", -X_FP_DBL_MAX);
+	A_PRINTF("33.1 A: f: %.380f\n", -DBL_MAX);
+	B_PRINTF("33.2 B: f: %.380f\n", -DBL_MAX);
 
-	A_PRINTF("34.1 A: f: %.800f\n", X_FP_DBL_MIN);
-	B_PRINTF("34.2 B: f: %.800f\n", X_FP_DBL_MIN);
+	A_PRINTF("34.1 A: f: %.800f\n", DBL_MIN);
+	B_PRINTF("34.2 B: f: %.800f\n", DBL_MIN);
 
-	A_PRINTF("35.1 A: f: %.380f\n", -X_FP_DBL_MIN);
-	B_PRINTF("35.2 B: f: %.380f\n", -X_FP_DBL_MIN);
+	A_PRINTF("35.1 A: f: %.380f\n", -DBL_MIN);
+	B_PRINTF("35.2 B: f: %.380f\n", -DBL_MIN);
 
-	A_PRINTF("36.1 A: f: %.380f\n", -X_FP_DBL_MIN);
-	B_PRINTF("36.2 B: f: %.380f\n", -X_FP_DBL_MIN);
+	A_PRINTF("36.1 A: f: %.380f\n", -DBL_MIN);
+	B_PRINTF("36.2 B: f: %.380f\n", -DBL_MIN);
 
 	/* character and string */
 	A_PRINTF("37.1 A: c: %c\n", 'w');
@@ -219,17 +219,17 @@ void test_printf(void)
 	A_PRINTF("60.1 A: %.324f\n", 0.179729);
 	B_PRINTF("60.2 B: %.324f\n", 0.179729);
 
-	A_PRINTF("61.1 A: %.324f\n", X_FP_DBL_MIN);
-	B_PRINTF("61.2 B: %.324f\n", X_FP_DBL_MIN);
+	A_PRINTF("61.1 A: %.324f\n", DBL_MIN);
+	B_PRINTF("61.2 B: %.324f\n", DBL_MIN);
 
-	A_PRINTF("62.1 A: %.324f\n", X_FP_DBL_MAX);
-	B_PRINTF("62.2 B: %.324f\n", X_FP_DBL_MAX);
+	A_PRINTF("62.1 A: %.324f\n", DBL_MAX);
+	B_PRINTF("62.2 B: %.324f\n", DBL_MAX);
 
-	A_PRINTF("63.1 A: %.0f\n", X_FP_DBL_MIN);
-	B_PRINTF("63.2 B: %.0f\n", X_FP_DBL_MIN);
+	A_PRINTF("63.1 A: %.0f\n", DBL_MIN);
+	B_PRINTF("63.2 B: %.0f\n", DBL_MIN);
 
-	A_PRINTF("64.1 A: %.0f\n", X_FP_DBL_MAX);
-	B_PRINTF("64.2 B: %.0f\n", X_FP_DBL_MAX);
+	A_PRINTF("64.1 A: %.0f\n", DBL_MAX);
+	B_PRINTF("64.2 B: %.0f\n", DBL_MAX);
 
 	A_PRINTF("65.1 A: %.324f\n", 0.001897);
 	B_PRINTF("65.2 B: %.324f\n", 0.001897);
