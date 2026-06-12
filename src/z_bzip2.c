@@ -1014,7 +1014,7 @@ int32_t conch_bzip2_init(struct bzip2_ctx *ctx, int32_t lev)
 	if (!(lev >= 1 && lev <= 9))
 		return -1;
 
-	ctx->block_max = 100000 * lev - 19;
+	ctx->block_max = 100000 * (uint32_t)lev - 19;
 	ctx->mtf_v = (uint16_t *)ctx->sort_tmp; /* reuse */
 
 	/* crc */

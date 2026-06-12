@@ -31,6 +31,9 @@
 
 /* TODO: The implementation of json tree is not yet complete */
 
+static void _tree_free_array(struct json_value *v);
+static void _tree_free_object(struct json_value *v);
+
 
 /* @func: _json_value_add (static)
  * #desc:
@@ -78,6 +81,7 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 	struct json_stack *s = t->stack, *ss;
 	struct json_value *v;
 	char *p;
+	char buf[512];
 
 	switch (type) {
 		case JSON_ARRAY_TYPE:
@@ -118,7 +122,7 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 			ss->next = s;
 			t->stack = ss;
 			break;
-		case JSON_OBJKEY_TYPE:
+		case JSON_KEYVAL_TYPE:
 			p = conch_strndup(str, (size_t)len);
 			s->name = p;
 			break;
@@ -129,25 +133,43 @@ static int32_t _call(int32_t type, const char *str, int32_t len, void *arg)
 			v->u.str = p;
 			break;
 		case JSON_NUMBER_DEC_TYPE:
-			p = conch_strndup(str, (size_t)len);
+			if ((size_t)len >= sizeof(buf)) {
+				p = conch_strndup(str, (size_t)len);
+			} else {
+				p = conch_memcpy(buf, str, (size_t)len);
+				p[len] = '\0';
+			}
 			v = _json_value_add(s);
 			v->type = JSON_NUMBER_DEC_TYPE;
 			v->u.i = conch_strtoll(p, NULL, 10);
-			conch_free(p);
+			if ((size_t)len >= sizeof(buf))
+				conch_free(p);
 			break;
 		case JSON_NUMBER_HEX_TYPE:
-			p = conch_strndup(str, (size_t)len);
+			if ((size_t)len >= sizeof(buf)) {
+				p = conch_strndup(str, (size_t)len);
+			} else {
+				p = conch_memcpy(buf, str, (size_t)len);
+				p[len] = '\0';
+			}
 			v = _json_value_add(s);
 			v->type = JSON_NUMBER_HEX_TYPE;
 			v->u.i = conch_strtoll(p, NULL, 16);
-			conch_free(p);
+			if ((size_t)len >= sizeof(buf))
+				conch_free(p);
 			break;
 		case JSON_NUMBER_FLT_TYPE:
-			p = conch_strndup(str, (size_t)len);
+			if ((size_t)len >= sizeof(buf)) {
+				p = conch_strndup(str, (size_t)len);
+			} else {
+				p = conch_memcpy(buf, str, (size_t)len);
+				p[len] = '\0';
+			}
 			v = _json_value_add(s);
 			v->type = JSON_NUMBER_FLT_TYPE;
 			v->u.f = conch_strtod(p, NULL);
-			conch_free(p);
+			if ((size_t)len >= sizeof(buf))
+				conch_free(p);
 			break;
 		case JSON_NUMBER_INF_TYPE:
 			v = _json_value_add(s);
@@ -210,28 +232,60 @@ int32_t conch_json_tree_parse(struct json_tree *tree, const char *s)
 	return ret;
 }
 
-/* @func: _tree_free_value (static)
+/* @func: _tree_free_array (static)
  * #desc:
  *    free the list of json tree value.
  *
  * #1: v [in/out] json value list
  */
-static void _tree_free_value(struct json_value *v)
+static void _tree_free_array(struct json_value *v)
 {
 	struct json_value *t = v;
 	while (v) {
 		switch (v->type) {
 			case JSON_ARRAY_TYPE:
-				_tree_free_value(v->u.ao);
+				_tree_free_array(v->u.ao);
 				break;
-			case JSON_OBJKEY_TYPE:
-				_tree_free_value(v->u.ao);
+			case JSON_OBJECT_TYPE:
+				_tree_free_object(v->u.ao);
 				conch_free(v->name);
 				break;
 			case JSON_STRING_TYPE:
 				conch_free(v->u.str);
-				break;
 			default:
+				break;
+		}
+
+		t = v;
+		v = v->next;
+		if (t)
+			conch_free(t);
+	}
+}
+
+/* @func: _tree_free_object (static)
+ * #desc:
+ *    free the list of json tree value.
+ *
+ * #1: v [in/out] json value list
+ */
+static void _tree_free_object(struct json_value *v)
+{
+	struct json_value *t = v;
+	while (v) {
+		switch (v->type) {
+			case JSON_ARRAY_TYPE:
+				_tree_free_array(v->u.ao);
+				conch_free(v->name);
+				break;
+			case JSON_OBJECT_TYPE:
+				_tree_free_object(v->u.ao);
+				conch_free(v->name);
+				break;
+			case JSON_STRING_TYPE:
+				conch_free(v->u.str);
+			default:
+				conch_free(v->name);
 				break;
 		}
 
@@ -250,6 +304,10 @@ static void _tree_free_value(struct json_value *v)
  */
 void conch_json_tree_free(struct json_tree *tree)
 {
-	_tree_free_value(tree->ao);
+	if (tree->type == JSON_OBJECT_TYPE) {
+		_tree_free_object(tree->ao);
+	} else {
+		_tree_free_array(tree->ao);
+	}
 	tree->ao = NULL;
 }

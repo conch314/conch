@@ -728,7 +728,7 @@ int32_t conch_unbzip2_init(struct unbzip2_ctx *ctx, int32_t lev)
 	if (!(lev >= 1 && lev <= 9))
 		return -1;
 
-	ctx->block_max = 100000 * lev;
+	ctx->block_max = 100000 * (uint32_t)lev;
 	ctx->mtf_v = (uint16_t *)ctx->rank_tmp; /* reuse */
 
 	/* crc */

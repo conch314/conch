@@ -266,8 +266,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		}
 		if (carry)
 			*--a = carry;
-		while (z > a && !z[-1])
-			z--;
+		for (; z > a && !z[-1]; z--);
 		e -= sh;
 	}
 
@@ -275,7 +274,7 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		int32_t sh = MIN(9, -e);
 		uint32_t carry = 0;
 		for (uint32_t *d = a; d < z; d++) {
-			uint32_t k = *d & ((1 << sh) - 1);
+			uint32_t k = *d & ((1U << sh) - 1);
 			*d = (*d >> sh) + carry;
 			carry = (1000000000 >> sh) * k;
 		}
@@ -288,14 +287,40 @@ static int32_t _dou2str_df(int32_t n, char *p, double v, int32_t pre)
 		e += sh;
 	}
 
+	/* NOTE: 1.3 => 1.299999 error rounding => 1.3 */
+
+	/* rounding (non GRS round) */
+	if (pre < ((int32_t)(z - r - 1) * 9)) {
+		int32_t j = ((pre + 9 * X_FP_DBL_MAX_EXP) % 9) + 1;
+		uint32_t *d = r + (((pre + 9 * X_FP_DBL_MAX_EXP) / 9)
+			- X_FP_DBL_MAX_EXP) + 1;
+
+		uint32_t carry, k;
+		for (k = 10; j < 9; k *= 10, j++);
+		carry = *d % k;
+
+		if (carry) {
+			*d += carry;
+			/* *d += k; */
+			while (*d > 999999999) {
+				*d-- = 0;
+				if (d < a)
+					*--a = 0;
+				(*d)++;
+			}
+		}
+
+		if (z > (d + 1))
+			z = d + 1;
+		for (; z > a && !z[-1]; z--);
+	}
+
 	/* integer length, (r - a) * 9 + floor(log10(*a)) */
 	if (a < z) {
 		intlen = (int32_t)(r - a) * 9 + 1;
 		for (uint32_t k = 10; *a >= k; k *= 10)
 			intlen++;
 	}
-
-	/* TODO: 1.3 => 1.299999 error rounding => 1.3 */
 
 	if (intlen < 1) {
 		p[n++] = '0';

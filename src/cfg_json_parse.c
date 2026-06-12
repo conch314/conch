@@ -87,7 +87,7 @@ enum {
 	TOKEN_ARRAY_END,
 	TOKEN_OBJECT,
 	TOKEN_OBJECT_END,
-	TOKEN_OBJKEY,
+	TOKEN_KEYVAL,
 	TOKEN_NEXT,
 	TOKEN_STRING,
 	TOKEN_NUMBER,
@@ -126,7 +126,7 @@ static int32_t _json_token(char c)
 		case ',':
 			return TOKEN_NEXT;
 		case ':':
-			return TOKEN_OBJKEY;
+			return TOKEN_KEYVAL;
 		case '"':
 		case '\'':
 			return TOKEN_STRING;
@@ -219,7 +219,7 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 				}
 			case 1:
 				if (c == 'I' || c == 'N') {
-					st = 8;
+					st = 9;
 					break;
 				} else if (c == '.') {
 					st = 5;
@@ -236,7 +236,7 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 				} else if (c == '.') {
 					st = 5;
 					break;
-				} else if (c == 'e') {
+				} else if (c == 'E' || c == 'e') {
 					st = 6;
 					break;
 				} else if (conch_isdigit(c)) {
@@ -256,7 +256,7 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 				if (c == '.') {
 					st = 5;
 					break;
-				} else if (c == 'e') {
+				} else if (c == 'E' || c == 'e') {
 					st = 6;
 					break;
 				} else if (conch_isdigit(c)) {
@@ -266,7 +266,7 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 				*type = JSON_NUMBER_DEC_TYPE;
 				return ctx->len - len;
 			case 5: /* floating */
-				if (c == 'e') {
+				if (c == 'E' || c == 'e') {
 					st = 6;
 					break;
 				} else if (conch_isdigit(c)) {
@@ -281,12 +281,18 @@ static int32_t _json_number(struct json_ctx *ctx, int32_t *type)
 					break;
 				}
 			case 7:
+				if (conch_isdigit(c)) {
+					st = 8;
+					break;
+				}
+				return -1;
+			case 8:
 				if (conch_isdigit(c))
 					break;
 
 				*type = JSON_NUMBER_FLT_TYPE;
 				return ctx->len - len;
-			case 8: /* Infinity and NaN */
+			case 9: /* Infinity and NaN */
 				ctx->str--;
 				ctx->len--;
 				if (!conch_strncmp("Infinity", ctx->str, 8)) {
@@ -458,10 +464,10 @@ static int32_t _json_object(struct json_ctx *ctx)
 					case TOKEN_STRING: /* object key */
 						ret = _json_string(ctx);
 						if (ret < 0) {
-							ctx->err = JSON_ERR_OBJECT_OBJKEY;
+							ctx->err = JSON_ERR_OBJECT_KEYVAL;
 							return -1;
 						}
-						if (ctx->call(JSON_OBJKEY_TYPE,
+						if (ctx->call(JSON_KEYVAL_TYPE,
 								ctx->str - ret + 1,
 								ret - 2,
 								ctx->arg))
@@ -495,11 +501,11 @@ static int32_t _json_object(struct json_ctx *ctx)
 						ctx->str--;
 						ctx->len--;
 						break;
-					case TOKEN_OBJKEY:
+					case TOKEN_KEYVAL:
 						st = 3;
 						break;
 					default:
-						ctx->err = JSON_ERR_OBJECT_OBJKEY;
+						ctx->err = JSON_ERR_OBJECT_KEYVAL;
 						return -1;
 				}
 				break;

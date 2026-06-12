@@ -268,13 +268,29 @@ void test_printf(void)
 	A_PRINTF("78.1 A: %f\n", 1.0);
 	B_PRINTF("78.2 B: %f\n", 1.0);
 	A_PRINTF("79.1 A: %f\n", 1.1);
-	A_PRINTF("79.2 B: %f\n", 1.1);
-	B_PRINTF("80.1 A: %f\n", 1.9);
+	B_PRINTF("79.2 B: %f\n", 1.1);
+	A_PRINTF("80.1 A: %f\n", 1.9);
 	B_PRINTF("80.2 B: %f\n", 1.9);
-	B_PRINTF("81.1 A: %f\n", 2.0);
+	A_PRINTF("81.1 A: %f\n", 2.0);
 	B_PRINTF("81.2 B: %f\n", 2.0);
-	B_PRINTF("82.1 A: %f\n", 2.1);
+	A_PRINTF("82.1 A: %f\n", 2.1);
 	B_PRINTF("82.2 B: %f\n", 2.1);
+
+	A_PRINTF("83.1 A: %.9f\n", 1.2301);
+	B_PRINTF("83.2 B: %.9f\n", 1.2301);
+	A_PRINTF("84.1 A: %.9f\n", 1.2342);
+	B_PRINTF("84.2 B: %.9f\n", 1.2342);
+	A_PRINTF("85.1 A: %.9f\n", 1.2343);
+	B_PRINTF("85.2 B: %.9f\n", 1.2343);
+
+	A_PRINTF("86.1 A: %.1f\n", 1.3);
+	B_PRINTF("86.2 B: %.1f\n", 1.3);
+	A_PRINTF("87.1 A: %.9f\n", 1.3);
+	B_PRINTF("87.2 B: %.9f\n", 1.3);
+	A_PRINTF("88.1 A: %.1f\n", 1.299999);
+	B_PRINTF("88.2 B: %.1f\n", 1.299999);
+	A_PRINTF("89.1 A: %.9f\n", 1.299999);
+	B_PRINTF("89.2 B: %.9f\n", 1.299999);
 }
 
 int main(void)
