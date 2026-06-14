@@ -1516,10 +1516,10 @@ int64_t conch_csf_f64_to_i64(uint64_t a, int32_t mode)
 	if (sh > 52) {
 		if (sh > 63)
 			goto e;
+
 		sig <<= sh - 52;
 	} else if (mode) { /* round */
-		sig <<= 10;
-		sig = _float_rshift_jam64(sig, 52 - sh);
+		sig = _float_rshift_jam64(sig << 10, 52 - sh);
 		round_bits = sig & 0x3ff;
 
 		sig = (sig + 0x200) >> 10;
@@ -1566,10 +1566,10 @@ uint64_t conch_csf_f64_to_u64(uint64_t a, int32_t mode)
 	if (sh > 52) {
 		if (sh > 63)
 			goto e;
+
 		sig <<= sh - 52;
 	} else if (mode) { /* round */
-		sig <<= 10;
-		sig = _float_rshift_jam64(sig, 52 - sh);
+		sig = _float_rshift_jam64(sig << 10, 52 - sh);
 		round_bits = sig & 0x3ff;
 
 		sig = (sig + 0x200) >> 10;
@@ -1711,10 +1711,10 @@ int32_t conch_csf_f32_to_i32(uint32_t a, int32_t mode)
 	if (sh > 23) {
 		if (sh > 31)
 			goto e;
+
 		sig <<= sh - 23;
 	} else if (mode) { /* round */
-		sig <<= 7;
-		sig = _float_rshift_jam32(sig, 23 - sh);
+		sig = _float_rshift_jam32(sig << 7, 23 - sh);
 		round_bits = sig & 0x7f;
 
 		sig = (sig + 0x40) >> 7;
@@ -1761,10 +1761,10 @@ uint32_t conch_csf_f32_to_u32(uint32_t a, int32_t mode)
 	if (sh > 23) {
 		if (sh > 31)
 			goto e;
+
 		sig <<= sh - 23;
 	} else if (mode) { /* round */
-		sig <<= 7;
-		sig = _float_rshift_jam32(sig, 23 - sh);
+		sig = _float_rshift_jam32(sig << 7, 23 - sh);
 		round_bits = sig & 0x7f;
 
 		sig = (sig + 0x40) >> 7;
@@ -1810,10 +1810,10 @@ int64_t conch_csf_f32_to_i64(uint32_t a, int32_t mode)
 	if (sh > 23) {
 		if (sh > 63)
 			goto e;
+
 		sig <<= sh - 23;
 	} else if (mode) { /* round */
-		sig <<= 7;
-		sig = _float_rshift_jam64(sig, 23 - sh);
+		sig = _float_rshift_jam64(sig << 7, 23 - sh);
 		round_bits = sig & 0x7f;
 
 		sig = (sig + 0x40) >> 7;
@@ -1860,10 +1860,10 @@ uint64_t conch_csf_f32_to_u64(uint32_t a, int32_t mode)
 	if (sh > 23) {
 		if (sh > 63)
 			goto e;
+
 		sig <<= sh - 23;
 	} else if (mode) { /* round */
-		sig <<= 7;
-		sig = _float_rshift_jam64(sig, 23 - sh);
+		sig = _float_rshift_jam64(sig << 7, 23 - sh);
 		round_bits = sig & 0x7f;
 
 		sig = (sig + 0x40) >> 7;
@@ -1934,6 +1934,7 @@ uint64_t conch_csf_f32_to_f64(uint32_t a)
 	if (!exp) { /* subnormal, zero */
 		if (!sig)
 			return _float_pack32(0, 0, 0);
+
 		sh = conch_csf_clz32(sig) - 8;
 		exp = (1 - sh) - 1;
 		sig = sig << sh;
