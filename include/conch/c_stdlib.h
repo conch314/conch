@@ -28,48 +28,6 @@
 #include <conch/c_stdint.h>
 
 
-struct random_ctx {
-	int32_t type;
-	int32_t *state;
-	int32_t *fptr;
-	int32_t *bptr;
-	int32_t *eptr;
-};
-
-/* LCG (Linear Congruential Generator) */
-#define RANDOM_TYPE0_NEW(name, seed) \
-	int32_t name##_random_tab0[1] = { \
-		seed \
-		}; \
-	struct random_ctx name = { \
-		.type = 0, \
-		.state = name##_random_tab0 \
-		}
-
-/*
- * LFSR (Linear Feedback Shift Register)
- * x^31 + x^3 + 1
- */
-#define RANDOM_TYPE1_NEW(name) \
-	int32_t name##_random_tab1[32] = { \
-		-1726662223, 379960547, 1735697613, 1040273694, \
-		1313901226, 1627687941, -179304937, -2073333483, \
-		1780058412, -1989503057, -615974602, 344556628, \
-		939512070, -1249116260, 1507946756, -812545463, \
-		154635395, 1388815473, -1926676823, 525320961, \
-		-1009028674, 968117788, -123449607, 1284210865, \
-		435012392, -2017506339, -911064859, -370259173, \
-		1132637927, 1398500161, -205601318, 0 \
-		}; \
-	struct random_ctx name = { \
-		.type = 1, \
-		.state = name##_random_tab1, \
-		.fptr = &name##_random_tab1[3], \
-		.bptr = &name##_random_tab1[0], \
-		.eptr = &name##_random_tab1[31] \
-		}
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -157,7 +115,7 @@ void *conch_bsearch(const void *k, const void *b, uint64_t n, uint64_t w,
 
 /* c_stdlib_rand.c */
 extern
-int32_t conch_random_r(struct random_ctx *p, int32_t *v)
+int32_t conch_rand_r(int32_t *state)
 ;
 
 #ifdef __cplusplus

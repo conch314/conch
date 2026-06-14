@@ -59,7 +59,7 @@ void test_gomap(void)
 {
 	clock_t start, end;
 	double time;
-	RANDOM_TYPE0_NEW(ran, 123456);
+	int32_t ran = 123456;
 
 	union gomap_group *ctrl = malloc(sizeof(union gomap_group)
 		* GOMAP_CTRL_ALIGN(TSIZE));
@@ -76,7 +76,7 @@ void test_gomap(void)
 
 	int32_t *array_key = conch_malloc(sizeof(int32_t) * SIZE);
 	for (int32_t i = 0; i < SIZE; i++)
-		conch_random_r(&ran, &array_key[i]);
+		array_key[i] = conch_rand_r(&ran);
 
 	/* insert */
 	start = clock();

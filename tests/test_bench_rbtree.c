@@ -47,14 +47,14 @@ void test_rbtree(void)
 {
 	clock_t start, end;
 	double time;
-	RANDOM_TYPE0_NEW(ran, 123456);
+	int32_t ran = 123456;
 
 	struct T *node = malloc(sizeof(struct T) * SIZE);
 	struct rb_node *p;
 	RB_ROOT_NEW(root);
 
 	for (int32_t i = 0; i < SIZE; i++)
-		conch_random_r(&ran, &node[i].key);
+		node[i].key = conch_rand_r(&ran);
 
 	/* insert */
 	start = clock();

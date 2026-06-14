@@ -25,40 +25,20 @@
 #include <conch/c_stdlib.h>
 
 
-/* @func: conch_random_r
+/* @func: conch_rand_r
  * #desc:
- *    reentrant random number generator.
+ *    pseudo-random number generator.
  *
- * #1: p [in/out] random context struct
- * #2: v [out]    random number result
- * #r:   [ret]    0: no error, -1: param error
+ * #1: state [in/out] seed state
+ * #r:       [ret]    random number
  */
-int32_t conch_random_r(struct random_ctx *p, int32_t *v)
+int32_t conch_rand_r(int32_t *state)
 {
-	if (!(p && v)) {
-		/* errno */
-		return -1;
-	}
+	int32_t ret;
 
 	/* LCG (Linear Congruential Generator) */
-	int32_t *state = p->state;
-	if (p->type == 0) {
-		*v = ((state[0] * 1103515245) + 12345) & INT32_MAX;
-		state[0] = *v;
-		return 0;
-	}
+	ret = ((*state * 1103515245) + 12345) & INT32_MAX;
+	*state = ret;
 
-	/* LFSR (Linear Feedback Shift Register) */
-	int32_t *fptr = p->fptr, *bptr = p->bptr, *eptr = p->eptr;
-	*v = (*fptr += *bptr) >> 1;
-	if (++fptr >= eptr) {
-		fptr = state;
-		bptr++;
-	} else if (++bptr >= eptr) {
-		bptr = state;
-	}
-	p->fptr = fptr;
-	p->bptr = bptr;
-
-	return 0;
+	return ret;
 }
